@@ -1544,3 +1544,57 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Visible close control ──────────────────────────────────────
+   Same 32px circle as the Crate close. Rests ghostly (opacity 0.5)
+   and only declares itself on hover/focus; press uses the mechanical
+   spring curve. Static border/background only — soft-render.css may
+   strip blur and shadows on Linux. */
+.settings-panel__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 9;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+  opacity: 0.5;
+  cursor: pointer;
+  transition:
+    opacity 200ms cubic-bezier(0.25, 1, 0.5, 1),
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.settings-panel__close:hover,
+.settings-panel__close:focus-visible {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.06));
+  opacity: 1;
+  border-radius: 50%;
+}
+
+.settings-panel__close:active {
+  transform: scale(0.92);
+}
+
+/* Glass panels are light: keep the hairline readable like the panel
+   border rather than the near-white surface token. */
+[data-theme="glass"] .settings-panel__close {
+  border-color: rgba(42, 70, 92, 0.28);
+}
+
+/* Keep the hovering close out of the label's box so the top-right
+   corner is provably clear; the visible text is unchanged. */
+.settings-panel__section-label {
+  width: fit-content;
+  max-width: calc(100% - 56px);
+}

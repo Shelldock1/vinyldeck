@@ -699,9 +699,10 @@
   animation: crateDotPulse 1.1s ease-in-out 3;
 }
 
-/* ── Crate trigger: below Settings, clear of the Linux title bar ── */
+/* ── Crate trigger: third in the top-left row, right of Mini ── */
 .settings-trigger.crate-trigger {
-  top: 78px;
+  top: 24px;
+  left: 132px;
 }
 
 /* ── Motion ────────────────────────────────────────────────── */

@@ -78,6 +78,11 @@ export function useKeyboardShortcuts({
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (shouldIgnoreShortcut(event)) return;
+      // While the context menu is open it owns every key except Escape, which
+      // stays on the single resolveEscapeTarget path below.
+      if (isGlobalShortcutSuppressed(optionsRef.current.isContextMenuOpen, event)) {
+        return;
+      }
       if (!isShortcutAllowedInMode(optionsRef.current.renderMode, event)) return;
 
       const { playback, settings, source } = useVinylDeckStore.getState();
@@ -166,6 +171,18 @@ export function isShortcutAllowedInMode(
   if (renderMode !== "mini") return true;
   if (event.code === "Space") return true;
   return event.ctrlKey && event.code === "KeyQ";
+}
+
+/**
+ * An open context menu takes the keyboard: its container is a focused div, so
+ * without this ArrowLeft/ArrowRight/typeahead keys would still reach the
+ * global handler. Escape stays routed to resolveEscapeTarget.
+ */
+export function isGlobalShortcutSuppressed(
+  isContextMenuOpen: boolean,
+  event: Pick<KeyboardEvent, "code">,
+): boolean {
+  return isContextMenuOpen && event.code !== "Escape";
 }
 
 function shouldIgnoreShortcut(event: KeyboardEvent): boolean {

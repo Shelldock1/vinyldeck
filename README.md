@@ -145,7 +145,7 @@ VinylDeck is released under the [MIT License](./LICENSE).
 
 Third-party content keeps its own license:
 
-- Fonts (Sora, Inter, JetBrains Mono and the other families in `src/styles/global.css`) are loaded from Google Fonts and are licensed under the SIL Open Font License.
+- Brand fonts (Sora, Inter, JetBrains Mono, Hanken Grotesk, Geist) are self-hosted under `public/fonts/`; each family ships with its SIL Open Font License file next to the woff2.
 - npm and Cargo dependencies are covered by their own licenses, listed in their package metadata.
 - The sample album art in `public/art-1.jpg` and `public/art-2.jpg` is demo media for the browser mock source; its origin and license are unverified and it is not covered by the MIT License.
 - Album artwork shown at runtime comes from your media player and belongs to its respective rights holders.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   clampSeek,
+  isGlobalShortcutSuppressed,
   isShortcutAllowedInMode,
   resolveEscapeTarget,
 } from "./useKeyboardShortcuts";
@@ -23,6 +24,38 @@ describe("isShortcutAllowedInMode", () => {
       expect(isShortcutAllowedInMode("main", key(code))).toBe(true);
     }
     expect(isShortcutAllowedInMode("main", key("KeyQ", true))).toBe(true);
+  });
+});
+
+describe("isGlobalShortcutSuppressed", () => {
+  it("suppresses every global action while the context menu is open", () => {
+    for (const code of [
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowUp",
+      "ArrowDown",
+      "Space",
+      "Enter",
+      "KeyS",
+      "KeyF",
+      "KeyM",
+      "KeyT",
+      "KeyA",
+      "KeyC",
+    ]) {
+      expect(isGlobalShortcutSuppressed(true, key(code))).toBe(true);
+    }
+    expect(isGlobalShortcutSuppressed(true, key("KeyQ", true))).toBe(true);
+  });
+
+  it("leaves Escape to resolveEscapeTarget", () => {
+    expect(isGlobalShortcutSuppressed(true, key("Escape"))).toBe(false);
+  });
+
+  it("does nothing when the menu is closed", () => {
+    expect(isGlobalShortcutSuppressed(false, key("ArrowRight"))).toBe(false);
+    expect(isGlobalShortcutSuppressed(false, key("Space"))).toBe(false);
+    expect(isGlobalShortcutSuppressed(false, key("Escape"))).toBe(false);
   });
 });
 

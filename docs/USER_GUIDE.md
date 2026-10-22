@@ -56,6 +56,8 @@ Pausing from the controls lifts the arm in place, like a cue lever. Sources with
 
 Mini starts as a `280x280` always-on-top player. You can shrink it down to a compact size, but it will not expand beyond the original square. As Mini gets smaller, the vinyl and hover controls scale down with the window and track text fades away to keep the record clear. Turn on Mini Transparency in Settings -> Display to let Windows Acrylic blur your desktop through the Mini player while the vinyl and controls stay readable.
 
+Window controls sit at the top-right; the Settings, Crate, and Mini triggers sit in a row at the top-left.
+
 Closing app windows can keep VinylDeck in the tray when Quit To Tray is enabled. Use tray Quit or `Ctrl+Q` for explicit exit.
 
 ## The Crate
@@ -66,7 +68,7 @@ Every album you play is pressed into your collection as its own record, with the
 - Records wear with use: favorites slowly gather dust, hairline scuffs, and a pale ring on the label.
 - Rarer pressings are graded Uncommon, Rare, or Legendary.
 
-Open the crate with `C`, the crate button under Settings, the right-click menu, or by clicking the stamp. Sort by recent, most played, rarest, or pressing order, and pick a record to read its pressing card. Your collection is stored locally next to your settings (`collection.json`).
+Open the crate with `C`, the crate button in the top-left trigger row, the right-click menu, or by clicking the stamp. Sort by recent, most played, rarest, or pressing order, and pick a record to read its pressing card. Your collection is stored locally next to your settings (`collection.json`).
 
 ## Keyboard Shortcuts
 

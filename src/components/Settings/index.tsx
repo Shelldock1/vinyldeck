@@ -134,6 +134,22 @@ export function Settings({ open, onClose }: SettingsProps) {
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
+            <button
+              type="button"
+              className="settings-panel__close"
+              aria-label="Close settings"
+              title="Close"
+              onClick={onClose}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                <path
+                  d="M2 2l10 10M12 2L2 12"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
             <div className="settings-panel__edge-light" aria-hidden="true" />
             <div className="settings-panel__sidebar">
               <p className="settings-panel__eyebrow">Preferences</p>

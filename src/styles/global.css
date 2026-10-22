@@ -3,9 +3,50 @@
    Base reset · OLED black · Font stack · Utilities
    ============================================================ */
 
-/* ── Google Fonts ────────────────────────────────────────── */
-/* All 5 themes + shared system. Load all weights upfront.   */
-@import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@200;300;400;600;700&family=Geist:wght@300;400;500;600&family=Anybody:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@400;500;600&family=Manrope:wght@400;600;700&display=swap");
+/* ── Self-hosted brand fonts ─────────────────────────────── */
+/* Latin subset, variable woff2, served from public/fonts/.   */
+/* Keeps the release CSP free of external font requests.     */
+/* Licenses: public/fonts/<family>/OFL.txt (SIL OFL 1.1).     */
+
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/sora/Sora-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url("/fonts/inter/Inter-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono/JetBrainsMono-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+  src: url("/fonts/hanken-grotesk/HankenGrotesk-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url("/fonts/geist/Geist-Variable.woff2") format("woff2");
+}
 
 /* ── Box-sizing reset ────────────────────────────────────── */
 *,
@@ -224,7 +265,7 @@ img {
 .settings-trigger {
   position: fixed;
   top: 24px;
-  right: 24px;
+  left: 24px;
   z-index: 90;
   width: 42px;
   height: 42px;
@@ -302,9 +343,9 @@ img {
   transform: translateY(0) scale(0.97);
 }
 
-/* Mini player trigger — same floating corner row, left of Settings. */
+/* Mini player trigger — same top-left row, right of Settings. */
 .mini-trigger {
-  right: 78px;
+  left: 78px;
 }
 
 /* ═══════════════════════════════════════════════════════════════

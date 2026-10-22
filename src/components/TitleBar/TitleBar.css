@@ -7,8 +7,8 @@
   height: 40px;
   display: flex;
   align-items: center;
-  /* Window controls sit top-left (macOS-style): the top-right corner belongs
-     to the floating Mini/Settings/Crate triggers and the tonearm pivot. */
+  /* Window controls sit top-right; the floating Mini/Settings/Crate triggers
+     own the top-left. */
   justify-content: flex-start;
   gap: 16px;
   padding: 0 14px;
@@ -37,19 +37,50 @@
 }
 
 .titlebar__brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-mono, "JetBrains Mono"), monospace;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
+  white-space: nowrap;
   opacity: 0.42;
 }
 
 .titlebar__controls {
-  order: -1;
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Narrow windows: a 102px row at the right edge would sit on the tonearm
+   (measured at 700x560), so the same controls stack down the right edge. */
+@media (max-width: 760px) {
+  .titlebar__controls {
+    flex-direction: column;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  /* Fullscreen reveals only the top 64px; compact the stack so all three
+     buttons stay reachable while the bar is open. */
+  .titlebar--fullscreen .titlebar__controls {
+    margin-top: 0;
+    gap: 2px;
+  }
+
+  .titlebar--fullscreen .titlebar__button {
+    width: 18px;
+    height: 18px;
+  }
+
+  .titlebar--fullscreen .titlebar__button svg {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .titlebar__button {

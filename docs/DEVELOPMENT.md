@@ -37,6 +37,38 @@ PKG_CONFIG_PATH = { value = "/path/to/tauri-sysroot/usr/lib/x86_64-linux-gnu/pkg
 
 These files hold machine-specific absolute paths and are gitignored, as are local `linux-env.sh` / `run-tauri.sh` helper scripts. In VMs and containers, set `WEBKIT_DISABLE_DMABUF_RENDERER=1` if the WebView renders blank.
 
+#### User-level install
+
+`src-tauri/target/release/vinyldeck` is replaced on every rebuild, so a launcher that points at it breaks (or runs a half-written file) mid-build. Install a stable copy for the current user instead:
+
+```bash
+npm run install:linux
+```
+
+The script sources `./linux-env.sh` when present (local sysroot), runs `npm run tauri build -- --no-bundle` (the configured `bundle.targets` are Windows-only; `--no-bundle` still produces the release binary), and then installs:
+
+| Item | Path |
+| --- | --- |
+| Binary (`755`) | `~/.local/bin/vinyldeck` |
+| Icon | `~/.local/share/icons/hicolor/256x256/apps/vinyldeck.png` |
+| Desktop entry | `~/.local/share/applications/vinyldeck.desktop` |
+
+The desktop entry uses `Exec="$HOME/.local/bin/vinyldeck"`, `Icon=vinyldeck`, and `StartupWMClass=vinyldeck`, so the panel launcher then points at `~/.local/bin/vinyldeck` and keeps working across rebuilds. No sudo is used; `update-desktop-database` and `gtk-update-icon-cache` run only when installed.
+
+Reuse an existing release binary without rebuilding:
+
+```bash
+SKIP_BUILD=1 npm run install:linux
+```
+
+Install into a throwaway prefix (useful for testing the script without touching your real launcher):
+
+```bash
+VINYLDECK_INSTALL_ROOT=/tmp/vinyldeck-install npm run install:linux
+```
+
+Reruns are idempotent: the same three files are overwritten with identical content and the desktop entry is not duplicated.
+
 ## Runtime Modes
 
 | Runtime | Playback source |

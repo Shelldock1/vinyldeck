@@ -105,11 +105,14 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
 
   const className = `titlebar${fullscreen ? " titlebar--fullscreen" : ""}${revealed ? " titlebar--revealed" : ""}`;
 
+  // Double-click maximize is owned by Tauri's injected drag script
+  // (`plugin:window|internal_toggle_maximize` on `detail === 2`), which fires
+  // for any `data-tauri-drag-region` on Windows/Linux. A React `onDoubleClick`
+  // here toggled maximize a second time, so the window maximized and snapped back.
   return (
     <div
       className={className}
       data-tauri-drag-region={fullscreen ? undefined : true}
-      onDoubleClick={fullscreen ? undefined : handleToggleMaximize}
     >
       <span className="titlebar__brand" data-tauri-drag-region={fullscreen ? undefined : true}>
         VinylDeck
