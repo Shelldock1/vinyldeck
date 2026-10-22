@@ -24,10 +24,10 @@ pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSess
 
 #[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_metadata(
-    selected: Option<&str>,
-    fallback: Option<&str>,
-) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    let Some(session) = current_session(selected, fallback).await? else {
+    selected: Option<String>,
+    fallback: Option<String>,
+) -> anyhow::Result<Option<MediaSnapshot>> {
+    let Some(session) = current_session(selected.as_deref(), fallback.as_deref()).await? else {
         return Ok(None);
     };
 
@@ -52,10 +52,10 @@ pub(crate) async fn current_media_snapshot_with_metadata(
 
 #[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_artwork(
-    selected: Option<&str>,
-    fallback: Option<&str>,
-) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    let Some(session) = current_session(selected, fallback).await? else {
+    selected: Option<String>,
+    fallback: Option<String>,
+) -> anyhow::Result<Option<MediaSnapshot>> {
+    let Some(session) = current_session(selected.as_deref(), fallback.as_deref()).await? else {
         return Ok(None);
     };
 
