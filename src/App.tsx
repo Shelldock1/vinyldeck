@@ -3,6 +3,8 @@
 // playback source, and routes the current window to MainView or MiniView.
 
 import { useEffect, useState } from "react";
+import { initCollection } from "./lib/collection";
+import { useBrowserListenTracker } from "./hooks/useCrate";
 import { createPlaybackSource } from "./lib/playback/sourceFactory";
 import { useVinylDeckStore } from "./lib/playback/store";
 import {
@@ -18,6 +20,8 @@ import {
 } from "./lib/window";
 import type { RenderWindowMode } from "./lib/window/types";
 import { LiquidGlassFilters } from "./components/LiquidGlass";
+import { TitleBar } from "./components/TitleBar/TitleBar";
+import { ResizeHandles } from "./components/TitleBar/ResizeHandles";
 import { MainView } from "./views/MainView";
 import { MiniView } from "./views/MiniView";
 
@@ -25,6 +29,20 @@ function App() {
   const setSource = useVinylDeckStore((s) => s.setSource);
   const clearSource = useVinylDeckStore((s) => s.clearSource);
   const [renderMode, setRenderMode] = useState<RenderWindowMode>("main");
+  useBrowserListenTracker();
+
+  useEffect(() => {
+    let unsubscribe = () => {};
+    let cancelled = false;
+    void initCollection().then((unlisten) => {
+      if (cancelled) unlisten();
+      else unsubscribe = unlisten;
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const source = createPlaybackSource();
@@ -78,12 +96,18 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const windowMode = useVinylDeckStore((s) => s.settings.windowMode);
   const view = renderMode === "mini" ? <MiniView /> : <MainView />;
 
   return (
     <>
       <LiquidGlassFilters />
       {view}
+      <TitleBar
+        visible={renderMode === "main"}
+        fullscreen={windowMode === "fullscreen"}
+      />
+      <ResizeHandles visible={renderMode === "main" && windowMode !== "fullscreen"} />
     </>
   );
 }

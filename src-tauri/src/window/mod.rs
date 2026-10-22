@@ -2,7 +2,8 @@ use std::str::FromStr;
 
 use tauri::{
     window::{Effect, EffectsBuilder},
-    AppHandle, LogicalSize, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+    AppHandle, LogicalSize, Manager, PhysicalPosition, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder,
 };
 
 use crate::settings::SettingsState;
@@ -15,6 +16,9 @@ const MINI_MIN_WIDTH: f64 = 140.0;
 const MINI_MIN_HEIGHT: f64 = 140.0;
 const MINI_MAX_WIDTH: f64 = 280.0;
 const MINI_MAX_HEIGHT: f64 = 280.0;
+
+/// Gap between the Mini window and the monitor working area edge.
+const MINI_SCREEN_MARGIN: f64 = 16.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum WindowMode {
@@ -74,8 +78,11 @@ fn show_main(app: &AppHandle) -> Result<(), String> {
 
     main.set_fullscreen(false)
         .map_err(|error| error.to_string())?;
-    main.set_decorations(true)
+    main.set_decorations(false)
         .map_err(|error| error.to_string())?;
+    // Leaving fullscreen keeps the old (screen-sized) placement, which can put
+    // the window partly off-screen. Re-center on the way back to windowed mode.
+    main.center().map_err(|error| error.to_string())?;
     main.show().map_err(|error| error.to_string())?;
     main.set_focus().map_err(|error| error.to_string())?;
 
@@ -152,12 +159,58 @@ async fn show_mini(app: &AppHandle) -> Result<(), String> {
         Err(error) => window_debug_log(&format!("show_mini: url read failed: {error}")),
     }
 
+    // Mini is a floating companion: it must stay above regular windows even if
+    // the persisted "always on top" setting (which is meant for Main) is off.
+    mini.set_always_on_top(true)
+        .map_err(|error| error.to_string())?;
+
     mini.show().map_err(|error| error.to_string())?;
     window_debug_log("show_mini: shown");
     mini.set_focus().map_err(|error| error.to_string())?;
     window_debug_log("show_mini: focused");
 
+    // Pin it to the bottom-right corner of the working area. Done after show()
+    // so the monitor the window landed on is already known.
+    place_mini_bottom_right(app, &mini);
+
     Ok(())
+}
+
+/// Docks the Mini window to the bottom-right corner of the monitor it sits on,
+/// inset by [`MINI_SCREEN_MARGIN`] from the working area (so panels/taskbars do
+/// not cover it). Uses physical pixels, so it stays put across DPI scales.
+fn place_mini_bottom_right(app: &AppHandle, window: &WebviewWindow) {
+    let monitor = window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| {
+            app.get_webview_window(MAIN_LABEL)
+                .and_then(|main| main.current_monitor().ok().flatten())
+        })
+        .or_else(|| window.primary_monitor().ok().flatten());
+
+    let Some(monitor) = monitor else {
+        eprintln!("[VinylDeck window] mini placement skipped: no monitor");
+        return;
+    };
+
+    // `outer_size` on X11 includes GTK's invisible client-side frame budget,
+    // which is larger than the actual frameless window; the content size is
+    // what has to sit on the screen.
+    let Ok(size) = window.inner_size() else {
+        eprintln!("[VinylDeck window] mini placement skipped: unknown window size");
+        return;
+    };
+
+    let area = monitor.work_area();
+    let margin = (MINI_SCREEN_MARGIN * monitor.scale_factor()).round() as i32;
+    let x = area.position.x + area.size.width as i32 - size.width as i32 - margin;
+    let y = area.position.y + area.size.height as i32 - size.height as i32 - margin;
+
+    if let Err(error) = window.set_position(PhysicalPosition::new(x, y)) {
+        eprintln!("[VinylDeck window] failed to place mini window: {error}");
+    }
 }
 
 fn apply_mini_resize_bounds(window: &WebviewWindow) {

@@ -32,6 +32,15 @@ The main view combines:
 
 Controls automatically disable when the active media source does not support that action.
 
+### Needle Drop
+
+The tonearm follows the track: it starts at the outer groove and creeps toward the label as the song plays. Grab the headshell to cue it yourself:
+
+- drop it anywhere on the grooves to jump there (playback starts if it was paused); the progress ring previews the landing time while you drag
+- drop it beyond the record's rim to lift it onto its rest and pause
+
+Pausing from the controls lifts the arm in place, like a cue lever. Sources with unknown duration keep the arm at a fixed playing position.
+
 ## Window Modes
 
 | Mode | What it does |
@@ -49,6 +58,16 @@ Mini starts as a `280x280` always-on-top player. You can shrink it down to a com
 
 Closing app windows can keep VinylDeck in the tray when Quit To Tray is enabled. Use tray Quit or `Ctrl+Q` for explicit exit.
 
+## The Crate
+
+Every album you play is pressed into your collection as its own record, with the same one-of-a-kind pressing you see on the deck (marble, splatter, clear, smoke, galaxy...). The stamp in the bottom-left corner shows the record's pressing number, its name, and how many times you have played it. A brand-new album flashes **New pressing**.
+
+- A play counts once you have heard half the track or 2 minutes, whichever comes first. Paused time does not count.
+- Records wear with use: favorites slowly gather dust, hairline scuffs, and a pale ring on the label.
+- Rarer pressings are graded Uncommon, Rare, or Legendary.
+
+Open the crate with `C`, the crate button under Settings, the right-click menu, or by clicking the stamp. Sort by recent, most played, rarest, or pressing order, and pick a record to read its pressing card. Your collection is stored locally next to your settings (`collection.json`).
+
 ## Keyboard Shortcuts
 
 Shortcuts work while a VinylDeck window is focused.
@@ -63,7 +82,8 @@ Shortcuts work while a VinylDeck window is focused.
 | Cycle shell | `T` |
 | Settings | `S` |
 | Toggle Art Ambient | `A` |
-| Close settings / leave fullscreen | `Escape` |
+| The Crate | `C` |
+| Close crate or settings / leave fullscreen | `Escape` |
 | Quit | `Ctrl+Q` |
 
 Disable shortcuts in Settings -> Other. Escape remains available for closing Settings and leaving fullscreen.

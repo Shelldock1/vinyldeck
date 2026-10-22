@@ -22,6 +22,7 @@ import { VinylShaderCanvas } from "./VinylShaderCanvas";
 import type { VinylShaderHandle } from "./VinylShaderCanvas";
 import "./VinylRecord.css";
 import "./pressings.css";
+import "./wear.css";
 
 // DORMANT EXPERIMENT: WebGL vinyl renderer.
 // Keep hardcoded OFF for now. User-visible gain was not clear, lag was visible.
@@ -36,7 +37,13 @@ interface VinylRecordProps {
   size?: number; // px, default 420
   trackChangeDirection?: TrackChangeDirection;
   trackChangeNonce?: number;
+  /** The Crate: 0 = fresh, 1 = well loved. */
+  wear?: number;
+  /** Degrees; seeds where this copy's scuffs fall. */
+  wearAngle?: number;
 }
+
+const MIN_VISIBLE_WEAR = 0.02;
 
 export function VinylRecord({
   isPlaying,
@@ -46,6 +53,8 @@ export function VinylRecord({
   size = 420,
   trackChangeDirection = "unknown",
   trackChangeNonce = 0,
+  wear = 0,
+  wearAngle = 0,
 }: VinylRecordProps) {
   const sheenRef = useRef<HTMLDivElement>(null);
   const shaderRef = useRef<VinylShaderHandle>(null);
@@ -121,7 +130,13 @@ export function VinylRecord({
   return (
     <div
       className={`vinyl-wrapper${isPlaying && vinylWobble ? " vinyl-wrapper--playing" : ""}${ENABLE_WEBGL_VINYL && shaderReady ? " vinyl-wrapper--shader-ready" : " vinyl-wrapper--css-renderer"}`}
-      style={{ "--vinyl-size": `${size}px` } as CSSProperties}
+      style={
+        {
+          "--vinyl-size": `${size}px`,
+          "--vinyl-wear": wear.toFixed(3),
+          "--vinyl-wear-angle": `${wearAngle}deg`,
+        } as CSSProperties
+      }
       data-renderer={ENABLE_WEBGL_VINYL && shaderReady ? "webgl" : "css"}
     >
       {/* SVG turbulence is static; CSS chooses when to use it for organic marble/wax texture. */}
@@ -203,6 +218,7 @@ export function VinylRecord({
         <div className="vinyl-pressing-texture" />
         <div className="vinyl-pressing-depth" />
         <div className="vinyl-grooves" />
+        {wear > MIN_VISIBLE_WEAR && <div className="vinyl-wear" />}
         <div className="vinyl-sheen" ref={sheenRef} />
         <div className="vinyl-reflection" />
         <div className="vinyl-label-ring" />
@@ -218,6 +234,7 @@ export function VinylRecord({
             </div>
           )}
         </div>
+        {wear > MIN_VISIBLE_WEAR && <div className="vinyl-wear-label" />}
       </div>
     </div>
   );

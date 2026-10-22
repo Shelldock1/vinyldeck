@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- The Crate: every album played is pressed into a persistent collection (`collection.json`, backend-owned) with a pressing number, first-pressed date, play count, rarity tier, and label thumbnail. Plays are counted by the backend poller after half the track or 2 minutes of real listening, whichever comes first. Records visibly wear with plays. New bottom-left pressing stamp, crate overlay (`C`, top-right button, context menu), and `cmd_collection_snapshot` / `cmd_collection_press` / `collection-changed` API.
+- Needle Drop: the tonearm tracks playback progress across the grooves. Drag the headshell onto the record to seek (and resume if paused) with a live time preview on the progress ring, or off the record to pause.
+
+### Changed
+
+- Crate play counting: a play now counts after half the track or 120 s of listening, whichever comes first (was half the track, capped at 4 minutes).
+- Window controls: the custom title bar now has close, minimize, and maximize/restore, moved to the top-left so they clear the tonearm pivot and the floating triggers. Fullscreen keeps a hover-revealed bar (top edge) with minimize, exit fullscreen, and close. Mini shows minimize and close top-left on hover.
+- Pausing lifts the tonearm in place instead of swinging it to a fixed angle; track skips re-cue the arm to the start groove.
+
 ## 0.1.1 - 2026-07-03
 
 ### Changed

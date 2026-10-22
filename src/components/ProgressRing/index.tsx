@@ -16,6 +16,8 @@ interface ProgressRingProps {
   isPlaying: boolean;
   size: number;
   onSeek?: (positionSeconds: number) => void;
+  /** External scrub preview (tonearm Needle Drop); null = none. */
+  previewPosition?: number | null;
 }
 
 const STROKE_WIDTH = 2.5;
@@ -31,6 +33,7 @@ export function ProgressRing({
   position,
   size,
   onSeek,
+  previewPosition = null,
 }: ProgressRingProps) {
   // ── ALL hooks first — no early returns before this block ──────
   const ambientMode = useVinylDeckStore(selectAmbientMode);
@@ -98,7 +101,10 @@ export function ProgressRing({
   const circumference = 2 * Math.PI * radius;
   const decorRadius = center - 2;
 
-  const displayPosition = isScrubbing ? scrubPosition : position;
+  const isPreviewing = !isScrubbing && previewPosition !== null;
+  const showScrub = isScrubbing || isPreviewing;
+  const scrubLabelPosition = isScrubbing ? scrubPosition : (previewPosition ?? 0);
+  const displayPosition = showScrub ? scrubLabelPosition : position;
   const progress = Math.min(Math.max(displayPosition / duration, 0), 1);
   const dashOffset = circumference * (1 - progress);
 
@@ -110,8 +116,9 @@ export function ProgressRing({
   const handleX = center + radius * Math.cos(handleRad);
   const handleY = center + radius * Math.sin(handleRad);
 
-  // Tooltip position — follows scrub angle
-  const tooltipRad = (scrubAngle - 90) * (Math.PI / 180);
+  // Tooltip position — follows scrub angle (or the needle preview)
+  const tooltipAngle = isScrubbing ? scrubAngle : progress * 360;
+  const tooltipRad = (tooltipAngle - 90) * (Math.PI / 180);
   const tooltipR = radius + 20;
   const tooltipX = center + tooltipR * Math.cos(tooltipRad);
   const tooltipY = center + tooltipR * Math.sin(tooltipRad);
@@ -175,13 +182,13 @@ export function ProgressRing({
         strokeLinecap="round"
         transform={`rotate(-90, ${center}, ${center})`}
         style={{
-          filter: `drop-shadow(0 0 ${isScrubbing ? "8px" : "4px"} var(--ring-glow))`,
+          filter: `drop-shadow(0 0 ${showScrub ? "8px" : "4px"} var(--ring-glow))`,
           animation: artAmbient
             ? "glow-pulse 3.6s ease-in-out infinite alternate"
             : "none",
         }}
         animate={{ strokeDashoffset: dashOffset }}
-        transition={{ duration: isScrubbing ? 0 : 0.3, ease: "linear" }}
+        transition={{ duration: showScrub ? 0 : 0.3, ease: "linear" }}
       />
 
       {/* Scrub handle dot */}
@@ -189,7 +196,7 @@ export function ProgressRing({
         <circle
           cx={handleX}
           cy={handleY}
-          r={isScrubbing ? 6 : 4}
+          r={showScrub ? 6 : 4}
           fill="var(--ring-fill)"
           style={{
             filter: "drop-shadow(0 0 4px var(--ring-glow))",
@@ -199,7 +206,7 @@ export function ProgressRing({
       )}
 
       {/* Scrub timestamp tooltip */}
-      {isScrubbing && (
+      {showScrub && (
         <g>
           <rect
             x={tooltipX - 22}
@@ -218,7 +225,7 @@ export function ProgressRing({
             fontFamily="var(--font-mono, 'JetBrains Mono'), monospace"
             letterSpacing="0.05em"
           >
-            {formatTime(scrubPosition)}
+            {formatTime(scrubLabelPosition)}
           </text>
         </g>
       )}

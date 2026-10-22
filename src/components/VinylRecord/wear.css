@@ -1,0 +1,61 @@
+/* ============================================================
+   The Crate — record wear
+   Well-loved records collect dust, hairline scuffs, and a pale
+   ring-wear circle on the label. Intensity: --vinyl-wear (0..1),
+   driven by the collection play count. Orientation is seeded per
+   record (--vinyl-wear-angle) so no two copies wear alike.
+   Static gradients only: no blur, no blend — safe for soft-render.
+   ============================================================ */
+
+.vinyl-wear,
+.vinyl-wear-label {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: rotate(var(--vinyl-wear-angle, 0deg));
+}
+
+/* Between grooves (4) and sheen (6): scuffs sit in the vinyl surface. */
+.vinyl-wear {
+  z-index: 5;
+  opacity: calc(var(--vinyl-wear, 0) * 0.95);
+  background:
+    /* dust specks */
+    radial-gradient(circle at 23% 31%, rgba(255, 255, 255, 0.55) 0 0.45px, transparent 1.1px),
+    radial-gradient(circle at 71% 18%, rgba(255, 255, 255, 0.5) 0 0.5px, transparent 1.2px),
+    radial-gradient(circle at 84% 62%, rgba(255, 255, 255, 0.45) 0 0.4px, transparent 1px),
+    radial-gradient(circle at 34% 79%, rgba(255, 255, 255, 0.5) 0 0.55px, transparent 1.3px),
+    radial-gradient(circle at 12% 55%, rgba(255, 255, 255, 0.4) 0 0.4px, transparent 1px),
+    radial-gradient(circle at 58% 88%, rgba(255, 255, 255, 0.42) 0 0.45px, transparent 1.1px),
+    radial-gradient(circle at 90% 40%, rgba(255, 255, 255, 0.38) 0 0.4px, transparent 1px),
+    radial-gradient(circle at 44% 12%, rgba(255, 255, 255, 0.44) 0 0.5px, transparent 1.2px),
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.36) 0 0.35px, transparent 0.9px),
+    radial-gradient(circle at 66% 74%, rgba(255, 255, 255, 0.4) 0 0.45px, transparent 1px),
+    /* hairline scuffs, each a thin chord across the grooves */
+    linear-gradient(28deg, transparent 0 61.6%, rgba(255, 255, 255, 0.16) 61.75%, transparent 61.95%),
+    linear-gradient(-47deg, transparent 0 27.3%, rgba(255, 255, 255, 0.12) 27.42%, transparent 27.6%),
+    linear-gradient(112deg, transparent 0 78.1%, rgba(255, 255, 255, 0.1) 78.22%, transparent 78.4%),
+    linear-gradient(161deg, transparent 0 39.4%, rgba(255, 255, 255, 0.09) 39.5%, transparent 39.66%),
+    /* surface haze: worn vinyl loses its deep black */
+    radial-gradient(circle at center, transparent 0 39%, rgba(205, 200, 190, 0.07) 60%, rgba(205, 200, 190, 0.11) 96%, transparent 100%);
+  /* keep scuffs on the grooves, off the label */
+  -webkit-mask: radial-gradient(circle at center, transparent 0 39.5%, #000 41%, #000 97%, transparent 98.5%);
+  mask: radial-gradient(circle at center, transparent 0 39.5%, #000 41%, #000 97%, transparent 98.5%);
+}
+
+/* Above the label (9): the classic sleeve-rub circle on the paper. */
+.vinyl-wear-label {
+  z-index: 11;
+  opacity: calc(max(var(--vinyl-wear, 0) - 0.25, 0) * 1.1);
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 15.2%,
+      rgba(255, 250, 240, 0.08) 15.9%,
+      rgba(255, 250, 240, 0.2) 16.6%,
+      rgba(255, 250, 240, 0.07) 17.4%,
+      transparent 18.1%
+    ),
+    radial-gradient(circle at 50% 50%, rgba(255, 245, 230, 0.06) 0 18.8%, transparent 19%);
+}

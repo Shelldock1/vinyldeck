@@ -1,0 +1,167 @@
+.titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  /* Window controls sit top-left (macOS-style): the top-right corner belongs
+     to the floating Mini/Settings/Crate triggers and the tonearm pivot. */
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 0 14px;
+  color: var(--ui-text-primary, #f1efea);
+  user-select: none;
+}
+
+/* Fullscreen: tucked away until the pointer nears the top edge. The bar
+   itself stays click-through so the deck underneath keeps its hover. */
+.titlebar--fullscreen {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.titlebar--fullscreen.titlebar--revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.titlebar--fullscreen.titlebar--revealed .titlebar__controls {
+  pointer-events: auto;
+}
+
+.titlebar__brand {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  opacity: 0.42;
+}
+
+.titlebar__controls {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.titlebar__button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+  background: var(--surface-bg, rgba(12, 12, 12, 0.76));
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.86;
+  transition:
+    opacity 180ms ease,
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.titlebar__button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.titlebar__button:hover {
+  opacity: 1;
+  color: var(--ui-text-primary, #fff);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.09));
+  border-color: var(--ui-border, rgba(255, 255, 255, 0.16));
+}
+
+.titlebar__button--close:hover {
+  background: rgba(214, 60, 60, 0.85);
+  border-color: rgba(255, 120, 120, 0.45);
+  color: #fff;
+}
+
+.titlebar__button:focus-visible {
+  outline: 2px solid rgba(127, 127, 127, 0.6);
+  outline-offset: 2px;
+}
+
+/* Frameless windows lose the desktop's resize borders. */
+.window-resize-handle {
+  position: fixed;
+  z-index: 95;
+}
+
+.window-resize-handle.edge-n,
+.window-resize-handle.edge-s {
+  left: 12px;
+  right: 12px;
+  height: 5px;
+  cursor: ns-resize;
+}
+
+.window-resize-handle.edge-n {
+  top: 0;
+}
+
+.window-resize-handle.edge-s {
+  bottom: 0;
+}
+
+.window-resize-handle.edge-e,
+.window-resize-handle.edge-w {
+  top: 12px;
+  bottom: 12px;
+  width: 5px;
+  cursor: ew-resize;
+}
+
+.window-resize-handle.edge-e {
+  right: 0;
+}
+
+.window-resize-handle.edge-w {
+  left: 0;
+}
+
+.window-resize-handle.corner-ne,
+.window-resize-handle.corner-nw,
+.window-resize-handle.corner-se,
+.window-resize-handle.corner-sw {
+  width: 12px;
+  height: 12px;
+}
+
+.window-resize-handle.corner-ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.window-resize-handle.corner-sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.window-resize-handle.corner-nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.window-resize-handle.corner-se {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}

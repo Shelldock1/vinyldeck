@@ -3,6 +3,9 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  /* The native Mini window is transparent-capable; the page background is
+     dropped in global.css so this radius is what the desktop sees. */
+  border-radius: 20px;
   background:
     radial-gradient(
       circle at 50% 48%,
@@ -12,8 +15,22 @@
     var(--bg, #000000);
 }
 
+/* Hairline edge so the rounded card keeps its silhouette on light desktops. */
+.mini-view::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  border: 1px solid color-mix(in srgb, var(--surface-border) 90%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* `position: fixed` would escape the card's rounded clip. */
 .mini-view .ambient-layer,
 .mini-view .vapor-grid {
+  position: absolute;
+  inset: 0;
   z-index: 0;
 }
 
@@ -148,6 +165,79 @@
   z-index: 1;
   width: var(--mini-return-icon-size, 16px);
   height: var(--mini-return-icon-size, 16px);
+}
+
+/* ── Window controls (minimize / close), top-left ──────────────── */
+.mini-view__window {
+  position: absolute;
+  top: var(--mini-return-offset, 10px);
+  left: var(--mini-return-offset, 10px);
+  z-index: 7;
+  display: flex;
+  gap: calc(6px * var(--mini-scale, 1));
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-8px, -8px, 0) scale(0.88);
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mini-view__window--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.mini-view__window-button {
+  width: var(--mini-return-size, 30px);
+  height: var(--mini-return-size, 30px);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--ui-text-primary);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  border-radius: 50%;
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.mini-view__window-button > svg {
+  width: var(--mini-return-icon-size, 16px);
+  height: var(--mini-return-icon-size, 16px);
+}
+
+.mini-view__window-button:hover {
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--ui-bg));
+  border-color: color-mix(in srgb, var(--ui-accent) 32%, var(--ui-border));
+}
+
+.mini-view__window-button--close:hover {
+  color: #fff;
+  background: rgba(214, 60, 60, 0.85);
+  border-color: rgba(255, 120, 120, 0.45);
+}
+
+.mini-view__window-button:active {
+  transform: scale(0.94);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Rounded Mini card — the window is transparent-capable, so the
+   page background must not paint into the clipped corners.
+   ══════════════════════════════════════════════════════════════ */
+
+html.mini-window-active,
+html.mini-window-active body,
+html.mini-window-active #root {
+  background: transparent !important;
 }
 
 /* ══════════════════════════════════════════════════════════════

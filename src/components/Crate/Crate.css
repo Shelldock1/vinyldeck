@@ -1,0 +1,778 @@
+/* ============================================================
+   The Crate — collection overlay, shelf discs, pressing stamp
+   Uses the shell tokens (--surface-*, --ui-*, --font-*), so Noir
+   and Glass both style it without per-theme forks.
+   ============================================================ */
+
+/* ── Overlay ─────────────────────────────────────────────────── */
+.crate-overlay {
+  position: fixed;
+  inset: 0;
+  /* above the floating triggers (90), below the title bar buttons (95) */
+  z-index: 92;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* clear the Linux title bar */
+  padding: 52px 28px 28px;
+  pointer-events: auto;
+}
+
+.crate-overlay__scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  cursor: default;
+  background: rgba(0, 0, 0, 0.32);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: crateFade 260ms ease both;
+}
+
+.crate-panel {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: min(860px, calc(100vw - 40px));
+  height: min(620px, calc(100vh - 80px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ui-text-primary);
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      color-mix(in srgb, var(--ui-accent) 10%, transparent) 0%,
+      transparent 40%
+    ),
+    var(--surface-bg, var(--ui-bg)),
+    /* the shelf needs a calmer backdrop than a floating control */
+    color-mix(in srgb, var(--bg, #050505) 84%, transparent);
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+  border-radius: var(--radius-lg, 20px);
+  -webkit-backdrop-filter: var(--surface-backdrop, blur(24px) saturate(1.5));
+  backdrop-filter: var(--surface-backdrop, blur(24px) saturate(1.5));
+  box-shadow: var(--surface-shadow, 0 40px 80px -20px rgba(0, 0, 0, 0.75));
+  animation: crateRise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.crate-panel__header {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 22px 24px 16px;
+  border-bottom: 0.5px solid var(--surface-border, var(--ui-border));
+}
+
+.crate-panel__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.crate-panel__eyebrow,
+.crate-panel__stats dt,
+.crate-sort__tab,
+.crate-sort__hint,
+.crate-card__rarity,
+.crate-detail__number,
+.crate-detail__rarity,
+.crate-detail__facts dt,
+.crate-stamp {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  letter-spacing: var(--mono-tracking, 0.12em);
+  text-transform: uppercase;
+}
+
+.crate-panel__eyebrow {
+  font-size: 10px;
+  color: var(--ui-accent);
+}
+
+.crate-panel__title {
+  margin: 0;
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.crate-panel__stats {
+  display: flex;
+  gap: 22px;
+  margin: 0;
+}
+
+.crate-panel__stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.crate-panel__stats dt {
+  font-size: 9px;
+  color: var(--ui-text-secondary);
+}
+
+.crate-panel__stats dd {
+  margin: 0;
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.crate-panel__close {
+  align-self: flex-start;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.crate-panel__close:hover,
+.crate-panel__close:focus-visible {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.06));
+}
+
+/* ── Body: shelf + record card ──────────────────────────────── */
+.crate-panel__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 248px;
+}
+
+.crate-panel__browse {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.crate-sort {
+  display: flex;
+  gap: 4px;
+  padding: 12px 20px 4px;
+}
+
+.crate-sort__tab {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 9.5px;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.crate-sort__tab:hover {
+  color: var(--ui-text-primary);
+}
+
+.crate-sort__tab--active {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.08));
+}
+
+/* First-open hint: ghosted metadata, never competes with the shelf. */
+.crate-sort__hint {
+  align-self: center;
+  margin-left: auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  font-size: 9px;
+  color: var(--ui-text-secondary);
+  pointer-events: none;
+}
+
+.crate-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  align-content: start;
+  gap: 18px 14px;
+  margin: 0;
+  padding: 14px 20px 24px;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+/* ── Sleeve card ────────────────────────────────────────────── */
+.crate-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.crate-card__stage {
+  position: relative;
+  width: 82%;
+  aspect-ratio: 1;
+  margin-bottom: 8px;
+}
+
+.crate-card__sleeve {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 4px;
+  background:
+    linear-gradient(135deg, var(--crate-sleeve-a, #262626), var(--crate-sleeve-b, #0d0d0d));
+  background-size: cover;
+  background-position: center;
+  box-shadow:
+    0 10px 22px -8px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The record peeks out of its sleeve; hover pulls it out. */
+.crate-card__disc {
+  position: absolute;
+  inset: 3%;
+  z-index: 1;
+  transform: translateX(18%) rotate(0deg);
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.crate-card:hover .crate-card__disc,
+.crate-card:focus-visible .crate-card__disc,
+.crate-card--selected .crate-card__disc {
+  transform: translateX(34%) rotate(70deg);
+}
+
+.crate-card:hover .crate-card__sleeve,
+.crate-card:focus-visible .crate-card__sleeve {
+  transform: translateY(-3px);
+}
+
+.crate-card:focus-visible {
+  outline: none;
+}
+
+.crate-card:focus-visible .crate-card__sleeve,
+.crate-card--selected .crate-card__sleeve {
+  box-shadow:
+    0 10px 22px -8px rgba(0, 0, 0, 0.7),
+    0 0 0 1.5px var(--ui-accent);
+}
+
+.crate-card__rarity {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  z-index: 3;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 8px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.crate-card[data-rarity="legendary"] .crate-card__rarity {
+  color: #1a1204;
+  background: linear-gradient(100deg, #f7d77c, #fff4c9 45%, #e0a93b);
+}
+
+.crate-card__album,
+.crate-card__meta {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.crate-card__album {
+  font-family: var(--font-body, "Inter"), system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.crate-card__meta {
+  font-size: 11px;
+  color: var(--ui-text-secondary);
+}
+
+/* ── Record card (detail) ───────────────────────────────────── */
+.crate-detail {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 20px 24px;
+  border-left: 0.5px solid var(--surface-border, var(--ui-border));
+  text-align: center;
+  scrollbar-width: none;
+}
+
+.crate-detail__disc-wrap {
+  width: 168px;
+  height: 168px;
+  margin-bottom: 12px;
+  animation: crateDrop 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.crate-detail__disc {
+  width: 100%;
+  height: 100%;
+  animation: crateSpin 9s linear infinite;
+}
+
+.crate-detail__number {
+  font-size: 10px;
+  color: var(--ui-text-secondary);
+}
+
+.crate-detail__album {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.crate-detail__artist {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ui-text-secondary);
+}
+
+.crate-detail__rarity {
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  color: var(--ui-text-secondary);
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+}
+
+.crate-detail[data-rarity="rare"] .crate-detail__rarity {
+  color: var(--ui-accent);
+  border-color: color-mix(in srgb, var(--ui-accent) 50%, transparent);
+}
+
+.crate-detail[data-rarity="legendary"] .crate-detail__rarity {
+  color: #1a1204;
+  border-color: transparent;
+  background: linear-gradient(100deg, #f7d77c, #fff4c9 45%, #e0a93b);
+}
+
+.crate-detail__facts {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.crate-detail__facts div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.crate-detail__facts dt {
+  font-size: 8.5px;
+  color: var(--ui-text-secondary);
+  white-space: nowrap;
+}
+
+.crate-detail__facts dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.crate-detail__wear {
+  width: 44px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+      90deg,
+      var(--ui-accent) var(--wear),
+      color-mix(in srgb, var(--ui-text-secondary) 25%, transparent) var(--wear)
+    );
+}
+
+/* ── Empty state ───────────────────────────────────────────── */
+.crate-panel__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.crate-panel__empty-art {
+  margin-bottom: 10px;
+  color: var(--ui-text-secondary);
+}
+
+.crate-panel__empty-title {
+  margin: 0;
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.crate-panel__empty-copy {
+  max-width: 300px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ui-text-secondary);
+}
+
+/* ── Shelf disc (drawn from recipe + 3 colors) ─────────────── */
+.crate-disc {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #0b0b0b;
+  box-shadow:
+    0 8px 20px -6px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.crate-disc > div {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.crate-disc__wax {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--crate-c1) 70%, #000) 0 38%,
+    var(--crate-c1) 70%,
+    color-mix(in srgb, var(--crate-c1) 55%, #000) 100%
+  );
+}
+
+.crate-disc[data-recipe="marble-blend"] .crate-disc__wax {
+  background:
+    conic-gradient(
+      from var(--crate-angle),
+      var(--crate-c1),
+      color-mix(in srgb, var(--crate-c2) 80%, var(--crate-c1)) 14%,
+      var(--crate-c1) 27%,
+      color-mix(in srgb, var(--crate-c3) 70%, var(--crate-c1)) 41%,
+      var(--crate-c1) 55%,
+      var(--crate-c2) 70%,
+      color-mix(in srgb, var(--crate-c1) 70%, var(--crate-c3)) 86%,
+      var(--crate-c1)
+    );
+}
+
+.crate-disc[data-recipe="splatter"] .crate-disc__wax {
+  background:
+    radial-gradient(circle at 28% 34%, var(--crate-c2) 0 3.5%, transparent 4.5%),
+    radial-gradient(circle at 66% 24%, var(--crate-c3) 0 2.5%, transparent 3.4%),
+    radial-gradient(circle at 78% 58%, var(--crate-c2) 0 4%, transparent 5%),
+    radial-gradient(circle at 38% 76%, var(--crate-c3) 0 3%, transparent 4%),
+    radial-gradient(circle at 18% 60%, var(--crate-c2) 0 2%, transparent 2.8%),
+    radial-gradient(circle at 58% 86%, var(--crate-c2) 0 2.6%, transparent 3.4%),
+    radial-gradient(circle at 86% 36%, var(--crate-c3) 0 1.8%, transparent 2.6%),
+    radial-gradient(circle at 46% 14%, var(--crate-c2) 0 2.2%, transparent 3%),
+    var(--crate-c1);
+}
+
+.crate-disc[data-recipe="merge"] .crate-disc__wax {
+  background: linear-gradient(
+    var(--crate-angle),
+    var(--crate-c1) 0 47%,
+    color-mix(in srgb, var(--crate-c1) 50%, var(--crate-c2)) 50%,
+    var(--crate-c2) 53% 100%
+  );
+}
+
+.crate-disc[data-recipe="clear-tint"] .crate-disc__wax,
+.crate-disc[data-recipe="color-in-color"] .crate-disc__wax {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--crate-c3) 80%, transparent) 0 30%, transparent 46%),
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--crate-c1) 45%, transparent) 0 60%,
+      color-mix(in srgb, var(--crate-c1) 75%, transparent) 100%
+    ),
+    #1b1b1d;
+}
+
+.crate-disc[data-recipe="clear-tint"] .crate-disc__wax {
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--crate-c1) 40%, transparent) 0 60%,
+      color-mix(in srgb, var(--crate-c1) 70%, transparent) 100%
+    ),
+    #222224;
+}
+
+.crate-disc[data-recipe="smoke-clear"] .crate-disc__wax {
+  background:
+    conic-gradient(from var(--crate-angle), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.14) 20%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.12) 70%, rgba(255, 255, 255, 0.05)),
+    radial-gradient(circle, #2b2c2f 0 50%, #151517 100%);
+}
+
+.crate-disc[data-recipe="galaxy"] .crate-disc__wax {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85) 0 0.6%, transparent 1%),
+    radial-gradient(circle at 72% 40%, rgba(255, 255, 255, 0.7) 0 0.5%, transparent 0.9%),
+    radial-gradient(circle at 56% 76%, rgba(255, 255, 255, 0.75) 0 0.5%, transparent 0.9%),
+    radial-gradient(circle at 20% 64%, rgba(255, 255, 255, 0.6) 0 0.4%, transparent 0.8%),
+    conic-gradient(
+      from var(--crate-angle),
+      #07070b,
+      color-mix(in srgb, var(--crate-c3) 70%, #07070b) 18%,
+      #07070b 34%,
+      color-mix(in srgb, var(--crate-c2) 55%, #07070b) 60%,
+      #07070b 78%,
+      color-mix(in srgb, var(--crate-c1) 60%, #07070b) 92%,
+      #07070b
+    );
+}
+
+.crate-disc[data-recipe="audiophile-black"] .crate-disc__wax,
+.crate-disc[data-recipe="blank"] .crate-disc__wax {
+  background: radial-gradient(circle, #121212 0 40%, #050505 100%);
+}
+
+.crate-disc__grooves {
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0 1px,
+      rgba(0, 0, 0, 0.22) 1.4px,
+      transparent 2.2px
+    ),
+    radial-gradient(circle, transparent 0 39%, rgba(0, 0, 0, 0.35) 39.5%, transparent 41%);
+}
+
+.crate-disc__label {
+  inset: 31% !important;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--crate-c3);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  z-index: 9;
+}
+
+.crate-disc__label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crate-disc__label span {
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 140%;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.crate-disc__gloss {
+  z-index: 12;
+  background: conic-gradient(
+    from 210deg,
+    transparent 0 8%,
+    rgba(255, 255, 255, 0.16) 13%,
+    transparent 20% 58%,
+    rgba(255, 255, 255, 0.1) 63%,
+    transparent 70%
+  );
+}
+
+/* ── Pressing stamp (bottom-left, mirrors the source badge) ── */
+.crate-stamp {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 50;
+  /* stop short of the centered shell picker */
+  max-width: max(140px, calc(50vw - 172px));
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 9px;
+  border-radius: 20px;
+  font-size: 9.5px;
+  color: var(--ui-text-secondary);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    border-color 400ms ease,
+    box-shadow 400ms ease;
+}
+
+.crate-stamp:hover,
+.crate-stamp:focus-visible {
+  color: var(--ui-text-primary);
+}
+
+.crate-stamp__text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.crate-stamp__text strong {
+  font-weight: 700;
+  color: var(--ui-text-primary);
+}
+
+.crate-stamp__dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ui-text-secondary) 70%, transparent);
+}
+
+.crate-stamp[data-rarity="rare"] .crate-stamp__dot {
+  background: var(--ui-accent);
+}
+
+.crate-stamp[data-rarity="legendary"] .crate-stamp__dot {
+  background: #f2c862;
+  box-shadow: 0 0 6px rgba(242, 200, 98, 0.8);
+}
+
+.crate-stamp--new {
+  color: var(--ui-text-primary);
+  border-color: color-mix(in srgb, var(--ui-accent) 60%, var(--surface-border));
+  box-shadow:
+    var(--surface-shadow),
+    0 0 18px -2px color-mix(in srgb, var(--ui-accent) 55%, transparent);
+  animation: crateStampIn 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.crate-stamp--new .crate-stamp__dot {
+  animation: crateDotPulse 1.1s ease-in-out 3;
+}
+
+/* ── Crate trigger: below Settings, clear of the Linux title bar ── */
+.settings-trigger.crate-trigger {
+  top: 78px;
+}
+
+/* ── Motion ────────────────────────────────────────────────── */
+@keyframes crateFade {
+  from { opacity: 0; }
+}
+
+@keyframes crateRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+}
+
+@keyframes crateDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.92);
+  }
+}
+
+@keyframes crateSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes crateStampIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+@keyframes crateDotPulse {
+  50% { transform: scale(1.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crate-panel,
+  .crate-overlay__scrim,
+  .crate-detail__disc-wrap,
+  .crate-stamp--new,
+  .crate-stamp--new .crate-stamp__dot {
+    animation: none;
+  }
+
+  .crate-detail__disc {
+    animation: none;
+  }
+
+  .crate-card__disc,
+  .crate-card__sleeve {
+    transition: none;
+  }
+}
+
+/* Narrow windows: card stacks under the shelf. */
+@media (max-width: 720px) {
+  .crate-panel__body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .crate-detail {
+    display: none;
+  }
+
+  .crate-panel__stats {
+    display: none;
+  }
+}

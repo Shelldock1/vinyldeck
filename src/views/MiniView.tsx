@@ -12,6 +12,7 @@ import { TrackInfo } from "../components/TrackInfo";
 import { VinylRecord } from "../components/VinylRecord";
 import { VaporGrid } from "../components/VaporGrid";
 import { useColorExtraction } from "../hooks/useColorExtraction";
+import { useCurrentRecord } from "../hooks/useCrate";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { setNativeWindowMode } from "../lib/window";
 import {
@@ -27,8 +28,8 @@ import {
 import "./MiniView.css";
 
 const MINI_CONTROLS_HIDE_MS = 1400;
-const MINI_SNAP_THRESHOLD_PX = 28;
-const MINI_SNAP_MARGIN_PX = 8;
+const MINI_SNAP_THRESHOLD_PX = 40;
+const MINI_SNAP_MARGIN_PX = 16;
 const MINI_SNAP_SETTLE_MS = 180;
 const MINI_BASE_SIZE = 280;
 const MINI_BASE_VINYL_SIZE = 172;
@@ -39,6 +40,11 @@ const MINI_COMPACT_TRACK_THRESHOLD = 218;
  * global.css punch the body/root background fully transparent so the native
  * Windows Acrylic effect behind the WebView is visible. */
 const MINI_TRANSPARENT_HTML_CLASS = "mini-transparent-active";
+
+/** Always-on class for this window's own document. The native Mini window is
+ * transparent-capable, so dropping the page background lets the CSS rounded
+ * corners of `.mini-view` show the desktop instead of black paint. */
+const MINI_WINDOW_HTML_CLASS = "mini-window-active";
 
 export function MiniView() {
   const playback = useVinylDeckStore(selectPlayback);
@@ -95,7 +101,11 @@ export function MiniView() {
 
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (target.closest("button, .mini-view__controls, .mini-view__return"))
+    if (
+      target.closest(
+        "button, .mini-view__controls, .mini-view__return, .mini-view__window",
+      )
+    )
       return;
 
     void getCurrentWindow()
@@ -108,6 +118,16 @@ export function MiniView() {
   useEffect(() => {
     return () => {
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    };
+  }, []);
+
+  // Rounded Mini window: the page itself must be transparent so the corners
+  // clipped by `.mini-view`'s border-radius reveal the desktop, not paint.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add(MINI_WINDOW_HTML_CLASS);
+    return () => {
+      root.classList.remove(MINI_WINDOW_HTML_CLASS);
     };
   }, []);
 
@@ -128,6 +148,7 @@ export function MiniView() {
     seed: `${effectivePlayback.album || effectivePlayback.track || "Unknown Album"}|${effectivePlayback.artist || "Unknown Artist"}`,
   });
   useMiniCornerSnap();
+  const currentRecord = useCurrentRecord(effectivePlayback);
 
   function handlePlay() {
     source?.play();
@@ -172,6 +193,8 @@ export function MiniView() {
           size={miniMetrics.vinylSize}
           trackChangeDirection={trackChangeDirection}
           trackChangeNonce={trackChangeNonce}
+          wear={currentRecord.wear}
+          wearAngle={currentRecord.wearAngle}
         />
       </section>
 
@@ -198,6 +221,53 @@ export function MiniView() {
           onPrevious={handlePrevious}
           showTooltips={false}
         />
+      </div>
+
+      {/* Window controls — top-left, mirroring the return button */}
+      <div
+        className={`mini-view__window${controlsVisible ? " mini-view__window--visible" : ""}`}
+      >
+        <button
+          className="mini-view__window-button"
+          type="button"
+          aria-label="Minimize mini player"
+          title="Minimize"
+          onClick={(event) => {
+            event.stopPropagation();
+            void getCurrentWindow()
+              .minimize()
+              .catch((error) => {
+                console.warn("[Window] Mini minimize failed:", error);
+              });
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 12h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button
+          className="mini-view__window-button mini-view__window-button--close"
+          type="button"
+          aria-label="Close mini player"
+          title="Close"
+          onClick={(event) => {
+            event.stopPropagation();
+            void getCurrentWindow()
+              .close()
+              .catch((error) => {
+                console.warn("[Window] Mini close failed:", error);
+              });
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M7.5 7.5l9 9M16.5 7.5l-9 9"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
       </div>
 
       <button
@@ -291,7 +361,7 @@ function useMiniCornerSnap() {
       if (!monitor) return;
 
       const position = await appWindow.outerPosition();
-      const size = await appWindow.outerSize();
+      const size = await appWindow.innerSize();
       const area = monitor.workArea;
       const left = area.position.x + MINI_SNAP_MARGIN_PX;
       const top = area.position.y + MINI_SNAP_MARGIN_PX;

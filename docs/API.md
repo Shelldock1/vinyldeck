@@ -43,19 +43,9 @@ These commands are used by `TauriSource` in desktop mode.
 
 Command responses are not the UI source of truth. The frontend sends intent, then accepts poller events as canonical state.
 
-## Legacy Backend Media Commands
+## Backend Playback Authority
 
-The older backend media authority remains registered:
-
-- `cmd_media_snapshot`
-- `cmd_media_play`
-- `cmd_media_pause`
-- `cmd_media_toggle_play_pause`
-- `cmd_media_next`
-- `cmd_media_previous`
-- `cmd_media_seek`
-
-In-app playback does not use these commands in Tauri mode. Tray playback menu code still references this path and should be unified with SMTC before distribution validation.
+`PlaybackAuthority` (Rust managed state) holds the last real platform snapshot written by the poller. The tray subscribes to it for its tooltip and Play/Pause/Previous/Next state, and dispatches controls through the same platform bridge as `cmd_smtc_*`. The legacy mock-backed `cmd_media_*` commands were removed.
 
 ## Settings Commands And Events
 
@@ -71,6 +61,18 @@ Current persisted settings fields include `theme`, `ambientMode`, `artAmbient`, 
 `miniTransparentMode` is Mini-only. When enabled, the Rust window service applies Tauri's native Acrylic window effect to the live Mini window and the Mini WebView removes its opaque background layers so the desktop blurs through behind the vinyl and controls. Main and fullscreen ignore this setting.
 
 The active shell choices are `noir` and `glass`. Legacy theme values `aurora`, `vapor`, and `paper` are migrated into the current shell/ambient model rather than exposed as live choices.
+
+## Collection (The Crate) Commands And Events
+
+| Command/Event | Args/Payload | Meaning |
+| --- | --- | --- |
+| `cmd_collection_snapshot` | none | All collected records |
+| `cmd_collection_press` | `{ input: PressInput }` | Upsert the album's pressing; returns `{ record, newlyPressed }` |
+| `collection-changed` | one `CollectedRecord` | A record was pressed or played |
+
+`PressInput` is `{ artist, album, recipe, pressingType, pressingName, colors: { primary, secondary, accent }, thumbnail }`. `album` falls back to the track title for singles; the record key is `lowercase(artist) + "|" + lowercase(album)`. Pressing is idempotent: the first press assigns `pressingNumber` and `firstPressedAt`, later presses only fill a missing thumbnail. `thumbnail` must be a `data:image/` URL of at most 48 KB.
+
+`CollectedRecord` adds `key`, `pressingNumber`, `firstPressedAt`, `lastPlayedAt` (epoch ms), and `playCount`. Play counts are owned by the backend media poller (half the track or 120 s, whichever comes first, of playing wall-clock time; tracks under 30 s never count). A play can arrive before the pressing; that record has `recipe: null` until the frontend presses it, and then `newlyPressed` is still `true`.
 
 ## Window And Lifecycle Commands
 

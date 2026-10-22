@@ -1,0 +1,153 @@
+/* ============================================================
+   VinylDeck — Linux software-render paint path
+   ------------------------------------------------------------
+   On Linux the WebView (WebKitGTK) may composite entirely on the
+   CPU: no GPU process is spawned, so every frame pays for the full
+   raster + blend of the optical stack. Measured on this checkout
+   (release build, 900x700 window; loading the same page in a plain
+   WebKitGTK browser gives the same numbers, so this is not a
+   Tauri-specific problem):
+
+       full stack ..................... 110-190 ms/frame (5-9 fps)
+       with this file .................  ~21-30 ms/frame (33-48 fps)
+       #root hidden (floor) ...........     16 ms/frame (60 fps)
+
+   The document is marked `data-soft-render="1"` in main.tsx for
+   Linux WebViews. What goes away is the per-frame compositing cost
+   that a CPU compositor cannot keep up with:
+
+     * `filter: url(#...)` — the vinyl marble/splatter turbulence
+       and the liquid-glass lens fields re-rasterise an SVG filter
+       chain on every repaint;
+     * `backdrop-filter` — each glass layer re-blurs its region, and
+       a blurred backdrop forces the layers behind it into their own
+       surface;
+     * blurred `box-shadow` — re-rastered on every repaint; the
+       disc's multi-layer shadow alone costs ~14 ms per frame;
+     * decoration layers that cover more pixels than the window has:
+       the ambient orbs/swirls/velvet/grain sit at 640px each with
+       -12% insets (~1.9 million px of surfaces in a 663k px window);
+     * endless keyframe animations in the ambient and vinyl layers.
+
+   What stays: the ambient base/readability/vignette, the album-art
+   glow, and the full vinyl material — pressing base, texture, depth,
+   grooves, gloss and the fixed studio reflections. The vinyl keeps
+   its authored `mix-blend-mode` values (the grooves are a
+   luminosity pass, the gloss is `screen`); blending a disc-sized
+   layer is affordable, blending the whole window is not.
+   Windows keeps the full optical stack.
+   ============================================================ */
+
+/* ── 1. Blend modes ──────────────────────────────────────── */
+/* A window-sized blend pass reads the whole backdrop every frame, so
+   everything renders unblended... */
+html[data-soft-render="1"] *,
+html[data-soft-render="1"] *::before,
+html[data-soft-render="1"] *::after {
+  mix-blend-mode: normal !important;
+}
+
+/* ...except the groove pass. Measured cost: ~2 ms of a ~47 ms frame, and
+   without it the rings paint as flat grey bands instead of shading the wax
+   (the single biggest visual difference on Linux). */
+html[data-soft-render="1"] .vinyl-grooves {
+  mix-blend-mode: var(--pressing-groove-blend, luminosity) !important;
+}
+
+/* ── 2. Filters and backdrop reads ───────────────────────── */
+html[data-soft-render="1"] *,
+html[data-soft-render="1"] *::before,
+html[data-soft-render="1"] *::after {
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ── 3. No blurred shadows ─────────────────────────────────
+   They are re-rastered whenever their element repaints, and in
+   software compositing the window repaints as a whole. The disc
+   keeps its zero-blur edge rings further down. */
+html[data-soft-render="1"] * {
+  box-shadow: none !important;
+}
+
+/* ── 4. Ambient decoration ─────────────────────────────────
+   Orbs/swirls are invisible unless Art Ambient is on, velvet/grain
+   cover more than the viewport; all four are blurred, blended and
+   animated forever. The base, readability, vignette and the
+   album-art glow remain, clamped to the viewport. */
+html[data-soft-render="1"] .ambient-layer__velvet,
+html[data-soft-render="1"] .ambient-layer__orb,
+html[data-soft-render="1"] .ambient-layer__swirl,
+html[data-soft-render="1"] .ambient-layer__grain {
+  display: none !important;
+}
+
+html[data-soft-render="1"] .ambient-layer__base::after {
+  inset: 0 !important;
+  transform: none !important;
+}
+
+/* ── 5. No idle-time animation ─────────────────────────────
+   A frame is only produced when something changes, so endless
+   decoration animation would keep a core busy around the clock.
+   The disc itself keeps spinning: its transform comes from the
+   vinyl RAF, not from CSS. */
+html[data-soft-render="1"] .ambient-layer,
+html[data-soft-render="1"] .ambient-layer *,
+html[data-soft-render="1"] .needle-arm__led,
+html[data-soft-render="1"] .vinyl-wrapper--playing,
+html[data-soft-render="1"] .vinyl-wrapper *,
+html[data-soft-render="1"] .liquid-glass * {
+  animation: none !important;
+}
+
+/* ── 6. Vinyl layers that are not worth their paint ────────
+   The sleeve ghost is `blur(7px)` and the bloom `blur(80px)`: with filters
+   off they would be hard-edged shapes. The pressing texture (clouding) and
+   the specular band are the two cheapest-to-lose polish layers: measured
+   ~4 ms per frame together, and the sheen already carries the gloss. */
+html[data-soft-render="1"] .vinyl-translucent-ghost,
+html[data-soft-render="1"] .vinyl-glow,
+html[data-soft-render="1"] .vinyl-pressing-texture,
+html[data-soft-render="1"] .vinyl-reflection {
+  display: none !important;
+}
+
+/* ── 7. Disc silhouette ────────────────────────────────────
+   The authored shadow is mostly a 32/62/110 px bloom (very
+   expensive); the two zero-blur rings are what gives the record its
+   crisp edge, so they stay. */
+html[data-soft-render="1"] .vinyl-disc {
+  box-shadow:
+    0 0 0 1px
+      color-mix(in srgb, var(--pressing-highlight, #ffffff) 14%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent) !important;
+}
+
+/* A blurred drop shadow is what makes the record sit on the surface. One
+   static gradient behind the disc reads the same in software and costs a
+   single layer instead of a per-frame blur pass. */
+html[data-soft-render="1"] .vinyl-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -4% -4% -8% -4%;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 72% 66% at 50% 58%,
+    rgba(0, 0, 0, 0.42) 54%,
+    rgba(0, 0, 0, 0.2) 68%,
+    rgba(0, 0, 0, 0.06) 78%,
+    transparent 86%
+  );
+}
+
+/* ── 8. Flat surfaces instead of frosted glass ─────────────
+   Without a backdrop blur the same tinted surface is painted
+   directly; a flat fill avoids re-blending the panel's own
+   gradient stack on every repaint. */
+html[data-soft-render="1"] .liquid-glass {
+  background: var(--surface-bg, rgba(18, 18, 18, 0.72));
+}

@@ -16,6 +16,9 @@ interface KeyboardShortcutOptions {
   isSettingsOpen?: boolean;
   onCloseSettings?: () => void;
   onOpenSettings?: () => void;
+  isCrateOpen?: boolean;
+  onCloseCrate?: () => void;
+  onToggleCrate?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -23,12 +26,18 @@ export function useKeyboardShortcuts({
   isSettingsOpen = false,
   onCloseSettings,
   onOpenSettings,
+  isCrateOpen = false,
+  onCloseCrate,
+  onToggleCrate,
 }: KeyboardShortcutOptions) {
   const optionsRef = useRef({
     renderMode,
     isSettingsOpen,
     onCloseSettings,
     onOpenSettings,
+    isCrateOpen,
+    onCloseCrate,
+    onToggleCrate,
   });
 
   useEffect(() => {
@@ -37,12 +46,24 @@ export function useKeyboardShortcuts({
       isSettingsOpen,
       onCloseSettings,
       onOpenSettings,
+      isCrateOpen,
+      onCloseCrate,
+      onToggleCrate,
     };
-  }, [renderMode, isSettingsOpen, onCloseSettings, onOpenSettings]);
+  }, [
+    renderMode,
+    isSettingsOpen,
+    onCloseSettings,
+    onOpenSettings,
+    isCrateOpen,
+    onCloseCrate,
+    onToggleCrate,
+  ]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (shouldIgnoreShortcut(event)) return;
+      if (!isShortcutAllowedInMode(optionsRef.current.renderMode, event)) return;
 
       const { playback, settings, source } = useVinylDeckStore.getState();
 
@@ -102,6 +123,11 @@ export function useKeyboardShortcuts({
           event.preventDefault();
           optionsRef.current.onOpenSettings?.();
           break;
+        case "KeyC":
+          if (!optionsRef.current.onToggleCrate) break;
+          event.preventDefault();
+          optionsRef.current.onToggleCrate();
+          break;
         case "Escape":
           handleEscape(event, optionsRef);
           break;
@@ -111,6 +137,16 @@ export function useKeyboardShortcuts({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+}
+
+// Mini is a glanceable surface: only play/pause and quit stay live there.
+export function isShortcutAllowedInMode(
+  renderMode: RenderWindowMode,
+  event: Pick<KeyboardEvent, "code" | "ctrlKey">,
+): boolean {
+  if (renderMode !== "mini") return true;
+  if (event.code === "Space") return true;
+  return event.ctrlKey && event.code === "KeyQ";
 }
 
 function shouldIgnoreShortcut(event: KeyboardEvent): boolean {
@@ -129,7 +165,13 @@ function handleEscape(
   event: KeyboardEvent,
   optionsRef: RefObject<KeyboardShortcutOptions>,
 ) {
-  const { isSettingsOpen, onCloseSettings } = optionsRef.current;
+  const { isSettingsOpen, onCloseSettings, isCrateOpen, onCloseCrate } =
+    optionsRef.current;
+  if (isCrateOpen) {
+    event.preventDefault();
+    onCloseCrate?.();
+    return;
+  }
   if (isSettingsOpen) {
     event.preventDefault();
     onCloseSettings?.();

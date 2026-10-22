@@ -352,3 +352,56 @@
   animation: none;
   opacity: 0.4;
 }
+
+/* ── Needle Drop — grab the headshell to cue anywhere on the record ── */
+.needle-arm {
+  transition: filter 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Lifted arm floats higher above the platter: longer, softer shadow. */
+.needle-arm--lifted {
+  filter: drop-shadow(26px 38px 34px rgba(0, 0, 0, 0.4));
+}
+
+.needle-arm__head--grabbable {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Generous invisible hit area around the small headshell. */
+.needle-arm__head--grabbable::after {
+  content: "";
+  position: absolute;
+  inset: -14px -12px -18px;
+}
+
+.needle-arm--dragging .needle-arm__head--grabbable {
+  cursor: grabbing;
+}
+
+/* Drop-time label: rides beside the headshell during a drag, counter-rotated
+   upright by motion/react. Glass chip with a hairline edge, tracked mono type. */
+.needle-arm__drop-time {
+  position: absolute;
+  bottom: -34px;
+  right: -26px;
+  padding: 3px 7px 3px 9px;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2em;
+  line-height: 1.2;
+  color: var(--ui-text-primary, #f5f3f0);
+  background: var(--ui-bg, rgba(12, 12, 12, 0.76));
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}

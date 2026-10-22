@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  MANIFEST: src-tauri/Cargo.toml
+
+jobs:
+  ubuntu:
+    name: Linux (frontend + Rust)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            build-essential \
+            pkg-config
+
+      - uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
+          cache: npm
+
+      # dtolnay/rust-toolchain publishes one ref per toolchain, not release tags.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2.7.5
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:frontend
+      - run: cargo fmt --manifest-path $MANIFEST -- --check
+      - run: cargo clippy --manifest-path $MANIFEST --all-targets -- -D warnings
+      - run: cargo test --manifest-path $MANIFEST
+
+  windows:
+    name: Windows (Tauri debug build)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2.7.5
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+      - run: cargo check --manifest-path ${{ env.MANIFEST }} --all-targets
+      - run: npm run tauri build -- --debug --no-bundle
+
+  landing:
+    name: Landing site
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: landing
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: landing/package-lock.json
+
+      - run: npm ci
+      - run: npm run build

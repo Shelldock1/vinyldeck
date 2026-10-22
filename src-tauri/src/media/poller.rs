@@ -4,12 +4,14 @@ use std::{
     time::{Duration, Instant},
 };
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use super::{
+    authority::PlaybackAuthority,
     emit_media_snapshot,
     model::{MediaSemanticKey, MediaSnapshot},
 };
+use crate::collection::{self, listen::ListenTracker};
 
 const SMTC_POLL_INTERVAL_MS: u64 = 500;
 const POSITION_RESYNC_INTERVAL_MS: u64 = 2_000;
@@ -50,7 +52,15 @@ pub fn start_smtc_poller(app: AppHandle) {
 }
 
 async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<()> {
-    if let Some(snapshot) = poller.next_event_snapshot().await? {
+    let snapshot = poller.snapshot_for_poll().await?;
+    if let Some(authority) = app.try_state::<PlaybackAuthority>() {
+        authority.update(snapshot.clone());
+    }
+    let now = Instant::now();
+    if let Some(play) = poller.listens.observe(snapshot.as_ref(), now) {
+        collection::record_play(app, &play.artist, &play.album, &play.track).await;
+    }
+    if let Some(snapshot) = poller.handle_polled_snapshot(snapshot, now) {
         emit_media_snapshot(app, &snapshot);
     }
 
@@ -63,14 +73,10 @@ struct SmtcPoller {
     last_emitted_key: Option<MediaSemanticKey>,
     last_emit_at: Option<Instant>,
     had_session: bool,
+    listens: ListenTracker,
 }
 
 impl SmtcPoller {
-    async fn next_event_snapshot(&mut self) -> anyhow::Result<Option<MediaSnapshot>> {
-        let snapshot = self.snapshot_for_poll().await?;
-        Ok(self.handle_polled_snapshot(snapshot, Instant::now()))
-    }
-
     fn handle_polled_snapshot(
         &mut self,
         snapshot: Option<MediaSnapshot>,
@@ -90,7 +96,7 @@ impl SmtcPoller {
     }
 
     async fn snapshot_for_poll(&mut self) -> anyhow::Result<Option<MediaSnapshot>> {
-        let Some(metadata_snapshot) = super::smtc::current_media_snapshot_with_metadata().await?
+        let Some(metadata_snapshot) = super::platform::current_media_snapshot_with_metadata().await?
         else {
             self.cached_media = None;
             return Ok(None);
@@ -108,7 +114,7 @@ impl SmtcPoller {
             )));
         }
 
-        let Some(full_snapshot) = super::smtc::current_media_snapshot_with_artwork().await? else {
+        let Some(full_snapshot) = super::platform::current_media_snapshot_with_artwork().await? else {
             self.cached_media = None;
             return Ok(Some(metadata_snapshot));
         };
@@ -398,6 +404,7 @@ mod tests {
             })),
             last_emitted_key: None,
             last_emit_at: None,
+            listens: Default::default(),
         };
 
         let ended = poller.session_ended_snapshot();

@@ -302,6 +302,11 @@ img {
   transform: translateY(0) scale(0.97);
 }
 
+/* Mini player trigger — same floating corner row, left of Settings. */
+.mini-trigger {
+  right: 78px;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    Source badge
    ═══════════════════════════════════════════════════════════════ */

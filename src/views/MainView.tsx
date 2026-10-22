@@ -42,6 +42,9 @@ import { ThemePicker } from "../components/ThemePicker";
 import { SourceBadge } from "../components/SourceBadge";
 import { Settings } from "../components/Settings";
 import { AppContextMenu } from "../components/AppContextMenu";
+import { Crate } from "../components/Crate";
+import { CrateStamp } from "../components/Crate/CrateStamp";
+import { useCratePressing, useCurrentRecord } from "../hooks/useCrate";
 import { Kbd } from "../components/Kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../components/Tooltip";
 import { useColorExtraction } from "../hooks/useColorExtraction";
@@ -72,6 +75,12 @@ interface PlaybackProgressRingProps {
   size: number;
   canSeek: boolean;
   onSeek: (positionSeconds: number) => void;
+  previewPosition: number | null;
+}
+
+function getLivePosition(): number {
+  const state = useVinylDeckStore.getState();
+  return state.devForceEmpty ? 0 : state.getPosition();
 }
 
 function PlaybackProgressRing({
@@ -80,16 +89,13 @@ function PlaybackProgressRing({
   size,
   canSeek,
   onSeek,
+  previewPosition,
 }: PlaybackProgressRingProps) {
   const [position, setPosition] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setPosition(
-        useVinylDeckStore.getState().devForceEmpty
-          ? 0
-          : useVinylDeckStore.getState().getPosition(),
-      );
+      setPosition(getLivePosition());
     }, 500);
 
     return () => clearInterval(id);
@@ -107,6 +113,7 @@ function PlaybackProgressRing({
       isPlaying={isPlaying}
       size={size}
       onSeek={canSeek ? handleSeek : undefined}
+      previewPosition={previewPosition}
     />
   );
 }
@@ -126,6 +133,8 @@ export function MainView() {
   );
   const devForceEmpty = useVinylDeckStore((s) => s.devForceEmpty);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [needlePreview, setNeedlePreview] = useState<number | null>(null);
+  const [isCrateOpen, setIsCrateOpen] = useState(false);
   const effectivePlayback = devForceEmpty ? EMPTY_PLAYBACK : playback;
   const isPlaying = devForceEmpty ? false : rawIsPlaying;
   const artworkDataUrl = devForceEmpty ? null : rawArtworkDataUrl;
@@ -135,7 +144,14 @@ export function MainView() {
     isSettingsOpen,
     onCloseSettings: () => setIsSettingsOpen(false),
     onOpenSettings: () => setIsSettingsOpen(true),
+    isCrateOpen,
+    onCloseCrate: () => setIsCrateOpen(false),
+    onToggleCrate: () => setIsCrateOpen((open) => !open),
   });
+
+  // The Crate: press this album into the collection; wear follows play count.
+  useCratePressing(effectivePlayback);
+  const currentRecord = useCurrentRecord(effectivePlayback);
 
   // Album art extraction now drives the vinyl pressing on every theme.
   // Ambient tinting is gated by the Art Ambient toggle in both shells.
@@ -261,6 +277,12 @@ export function MainView() {
         onSelect: () => handleWindowModeSelect("mini"),
       },
       {
+        id: "crate",
+        label: "The Crate",
+        kbd: "C",
+        onSelect: () => setIsCrateOpen(true),
+      },
+      {
         id: "settings",
         label: "Settings",
         onSelect: () => setIsSettingsOpen(true),
@@ -347,6 +369,7 @@ export function MainView() {
                   size={RING_SIZE}
                   canSeek={canUseSeekControl(effectivePlayback)}
                   onSeek={handleSeek}
+                  previewPosition={needlePreview}
                 />
               </div>
 
@@ -360,13 +383,24 @@ export function MainView() {
                   size={VINYL_SIZE}
                   trackChangeDirection={trackChangeDirection}
                   trackChangeNonce={trackChangeNonce}
+                  wear={currentRecord.wear}
+                  wearAngle={currentRecord.wearAngle}
                 />
               </div>
 
               {/* Needle arm */}
+              {/* Needle Drop: drag the headshell to seek, off the record to pause */}
               <NeedleArm
                 isPlaying={isPlaying}
                 trackKey={effectivePlayback.track}
+                duration={effectivePlayback.duration}
+                getPosition={getLivePosition}
+                canSeek={canUseSeekControl(effectivePlayback)}
+                canControl={canUseTransportControls(effectivePlayback)}
+                onSeek={handleSeek}
+                onPlay={handlePlay}
+                onPause={handlePause}
+                onScrubPreview={setNeedlePreview}
               />
             </div>
           </TooltipTrigger>
@@ -405,7 +439,111 @@ export function MainView() {
       {/* z:2 — Source badge */}
       <SourceBadge sourceName={effectivePlayback.sourceName} />
 
+      {/* z:50 — Pressing stamp for the record on the deck */}
+      <div style={idleHideStyle}>
+        <CrateStamp
+          record={currentRecord.record}
+          onOpenCrate={() => setIsCrateOpen(true)}
+        />
+      </div>
+
       <AppContextMenu actions={contextMenuActions} />
+
+      {/* z:90 — Crate trigger */}
+      <Tooltip side="bottom">
+        <TooltipTrigger>
+          <button
+            type="button"
+            className="settings-trigger crate-trigger"
+            aria-label="Open the crate"
+            aria-haspopup="dialog"
+            aria-expanded={isCrateOpen}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setIsCrateOpen(true);
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="9.5" cy="9" r="5.25" stroke="currentColor" strokeWidth="1.55" />
+              <circle cx="14.5" cy="9" r="5.25" stroke="currentColor" strokeWidth="1.55" />
+              <path
+                d="M3.75 13.25h16.5v4.5a2 2 0 0 1-2 2H5.75a2 2 0 0 1-2-2v-4.5Z"
+                fill="var(--surface-bg, #111)"
+                stroke="currentColor"
+                strokeWidth="1.55"
+                strokeLinejoin="round"
+              />
+              <path d="M9.5 16.5h5" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+            </svg>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          The Crate <Kbd>C</Kbd>
+        </TooltipContent>
+      </Tooltip>
+
+      {/* z:90 — Mini player trigger */}
+      <Tooltip side="bottom">
+        <TooltipTrigger>
+          <button
+            type="button"
+            className="settings-trigger mini-trigger"
+            aria-label="Open mini player"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              handleWindowModeSelect("mini");
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect
+                x="3.25"
+                y="4.75"
+                width="17.5"
+                height="14.5"
+                rx="3.25"
+                stroke="currentColor"
+                strokeWidth="1.55"
+              />
+              <path
+                d="M10 14 17.5 6.5M17.5 6.5h-4.4M17.5 6.5v4.4"
+                stroke="currentColor"
+                strokeWidth="1.55"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M13.6 17.2h4.2a1.5 1.5 0 0 0 1.5-1.5v-2"
+                stroke="currentColor"
+                strokeWidth="1.55"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Mini Player <Kbd>M</Kbd>
+        </TooltipContent>
+      </Tooltip>
 
       {/* z:90 — Settings trigger */}
       <Tooltip side="bottom">
@@ -496,6 +634,13 @@ export function MainView() {
           Settings <Kbd>S</Kbd>
         </TooltipContent>
       </Tooltip>
+
+      {/* z:80 — The Crate overlay */}
+      <Crate
+        open={isCrateOpen}
+        onClose={() => setIsCrateOpen(false)}
+        focusKey={currentRecord.record?.key ?? null}
+      />
 
       {/* z:40 — Settings overlay */}
       <Settings

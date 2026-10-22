@@ -37,6 +37,8 @@ Built with Tauri, Rust, React, and Windows media integration, VinylDeck is desig
 - **Opt-in startup** - launch with Windows when you want VinylDeck ready as a quiet companion.
 - **Real media controls** - play, pause, previous, next, and seek flow through Windows SMTC when supported by the active source.
 - **Persistent settings** - visual and behavior preferences sync across app windows through the Rust backend.
+- **The Crate** - every album you play is pressed into a personal collection as a one-of-a-kind record that wears with every listen.
+- **Needle Drop** - grab the tonearm and drop it anywhere on the grooves to seek, or lift it off to pause.
 - **Keyboard-first polish** - focused shortcuts, keycap hints, custom tooltips, and a right-click command menu.
 
 ## Preview
@@ -94,6 +96,7 @@ npm run dev
 | Cycle shell | `T` |
 | Settings | `S` |
 | Art Ambient | `A` |
+| The Crate (your collection) | `C` |
 | Quit | `Ctrl+Q` |
 
 Shortcuts can be turned off in Settings. Escape remains available for closing Settings or leaving fullscreen.
