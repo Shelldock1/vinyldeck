@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Collection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#001a41",
+                        "on-secondary-fixed-variant": "#464747",
+                        "primary-container": "#0070eb",
+                        "surface-container": "#eeeef0",
+                        "primary-fixed": "#d8e2ff",
+                        "outline-variant": "#c1c6d7",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#e8e8ea",
+                        "on-tertiary-container": "#4c3e00",
+                        "on-primary-fixed-variant": "#004493",
+                        "tertiary": "#705d00",
+                        "secondary-fixed": "#e3e2e2",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#626363",
+                        "surface-container-low": "#f3f3f5",
+                        "secondary": "#5e5e5f",
+                        "surface-variant": "#e2e2e4",
+                        "inverse-on-surface": "#f0f0f2",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#d9dadc",
+                        "on-primary-container": "#fefcff",
+                        "secondary-container": "#e0dfdf",
+                        "inverse-primary": "#adc6ff",
+                        "surface": "#f9f9fb",
+                        "surface-container-highest": "#e2e2e4",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#005bc1",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#e9c400",
+                        "on-surface-variant": "#414755",
+                        "on-surface": "#1a1c1d",
+                        "tertiary-fixed": "#ffe170",
+                        "inverse-surface": "#2f3132",
+                        "on-tertiary-fixed": "#221b00",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-bright": "#f9f9fb",
+                        "on-primary": "#ffffff",
+                        "outline": "#717786",
+                        "tertiary-container": "#c9a900",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#544600",
+                        "background": "#f9f9fb",
+                        "error-container": "#ffdad6",
+                        "on-background": "#1a1c1d",
+                        "primary": "#0058bc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "24px",
+                        "unit": "8px",
+                        "container-padding-mb": "20px",
+                        "gutter": "24px",
+                        "container-padding-dt": "64px",
+                        "stack-lg": "48px",
+                        "stack-sm": "12px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-xl-mobile": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "1.1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-xl-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.04);
+        }
+        .glass-border-highlight {
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
+            border-left: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        .ambient-blob-1 {
+            position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(0,112,235,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1; filter: blur(60px);
+        }
+        .ambient-blob-2 {
+            position: fixed; bottom: -20%; right: -10%; width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(201,169,0,0.05) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1; filter: blur(80px);
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md relative overflow-x-hidden">
+<!-- Ambient Background Lighting -->
+<div class="ambient-blob-1 pointer-events-none"></div>
+<div class="ambient-blob-2 pointer-events-none"></div>
+<!-- TopAppBar -->
+<header class="hidden md:flex justify-between items-center px-container-padding-dt h-20 w-full z-50 fixed top-0 bg-transparent border-b border-white/5 flat no shadows">
+<div class="font-display text-headline-lg tracking-tighter text-primary font-headline-lg text-headline-lg">
+            VinylDeck
+        </div>
+<nav class="flex gap-8">
+<a class="text-primary border-b border-primary pb-1 font-label-caps text-label-caps hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Collection</a>
+<a class="text-on-secondary-container font-label-caps text-label-caps hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Discovery</a>
+<a class="text-on-secondary-container font-label-caps text-label-caps hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Studios</a>
+</nav>
+<div class="flex gap-4 items-center">
+<span class="material-symbols-outlined text-on-secondary-container hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70 text-[24px]">settings</span>
+<span class="material-symbols-outlined text-on-secondary-container hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70 text-[24px]">account_circle</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 md:pt-32 pb-40 px-container-padding-mb md:px-container-padding-dt max-w-[1140px] mx-auto">
+<!-- Hero Section -->
+<section class="mb-stack-lg">
+<h1 class="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-background mb-unit">Your Collection</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">248 Albums • 1,240 Tracks</p>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Featured Album (Large) -->
+<div class="col-span-1 md:col-span-8 glass-card glass-border-highlight rounded-xl p-stack-md flex flex-col md:flex-row gap-stack-md items-center md:items-start group cursor-pointer hover:bg-white/80 transition-colors duration-300">
+<div class="w-full md:w-1/2 aspect-square rounded-lg overflow-hidden relative shadow-lg">
+<img alt="Featured Album Cover" class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A macro shot of a sleek, modern turntable stylus resting delicately on a spinning black vinyl record. The lighting is incredibly soft and clinical, creating subtle prismatic reflections on the metallic tonearm. The background is a stark, smooth white surface that softly diffuses light, emphasizing a premium, Apple-inspired minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwexPxEcgWvGEMh19KvsPE3Rk8a5SMwYLbA5VIsKcGrx-qq4ZTKZYhsdIRKJmbbgYkncRNVBTv7ZrKPOKAPgRpidi40QkmARfNGzlEj42B3gtxDVBTs4TY7FsT8Il3mvbr5PIJNop_lPaVbssUTkcCQhjfQ6QQl1OlyYEwpyP3o9WYi9gPmm3U86dFuCJZ9UCq2lTvgOSP0eNBLNHd2cYL-oEOESAD8yDCavo4REjbtuo_uMi-UHcpI5ix7vzNeyjP7iS2EUgtbsND"/>
+</div>
+<div class="w-full md:w-1/2 flex flex-col justify-center h-full">
+<div class="inline-block bg-primary-container/10 text-primary px-3 py-1 rounded-full font-label-sm text-label-sm w-fit mb-stack-sm">NOW PLAYING</div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-unit">Midnight Marauders</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-stack-md">A Tribe Called Quest</p>
+<div class="mt-auto flex items-center gap-4">
+<button class="bg-primary text-on-primary w-12 h-12 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(0,88,188,0.3)] hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<div class="flex-1 h-1 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/3 rounded-full"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1:24 / 4:18</span>
+</div>
+</div>
+</div>
+<!-- Stats/Recent (Small) -->
+<div class="col-span-1 md:col-span-4 flex flex-col gap-gutter">
+<div class="glass-card glass-border-highlight rounded-xl p-stack-md flex-1">
+<h3 class="font-headline-md text-headline-md text-on-background mb-stack-sm">Recently Added</h3>
+<ul class="space-y-4">
+<li class="flex items-center gap-4 group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-white/50 transition-colors">
+<div class="w-12 h-12 bg-surface-variant rounded flex-shrink-0 overflow-hidden">
+<img alt="Album Cover" class="w-full h-full object-cover" data-alt="Abstract gradient artwork resembling a vinyl record sleeve in soft pastel blues and pinks, bathed in bright, diffused light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAh9yJoAUT5jbMMvcJbyCEFDErgb41adQXl16sv0ygNelrDEcmBDbFzvNVabtid_CQ0BRsMiN2ByEZXoCQ8U21dwKcOOGqD1e_P4isAIsK26XQMuI3QQ41X-l9OPPJJziAGAXyC8BP6nULMMwTQfKUZu0vzcGPESs54aF77yz64hn0ie6BHui-lvz5MjpQgEbUni2lgx1ji2vdIu1gM7QBXyEyfV5YBEWZduPGl_mrrcWKdz0DnlvwCumfAePkWTAhjzeGBDBr28iI"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background group-hover:text-primary transition-colors">Currents</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Tame Impala</p>
+</div>
+</li>
+<li class="flex items-center gap-4 group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-white/50 transition-colors">
+<div class="w-12 h-12 bg-surface-variant rounded flex-shrink-0 overflow-hidden">
+<img alt="Album Cover" class="w-full h-full object-cover" data-alt="Minimalist monochromatic photo of a vintage amplifier dial, brightly lit with soft shadows on a clean white desk." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhBjOmlWKz-JFHheSLTZLrwKiM2cnx_4nS5XCtvfvHV6y7TRR7uZeM-GNF98k2MpfcIiaFFLo5JmHh92WJo3tg9G7MHlMCopTsCbUE3ooyn2rTG2vnt84C9MAEkhCaXDxxyL6oQEQVtmHBKtEZS3EAdoGqPzimJ2q9bqMCbI-zIIH29Lb68j6h7702yh2jAS16tcjx_Zpl2yB-RHV7XkyO_qg6Ddz0YqvYyZaz-7T9Gy-jm7KzlVhTc_07Q6GWIfNOSmJJLAAcrdGd"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background group-hover:text-primary transition-colors">Kid A</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Radiohead</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="glass-card glass-border-highlight rounded-xl p-stack-md">
+<h3 class="font-headline-md text-headline-md text-on-background mb-unit">Value Estimate</h3>
+<p class="font-headline-lg text-headline-lg text-primary">$4,250</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">+12% this year</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden bg-surface-container/80 backdrop-blur-xl border border-outline-variant/20 shadow-[0_0_20px_rgba(0,0,0,0.4)] fixed bottom-0 left-0 w-full z-50 flex justify-center items-center pb-8 px-margin-mobile">
+<div class="flex justify-between w-full max-w-sm px-6 pt-4">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined text-[24px]">skip_previous</span>
+<span class="font-data-mono text-[10px] mt-1 hidden">Previous</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary scale-110 hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span class="font-data-mono text-[10px] mt-1 hidden">Play</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined text-[24px]">skip_next</span>
+<span class="font-data-mono text-[10px] mt-1 hidden">Next</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined text-[24px]">queue_music</span>
+<span class="font-data-mono text-[10px] mt-1 hidden">Queue</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined text-[24px]">notes</span>
+<span class="font-data-mono text-[10px] mt-1 hidden">Lyrics</span>
+</div>
+</div>
+</nav>
+<!-- Global Desktop Player (Glass Slab) -->
+<div class="hidden md:flex fixed bottom-0 left-1/2 -translate-x-1/2 mb-8 rounded-full bg-surface-container/80 backdrop-blur-[40px] border border-outline-variant/20 shadow-[0_0_30px_rgba(0,0,0,0.1)] z-50 px-8 py-4 items-center gap-8 w-max">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden shadow-sm">
+<img alt="Now Playing" class="object-cover w-full h-full" data-alt="A macro shot of a sleek, modern turntable stylus resting delicately on a spinning black vinyl record. The lighting is incredibly soft and clinical, creating subtle prismatic reflections on the metallic tonearm. The background is a stark, smooth white surface that softly diffuses light, emphasizing a premium, Apple-inspired minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo9w_IXgsezfJcPo3a_sUC6q5Ntct3vBI_Mshjn8j8igQCZhTZU2SJ98CK56swE0ayel8ve2Tzqwkh7Om64oMqugwbF-W8nPhN190Mfr6-iJ992T-7u2zigwSuJbh_VeBbIaj-GrsGSnKi9MnOVYsNjGMMeKji5FeyiiRJVrVhGTkWlf5YCpQwll6LGXNqRBv3K3VGBDisQkyun3tg8VQbVzv9IXR8-E1ZZr2k55hJDmUJ4jE84ZDiJ8pom36NbUzZXKf8_7k8WhrI"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background font-semibold">Award Tour</p>
+<p class="font-label-sm text-[10px] text-on-surface-variant">A Tribe Called Quest</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-[20px]">skip_previous</span>
+<button class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white shadow-md hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-[20px]">skip_next</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-[20px]">queue_music</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors text-[20px]">notes</span>
+</div>
+</div>
+</body></html>

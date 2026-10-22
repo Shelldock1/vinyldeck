@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Vapor Experience</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from Design System -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#381e72",
+                    "secondary-container": "#4d4465",
+                    "inverse-on-surface": "#322f35",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "secondary-fixed": "#e9ddff",
+                    "surface-bright": "#3b383e",
+                    "on-surface-variant": "#cbc4d2",
+                    "tertiary-fixed": "#ffdf93",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "on-surface": "#e6e0e9",
+                    "surface": "#141218",
+                    "outline-variant": "#494551",
+                    "primary": "#cfbcff",
+                    "on-secondary-container": "#bfb2da",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "on-error-container": "#ffdad6",
+                    "outline": "#948e9c",
+                    "primary-container": "#6750a4",
+                    "surface-variant": "#36343a",
+                    "secondary": "#cdc0e9",
+                    "on-secondary-fixed": "#1f1635",
+                    "primary-fixed-dim": "#cfbcff",
+                    "surface-container-highest": "#36343a",
+                    "surface-tint": "#cfbcff",
+                    "on-secondary": "#342b4b",
+                    "tertiary": "#e7c365",
+                    "on-tertiary-container": "#503d00",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "on-primary-container": "#e0d2ff",
+                    "inverse-surface": "#e6e0e9",
+                    "on-background": "#e6e0e9",
+                    "primary-fixed": "#e9ddff",
+                    "tertiary-container": "#c9a74d",
+                    "surface-dim": "#141218",
+                    "error": "#ffb4ab",
+                    "inverse-primary": "#6750a4",
+                    "on-error": "#690005",
+                    "surface-container-low": "#1d1b20",
+                    "on-primary-fixed": "#22005d",
+                    "surface-container-lowest": "#0f0d13",
+                    "error-container": "#93000a",
+                    "on-tertiary": "#3e2e00",
+                    "surface-container": "#211f24",
+                    "on-tertiary-fixed": "#241a00",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "surface-container-high": "#2b292f",
+                    "background": "#141218"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "container-padding": "32px",
+                    "component-gap": "16px",
+                    "unit": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Space Grotesk"],
+                    "body-lg": ["Inter"],
+                    "label-mono": ["JetBrains Mono"],
+                    "body-sm": ["Inter"],
+                    "display-lg": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-mono": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Base Google Fonts imports based on config */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap');
+
+        /* Vaporwave specific atmospheric effects */
+        .vapor-grid {
+            background-image: linear-gradient(to right, rgba(207, 188, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(207, 188, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: bottom;
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 150%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .neon-glow-primary {
+            box-shadow: 0 0 20px rgba(207, 188, 255, 0.4), inset 0 0 10px rgba(207, 188, 255, 0.2);
+        }
+
+        .vinyl-grooves {
+            background: repeating-radial-gradient(
+                #141218,
+                #141218 2px,
+                #211f24 3px,
+                #211f24 4px
+            );
+        }
+
+        @keyframes rotate-platter {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-spin-slow {
+            animation: rotate-platter 8s linear infinite;
+        }
+
+        /* Hardware button styling */
+        .hw-button {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
+        }
+        .hw-button:active {
+            border-top: 1px solid transparent;
+            border-bottom: 0px solid transparent;
+            transform: translateY(2px);
+            background-color: var(--color-surface-container-high);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-lg text-body-lg overflow-x-hidden relative">
+<!-- Vaporwave Atmospheric Background -->
+<div class="fixed inset-0 z-0 bg-gradient-to-b from-background via-surface-container to-surface-container-lowest pointer-events-none"></div>
+<div class="vapor-grid opacity-60"></div>
+<!-- Neon backglow -->
+<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-primary-container/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+<!-- TopAppBar (Hidden on mobile, visible md+) -->
+<nav class="hidden md:flex bg-surface/80 dark:bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-sm dark:shadow-none flex justify-between items-center px-gutter py-4 w-full max-w-none">
+<!-- Brand -->
+<div class="font-display-lg text-display-lg tracking-tighter text-primary dark:text-primary">
+            VinylDeck
+        </div>
+<!-- Navigation Links -->
+<div class="flex items-center gap-component-gap font-headline-md text-headline-md">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95 transition-transform" href="#">Collection</a>
+<!-- Discovery is pseudo-active for desktop context -->
+<a class="text-primary dark:text-primary border-b-2 border-primary pb-1 hover:text-primary transition-colors duration-300 active:scale-95 transition-transform" href="#">Discovery</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-300 active:scale-95 transition-transform" href="#">Studios</a>
+</div>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-unit text-primary dark:text-primary">
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- Main Canvas: The Deck (Vapor Theme) -->
+<main class="flex-1 relative z-10 flex flex-col items-center justify-center w-full px-container-padding pt-24 pb-32 md:pb-24">
+<!-- Centerpiece: The Platter -->
+<div class="relative flex items-center justify-center mb-8">
+<!-- Hardware Base -->
+<div class="w-80 h-80 md:w-[450px] md:h-[450px] rounded-full bg-surface-container-lowest border-4 border-surface-container flex items-center justify-center shadow-2xl relative">
+<!-- Outer Edge Glow -->
+<div class="absolute inset-[-2px] rounded-full neon-glow-primary pointer-events-none"></div>
+<!-- The Vinyl Record -->
+<div class="w-[95%] h-[95%] rounded-full vinyl-grooves animate-spin-slow flex items-center justify-center border border-outline-variant/30 relative overflow-hidden">
+<!-- Specular Highlight (Vapor aesthetic) -->
+<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/10 to-transparent pointer-events-none mix-blend-screen"></div>
+<!-- Center Label -->
+<div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-primary-container flex items-center justify-center border-2 border-primary shadow-inner">
+<div class="w-4 h-4 bg-surface-container-lowest rounded-full border border-outline-variant"></div>
+<!-- Stylized track rings on label -->
+<div class="absolute w-20 h-20 md:w-28 md:h-28 rounded-full border border-primary/30 pointer-events-none"></div>
+<div class="absolute w-16 h-16 md:w-24 md:h-24 rounded-full border border-primary/20 pointer-events-none"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Track Information -->
+<div class="text-center flex flex-col items-center gap-unit mb-10 z-10">
+<h1 class="font-display-lg text-display-lg text-primary tracking-tighter" style="text-shadow: 0 0 10px rgba(207,188,255,0.5);">NIGHT DRIVE</h1>
+<p class="font-body-lg text-body-lg text-secondary tracking-widest uppercase">Synth Syndicate</p>
+</div>
+<!-- Transport Controls (Hardware style) -->
+<div class="flex items-center gap-component-gap bg-surface-container-high p-4 rounded-xl shadow-lg border border-outline-variant/20 z-10 backdrop-blur-md">
+<button class="hw-button bg-surface-variant w-14 h-12 flex items-center justify-center rounded-lg text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button class="hw-button bg-primary-container w-20 h-16 flex items-center justify-center rounded-xl text-on-primary-container neon-glow-primary transition-colors">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="hw-button bg-surface-variant w-14 h-12 flex items-center justify-center rounded-lg text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+</div>
+<!-- Vapor LED Peak Meters (Decorative) -->
+<div class="absolute bottom-32 md:bottom-12 left-1/2 -translate-x-1/2 flex items-end gap-1 h-12 opacity-80 mix-blend-screen z-10">
+<!-- Simulated jumping bars via JS later, static CSS for now -->
+<div class="w-3 bg-tertiary h-[20%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+<div class="w-3 bg-tertiary h-[50%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+<div class="w-3 bg-tertiary h-[80%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+<div class="w-3 bg-tertiary h-[40%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+<div class="w-3 bg-tertiary h-[90%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+<div class="w-3 bg-tertiary h-[60%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+<div class="w-3 bg-tertiary h-[30%] rounded-t-sm shadow-[0_0_8px_var(--color-tertiary)]"></div>
+</div>
+</main>
+<!-- BottomNavBar (Visible on Mobile, Hidden on Web) -->
+<nav class="md:hidden bg-surface-container-high/90 dark:bg-surface-container-high/90 backdrop-blur-2xl fixed bottom-0 w-full rounded-t-full z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-container-padding pb-8 pt-4">
+<!-- Active Tab: Deck -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full p-3 scale-110 shadow-lg shadow-primary/20 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="font-label-mono text-label-mono mt-1">Deck</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-primary transition-all duration-300 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">equalizer</span>
+<span class="font-label-mono text-label-mono mt-1">Mixer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-primary transition-all duration-300 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-mono text-label-mono mt-1">Crate</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-primary transition-all duration-300 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">radio</span>
+<span class="font-label-mono text-label-mono mt-1">Tuner</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction: Randomize peak meters to simulate playback
+        document.addEventListener("DOMContentLoaded", () => {
+            const meters = document.querySelectorAll('.bg-tertiary');
+            setInterval(() => {
+                meters.forEach(meter => {
+                    const randomHeight = Math.floor(Math.random() * 90) + 10; // 10% to 100%
+                    meter.style.height = `${randomHeight}%`;
+                    meter.style.transition = "height 0.1s ease";
+                });
+            }, 150);
+        });
+    </script>
+</body></html>

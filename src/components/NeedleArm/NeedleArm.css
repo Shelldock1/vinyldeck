@@ -1,0 +1,354 @@
+/* ============================================================
+   NeedleArm Component CSS
+   Tonearm: brushed metal arm, hinge, stylus head, LED.
+   Transform-origin near hinge = physical pivot simulation.
+
+   Geometry v4:
+   - No fake elbow ball / collar.
+   - One straight upper wand + one real lower connector + one headshell.
+   - Upper wand and lower connector share the same local X anchor, so the
+     joint stays connected while the parent motion div rotates.
+   - Lifted/pause state keeps a visible local elbow/kink, while still
+     reducing it enough that the lifted arm does not over-fold inward.
+   ============================================================ */
+
+/* ── Container — positioned relative to vinyl-area ─────────── */
+.needle-arm-container {
+  position: absolute;
+  top: -4.5%;
+  right: -0.5%;
+  width: 34%;
+  height: 69%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* ── Arm — pivots from hinge at top-right ───────────────────── */
+.needle-arm {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+
+  /* Playing/down geometry. The parent motion div already rotates to 10deg,
+     so these are local angles only. */
+  --tonearm-bend-rotate: 19deg;
+  --tonearm-head-rotate: 22deg;
+
+  transform-origin: 82% 12%; /* hinge pivot point */
+  will-change: transform;
+  filter: drop-shadow(18px 26px 28px rgba(0, 0, 0, 0.46));
+}
+
+/* When paused/lifted, motion/react rotates the entire arm to 25deg.
+   Do not flatten the lower section into a straight line. A real tonearm
+   keeps a visible headshell/elbow angle even when cued/lifted. These values
+   are lower than the playing geometry, but high enough to preserve the kink. */
+.needle-arm:has(.needle-arm__led--dim) {
+  --tonearm-bend-rotate: 15deg;
+  --tonearm-head-rotate: 16deg;
+}
+
+.needle-arm__pivot-stack {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 72px;
+  height: 92px;
+}
+
+.needle-arm__base-ring,
+.needle-arm__hinge,
+.needle-arm__counterweight {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.needle-arm__base-ring {
+  top: 26px;
+  right: 8px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    color-mix(in srgb, var(--needle-hinge-color, #a0a0a0) 22%, #ffffff),
+    color-mix(in srgb, var(--needle-hinge-color, #a0a0a0) 36%, #111111) 58%,
+    rgba(8, 8, 8, 0.92) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--ui-border) 80%, transparent);
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Hinge circle — machined metal knob ────────────────────── */
+.needle-arm__hinge {
+  top: 36px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 42% 36%, #f7f7f7 0 18%, transparent 19%),
+    radial-gradient(
+      circle at 35% 30%,
+      #e0e0e0,
+      var(--needle-hinge-color, #a0a0a0) 50%,
+      #404040 100%
+    );
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.needle-arm__counterweight {
+  top: 0;
+  right: 14px;
+  width: 44px;
+  height: 28px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--needle-hinge-color) 55%, #222222),
+    #f2f2f2 42%,
+    var(--needle-color) 58%,
+    color-mix(in srgb, var(--needle-hinge-color) 62%, #111111)
+  );
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.28);
+  transform: rotate(-4deg);
+}
+
+/* Inner dot on hinge */
+.needle-arm__hinge::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 40% 35%, #555, #222);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* ── Arm body — upper straight brushed metal wand ───────────── */
+.needle-arm__body {
+  position: absolute;
+  top: 62px;
+  right: 32px;
+  width: 8px;
+
+  /* V6: keep the V4 layout, but remove the visible round cap at the elbow.
+     The upper wand now tucks slightly under the lower connector without
+     drawing any extra overlay/collar line. */
+  height: calc(100% - 160px);
+
+  background: linear-gradient(
+    to right,
+    var(--needle-hinge-color, #a0a0a0),
+    var(--needle-color, #c0c0c0) 40%,
+    #e0e0e0 55%,
+    var(--needle-color, #c0c0c0) 70%,
+    var(--needle-hinge-color, #a0a0a0)
+  );
+  border-radius: 999px 999px 2px 2px;
+  box-shadow:
+    10px 12px 24px var(--needle-shadow, rgba(0, 0, 0, 0.6)),
+    inset 1px 0 0 rgba(255, 255, 255, 0.4),
+    inset -1px 0 0 rgba(0, 0, 0, 0.35);
+  transform: none;
+  transform-origin: top center;
+  z-index: 2;
+}
+
+/* ── Lower connector — single connected elbow into headshell ── */
+.needle-arm__bend {
+  position: absolute;
+  top: calc(100% - 101px);
+  right: 32px;
+  width: 8px;
+  height: 110px;
+  border-radius: 2px 2px 999px 999px;
+  background: linear-gradient(
+    to right,
+    var(--needle-hinge-color, #a0a0a0),
+    var(--needle-color, #c0c0c0) 40%,
+    #e0e0e0 55%,
+    var(--needle-color, #c0c0c0) 70%,
+    var(--needle-hinge-color, #a0a0a0)
+  );
+  box-shadow:
+    7px 10px 18px rgba(0, 0, 0, 0.46),
+    inset 1px 0 0 rgba(255, 255, 255, 0.4),
+    inset -1px 0 0 rgba(0, 0, 0, 0.35);
+  transform: rotate(var(--tonearm-bend-rotate));
+  transform-origin: top center;
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 3;
+}
+
+/* V6: no decorative ball, no bridge collar, no pseudo overlay.
+   The elbow is improved only by matching the rod material and trimming the caps. */
+.needle-arm__bend::before,
+.needle-arm__bend::after {
+  content: none;
+}
+
+/* ── Headshell — cartridge body at tip ─────────────────────── */
+.needle-arm__head {
+  position: absolute;
+  bottom: -8px;
+  right: 35px;
+  width: 38px;
+  height: 58px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), transparent 36%),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--needle-color, #c0c0c0) 34%, #1c1c1c),
+      #111 62%,
+      #050505
+    );
+  border: 1px solid color-mix(in srgb, var(--ui-border) 70%, transparent);
+  border-radius: 3px 3px 7px 7px;
+  box-shadow:
+    14px 18px 30px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.42);
+  transform-origin: top center;
+  transform: rotate(var(--tonearm-head-rotate));
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: visible;
+  z-index: 4;
+}
+
+/* Disabled: this old pseudo-rod created the second, crossing connector. */
+.needle-arm__head::before {
+  content: none;
+}
+
+.needle-arm__headshell-plate {
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  right: 6px;
+  height: 11px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--needle-hinge-color),
+    #ffffff 50%,
+    var(--needle-color)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 5px 10px rgba(0, 0, 0, 0.38);
+}
+
+.needle-arm__cartridge {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 14px;
+  height: 25px;
+  border-radius: 2px;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(255, 255, 255, 0.08),
+      transparent 34%
+    ),
+    linear-gradient(180deg, #181818, #050505);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.62);
+}
+
+.needle-arm__stylus {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  width: 4px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-accent) 82%, #ffffff),
+    #7b0b0b
+  );
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--ui-accent) 46%, transparent),
+    0 4px 8px rgba(0, 0, 0, 0.48);
+  transform: translateX(-50%);
+}
+
+.needle-arm__screws {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 7px;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.58;
+}
+
+.needle-arm__screws span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--needle-color) 72%, #ffffff);
+  box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.62);
+}
+
+/* Phase 3.2: Stylus "needle bump" — triggered when arm drop completes */
+.needle-arm__head--bump {
+  animation: needleBump 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes needleBump {
+  0% {
+    transform: rotate(var(--tonearm-head-rotate)) translateY(0);
+  }
+  40% {
+    transform: rotate(var(--tonearm-head-rotate)) translateY(-3px);
+  }
+  100% {
+    transform: rotate(var(--tonearm-head-rotate)) translateY(0);
+  }
+}
+
+/* ── LED — phase-aware power indicator on headshell ─────────── */
+.needle-arm__led {
+  position: absolute;
+  bottom: 8px;
+  left: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ui-accent, #ffffff);
+  box-shadow:
+    0 0 4px var(--ui-accent, #ffffff),
+    0 0 8px var(--ui-accent, #ffffff);
+  animation: ledPulse 2.5s ease-in-out infinite alternate;
+  transition:
+    background var(--theme-transition, 600ms ease),
+    box-shadow var(--theme-transition, 600ms ease);
+}
+
+/* Arm lifted (not playing) — dim the LED, stop pulse */
+.needle-arm__led--dim {
+  background: color-mix(in srgb, var(--ui-accent, #ffffff) 25%, #111);
+  box-shadow: 0 0 2px
+    color-mix(in srgb, var(--ui-accent, #ffffff) 20%, transparent);
+  animation: none;
+  opacity: 0.4;
+}

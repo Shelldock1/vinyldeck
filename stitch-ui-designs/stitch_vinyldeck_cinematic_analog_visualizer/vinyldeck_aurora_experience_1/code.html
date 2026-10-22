@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Aurora</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400&amp;family=JetBrains+Mono:wght@500&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#00dbe7",
+                        "surface-bright": "#343a40",
+                        "on-primary": "#00363a",
+                        "outline": "#849495",
+                        "on-secondary-fixed": "#002020",
+                        "tertiary-container": "#e3d4ff",
+                        "on-secondary": "#003737",
+                        "background": "#0e1419",
+                        "on-tertiary-fixed-variant": "#5700c9",
+                        "primary": "#e1fdff",
+                        "error-container": "#93000a",
+                        "on-background": "#dee3ea",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#00dbe7",
+                        "tertiary-fixed-dim": "#d1bcff",
+                        "on-surface-variant": "#b9cacb",
+                        "on-surface": "#dee3ea",
+                        "inverse-surface": "#dee3ea",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#23005b",
+                        "on-primary-fixed-variant": "#004f54",
+                        "on-tertiary-container": "#7318ff",
+                        "surface-container-lowest": "#090f14",
+                        "tertiary": "#fcf5ff",
+                        "secondary-fixed": "#b0eeed",
+                        "on-secondary-container": "#86c3c2",
+                        "secondary": "#94d1d1",
+                        "surface-container-low": "#161c22",
+                        "surface-variant": "#2f353b",
+                        "on-primary-container": "#006a71",
+                        "surface-dim": "#0e1419",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#94d1d1",
+                        "inverse-on-surface": "#2b3137",
+                        "secondary-container": "#095252",
+                        "surface-container-highest": "#2f353b",
+                        "on-error": "#690005",
+                        "inverse-primary": "#00696f",
+                        "surface": "#0e1419",
+                        "on-secondary-fixed-variant": "#044f4f",
+                        "on-primary-fixed": "#002022",
+                        "primary-container": "#00f2ff",
+                        "surface-container": "#1a2026",
+                        "on-tertiary": "#3c0090",
+                        "outline-variant": "#3a494b",
+                        "primary-fixed": "#74f5ff",
+                        "surface-container-high": "#252b30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Sora"],
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-lg": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "body-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.08em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    },
+                    "animation": {
+                        'spin-slow': 'spin 15s linear infinite',
+                        'pulse-glow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            overflow-x: hidden;
+        }
+        
+        /* Atmospheric Aurora Background */
+        .aurora-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 0%, rgba(0, 219, 231, 0.05) 0%, transparent 60%);
+        }
+        .aurora-orb-1 {
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 70vw;
+            height: 70vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.08) 0%, transparent 70%);
+            filter: blur(100px);
+            mix-blend-mode: screen;
+            animation: pulse 10s infinite alternate;
+        }
+        .aurora-orb-2 {
+            position: absolute;
+            bottom: -10%;
+            right: -20%;
+            width: 80vw;
+            height: 80vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(9, 82, 82, 0.15) 0%, transparent 70%);
+            filter: blur(120px);
+            mix-blend-mode: screen;
+            animation: pulse 15s infinite alternate-reverse;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(15, 25, 30, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .luminous-top-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 219, 231, 0.4), transparent);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: theme('colors.surface-container-lowest'); }
+        ::-webkit-scrollbar-thumb { background: theme('colors.surface-variant'); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: theme('colors.outline'); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+<!-- Atmospheric Background -->
+<div class="aurora-bg">
+<div class="aurora-orb-1"></div>
+<div class="aurora-orb-2"></div>
+</div>
+<!-- TopAppBar (Shared Component) -->
+<nav class="hidden md:flex bg-transparent fixed top-0 w-full border-b border-white/5 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 z-50 transition-all duration-300">
+<!-- Brand Logo -->
+<div class="font-headline-lg text-headline-lg tracking-tighter text-primary group cursor-pointer flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-fixed-dim to-secondary-container flex items-center justify-center shadow-[0_0_15px_rgba(0,219,231,0.3)]">
+<div class="w-3 h-3 rounded-full bg-background border border-primary-fixed-dim shadow-inner"></div>
+</div>
+            VinylDeck
+        </div>
+<!-- Navigation Links -->
+<ul class="flex gap-12 font-label-sm text-label-sm uppercase tracking-widest">
+<li class="text-on-secondary-container hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70 flex flex-col justify-center h-20">
+                Collection
+            </li>
+<li class="text-primary border-b border-primary pb-1 hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70 flex flex-col justify-center h-20 mt-[5px]">
+                Discovery
+            </li>
+<li class="text-on-secondary-container hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70 flex flex-col justify-center h-20">
+                Studios
+            </li>
+</ul>
+<!-- Trailing Actions -->
+<div class="flex gap-6 items-center">
+<span class="material-symbols-outlined text-primary hover:text-primary-fixed-dim transition-colors duration-300 cursor-pointer active:opacity-70" data-icon="settings">settings</span>
+<span class="material-symbols-outlined text-primary hover:text-primary-fixed-dim transition-colors duration-300 cursor-pointer active:opacity-70" data-icon="account_circle">account_circle</span>
+</div>
+</nav>
+<!-- Main Canvas: The Deck -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop pt-24 pb-32 relative z-10 w-full max-w-container-max mx-auto">
+<!-- Interactive Player Module -->
+<section class="w-full max-w-3xl glass-panel rounded-[2rem] p-8 md:p-14 relative group perspective-1000">
+<div class="luminous-top-border"></div>
+<!-- Context Badge -->
+<div class="absolute top-8 left-8 md:top-10 md:left-10 font-label-sm text-label-sm text-primary uppercase border border-primary/30 px-3 py-1 rounded-sm shadow-[0_0_10px_rgba(0,219,231,0.1)] flex items-center gap-2 bg-surface-container-lowest/50 backdrop-blur-md">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow"></span>
+                Now Playing
+            </div>
+<!-- Quality Badge -->
+<div class="absolute top-8 right-8 md:top-10 md:right-10 font-label-sm text-label-sm text-on-surface-variant border border-outline-variant/50 px-3 py-1 rounded-sm">
+                Lossless 192kHz
+            </div>
+<!-- The Vinyl (Album Art) -->
+<div class="relative w-64 h-64 md:w-96 md:h-96 mx-auto mt-12 mb-12 rounded-full border border-white/10 shadow-[0_0_40px_rgba(0,242,255,0.08)] flex items-center justify-center animate-spin-slow hover:shadow-[0_0_60px_rgba(0,242,255,0.15)] transition-shadow duration-700 cursor-pointer">
+<!-- Outer Ring Glow -->
+<div class="absolute inset-[-2px] rounded-full bg-gradient-to-b from-primary-fixed-dim/30 to-transparent opacity-50"></div>
+<!-- Iridescent Sheen -->
+<div class="absolute inset-0 z-10 bg-gradient-to-tr from-transparent via-primary-fixed-dim/10 to-transparent mix-blend-overlay rounded-full pointer-events-none"></div>
+<!-- Album Artwork -->
+<img alt="Current Track Artwork" class="w-full h-full object-cover rounded-full p-[2px] bg-surface-container-lowest" data-alt="A cinematic, high-fidelity digital art rendering of a swirling, abstract nebula suspended inside a pristine glass sphere. The color palette relies heavily on deep oceanic teal, midnight blue, and bright, glowing cyan accents that mimic bioluminescence. The lighting is dramatic and volumetric, with soft neon glows cutting through subtle fog-like textures. The overall aesthetic is distinctly futuristic, minimalist, and deeply immersive, perfect for a high-end sci-fi audio interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjkOySl9SVoR3I0FyzQoNVwnHYQEZ7MmTHCu9NlpbX_gUqgpPY8yGWZQrRNUy1KMO6XQqykOaUPU2OvCWyFOlmUL-_SkvBX4spju3bBigk9g7NW-d-LkMpcrqMiTNJPfuzg3L5eRItdMKbvyU8XHta-jg4QcUsVP8BhXRq5YfZ72eXvY2Vzzy9PbW9c867W92DRwheyfmxNKTwgPPBE5o118HiKIZtEBY-29Iw0yY5Ntx2QAUA2f3SPyYd-w2_dSMJWd2vuo3xho9E"/>
+<!-- Turntable Center Hole -->
+<div class="absolute w-12 h-12 bg-surface-container-lowest rounded-full z-20 border border-white/10 shadow-inner flex items-center justify-center backdrop-blur-sm">
+<div class="w-3 h-3 bg-background rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"></div>
+</div>
+<!-- Vinyl Grooves -->
+<div class="absolute inset-4 border border-white/5 rounded-full z-10 pointer-events-none mix-blend-screen"></div>
+<div class="absolute inset-10 border border-white/5 rounded-full z-10 pointer-events-none mix-blend-screen"></div>
+<div class="absolute inset-16 border border-white/5 rounded-full z-10 pointer-events-none mix-blend-screen"></div>
+</div>
+<!-- Track Metadata -->
+<div class="text-center mb-10 flex flex-col items-center">
+<h1 class="font-display-lg text-display-lg text-primary mb-3 drop-shadow-[0_0_10px_rgba(0,219,231,0.2)] tracking-tight">Event Horizon</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md mx-auto opacity-80">
+<span class="text-on-surface font-semibold">Deep Space Navigators</span> • Orbital Resonance Vol. II
+                </p>
+</div>
+<!-- Precision Seek Bar -->
+<div class="w-full max-w-xl mx-auto flex flex-col gap-3">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant/70">
+<span>03:42</span>
+<span>-04:18</span>
+</div>
+<div class="w-full h-[2px] bg-surface-variant relative rounded-full cursor-pointer group/seeker">
+<!-- Unfilled background glow catch -->
+<div class="absolute inset-0 bg-surface-variant rounded-full"></div>
+<!-- Filled Segment -->
+<div class="absolute top-0 left-0 h-full w-[45%] bg-primary-fixed-dim shadow-[0_0_12px_#00dbe7] rounded-full transition-all duration-300"></div>
+<!-- Glowing Playhead -->
+<div class="absolute top-1/2 left-[45%] w-1.5 h-4 bg-primary -translate-y-1/2 -translate-x-1/2 shadow-[0_0_15px_#e1fdff] group-hover/seeker:h-6 group-hover/seeker:bg-white transition-all duration-200 cursor-grab active:cursor-grabbing rounded-sm"></div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-center items-center pb-6 md:pb-8 pt-6 px-margin-mobile bg-surface-container/80 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_0_30px_rgba(0,0,0,0.6)]">
+<ul class="flex justify-between items-center w-full max-w-2xl gap-2 md:gap-4 font-label-sm text-label-sm">
+<!-- Queue -->
+<li class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer w-16">
+<span class="material-symbols-outlined text-[28px] mb-1 opacity-70 group-hover:opacity-100" data-icon="queue_music" data-weight="fill" style="font-variation-settings: 'FILL' 1;">queue_music</span>
+</li>
+<!-- Previous -->
+<li class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer w-16">
+<span class="material-symbols-outlined text-[36px] mb-1" data-icon="skip_previous" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</li>
+<!-- Play (Active Central Action) -->
+<li class="flex flex-col items-center justify-center text-primary scale-110 hover:scale-125 transition-transform duration-300 active:scale-95 cursor-pointer relative group mx-4">
+<!-- Neon Breathing Aura -->
+<div class="absolute inset-0 bg-primary-fixed-dim/20 blur-[20px] rounded-full animate-pulse-glow group-hover:bg-primary-fixed-dim/40 transition-colors duration-300"></div>
+<!-- Primary Action Button -->
+<div class="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-primary-fixed-dim to-secondary-container flex items-center justify-center shadow-[0_0_25px_rgba(0,219,231,0.5)] relative z-10 border border-primary/40 group-hover:border-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-background text-[40px] ml-1" data-icon="play_arrow" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</li>
+<!-- Next -->
+<li class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer w-16">
+<span class="material-symbols-outlined text-[36px] mb-1" data-icon="skip_next" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</li>
+<!-- Lyrics -->
+<li class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 cursor-pointer w-16">
+<span class="material-symbols-outlined text-[28px] mb-1 opacity-70 group-hover:opacity-100" data-icon="notes" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notes</span>
+</li>
+</ul>
+</nav>
+</body></html>

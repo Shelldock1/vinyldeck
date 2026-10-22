@@ -1,0 +1,121 @@
+/* ============================================================
+   TrackInfo Component CSS
+   Per-theme typography: --font-display / --font-body / --font-mono.
+   Phase 5: slide left/right transitions, hover bloom, empty state.
+   ============================================================ */
+
+/* ── Container ───────────────────────────────────────────────── */
+.track-info {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 0 24px;
+  width: 100%;
+  max-width: 400px;
+  flex-shrink: 0;
+}
+
+/* ── AnimatePresence wrapper — needed for layout stability ───── */
+.track-info__motion {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.track-info__tooltip-trigger {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Track title ─────────────────────────────────────────────── */
+/* Phase 5.1: var(--font-display) — theme-controlled             */
+.track-info__title {
+  font-family: var(--font-display, 'Sora'), system-ui, sans-serif;
+  font-size: clamp(18px, 2.6vw, 28px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ui-text-primary, rgba(255, 255, 255, 0.92));
+  margin: 0;
+  /* Phase 5.4: single-line, ellipsis on overflow */
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Phase 5.5: hover bloom — text-shadow glow, no underline */
+  transition: text-shadow 300ms ease;
+  cursor: default;
+}
+
+.track-info__title:hover {
+  text-shadow: 0 0 16px var(--ui-accent, rgba(255, 255, 255, 0.5));
+}
+
+/* Paper theme — serif display needs slightly different sizing */
+[data-theme="paper"] .track-info__title {
+  font-size: clamp(17px, 2.4vw, 26px);
+  font-weight: 400; /* Caslon reads better at regular weight */
+  letter-spacing: -0.01em;
+  font-style: normal;
+}
+
+/* ── Artist line ─────────────────────────────────────────────── */
+/* Phase 5.1: var(--font-body), uppercase tracking                */
+.track-info__artist {
+  font-family: var(--font-body, 'Inter'), system-ui, sans-serif;
+  font-size: clamp(11px, 1.3vw, 13px);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ui-text-secondary, rgba(255, 255, 255, 0.45));
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Album line ──────────────────────────────────────────────── */
+/* Phase 5.1: var(--font-mono) — metadata, stamped feel          */
+.track-info__album {
+  font-family: var(--font-mono, 'JetBrains Mono'), monospace;
+  font-size: clamp(10px, 1.1vw, 11px);
+  font-weight: 400;
+  letter-spacing: var(--mono-tracking, 0.1em);
+  text-transform: uppercase;
+  color: var(--ui-text-secondary, rgba(255, 255, 255, 0.35));
+  opacity: 0.7;
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Empty state placeholder ─────────────────────────────────── */
+/* Phase 5.2: "— / —" in mono, reduced opacity                   */
+.track-info__empty {
+  font-family: var(--font-mono, 'JetBrains Mono'), monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ui-text-secondary, rgba(255, 255, 255, 0.35));
+  opacity: 0.5;
+  margin: 0;
+  text-align: center;
+}
+
+/* Light-mode: empty state in warm charcoal (Paper) or blue-grey (Glass) */
+[data-theme="paper"] .track-info__empty,
+[data-theme="glass"] .track-info__empty {
+  color: var(--ui-text-secondary);
+  opacity: 0.45;
+}

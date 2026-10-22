@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+stitch-ui-designs/**/node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+coverage/
+
+# Tauri / Rust outputs
+src-tauri/target/
+src-tauri/gen/
+target/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment / local secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Tauri signing / platform artifacts
+*.msi
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.pfx
+*.p12
+*.pem
+changes
+Conversations/**
+raw/
+**/chats/**
+/*prompt*.md
+/*task*.md
+vinyl-pressing-research
+raw/md-vinyl-screenshots/comparison-videos/md-vinyl-app.mp4
+raw/md-vinyl-screenshots/comparison-videos/vinyldeck-current.mp4
+raw/chats/gpt-chat-2.md
+claude-plan.md
+gpt-plan.md
+raw/md-vinyl-screenshots/md-vinyl-1.png
+raw/md-vinyl-screenshots/md-vinyl-2.png
+raw/md-vinyl-screenshots/md-vinyl-3.png
+raw/md-vinyl-screenshots/md-vinyl-4.png
+files-to-add
+glass-1.md
+bgs-4.md
+bgs-3.md
+bgs-2.md
+bgs-1.md
+*.tsbuildinfo
+# Local Netlify folder
+.netlify

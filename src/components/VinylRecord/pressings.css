@@ -1,0 +1,641 @@
+/* ============================================================
+   VinylRecord pressing variants — second pass
+   More aggressive collector-pressing identity, visible splatter,
+   real clear/smoke translucency, and neutral-art material handling.
+   Driven by <html data-vinyl-pressing="...">.
+   ============================================================ */
+
+/* ── Solid colored pressing ────────────────────────────────── */
+[data-vinyl-pressing="solid"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      circle at 34% 24%,
+      color-mix(in srgb, var(--pressing-highlight) 42%, transparent) 0%,
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 70% 68%,
+      color-mix(in srgb, var(--pressing-secondary) 18%, transparent) 0%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at center,
+      var(--pressing-primary) 0%,
+      color-mix(in srgb, var(--pressing-primary) 62%, var(--pressing-deep)) 70%,
+      var(--pressing-edge) 100%
+    );
+}
+
+[data-vinyl-pressing="solid"] .vinyl-pressing-texture {
+  background:
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      transparent 0deg,
+      color-mix(in srgb, var(--pressing-highlight) 16%, transparent) 31deg,
+      transparent 78deg,
+      color-mix(in srgb, var(--pressing-secondary) 10%, transparent) 181deg,
+      transparent 253deg,
+      color-mix(in srgb, var(--pressing-soft) 12%, transparent) 322deg,
+      transparent 360deg
+    ),
+    radial-gradient(
+      ellipse at 48% 52%,
+      transparent 0 42%,
+      color-mix(in srgb, #ffffff 4%, transparent) 44%,
+      transparent 61%
+    );
+  mix-blend-mode: soft-light;
+  opacity: calc(
+    var(--pressing-texture-opacity) * 0.8 * var(--pressing-material-opacity, 1)
+  );
+}
+
+/* ── Marble pressing ───────────────────────────────────────── */
+[data-vinyl-pressing="marble"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      ellipse at 24% 28%,
+      color-mix(in srgb, var(--pressing-pearl) 20%, transparent) 0%,
+      transparent 32%
+    ),
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      color-mix(in oklch, var(--pressing-primary) 82%, var(--pressing-deep) 18%)
+        0deg,
+      color-mix(
+          in oklch,
+          var(--pressing-secondary) 64%,
+          var(--pressing-primary) 36%
+        )
+        44deg,
+      color-mix(
+          in oklch,
+          var(--pressing-primary) 78%,
+          var(--pressing-accent) 22%
+        )
+        88deg,
+      color-mix(
+          in oklch,
+          var(--pressing-deep) 72%,
+          var(--pressing-secondary) 28%
+        )
+        146deg,
+      color-mix(
+          in oklch,
+          var(--pressing-accent) 56%,
+          var(--pressing-primary) 44%
+        )
+        206deg,
+      color-mix(
+          in oklch,
+          var(--pressing-secondary) 46%,
+          var(--pressing-edge) 54%
+        )
+        276deg,
+      color-mix(in oklch, var(--pressing-primary) 82%, var(--pressing-deep) 18%)
+        360deg
+    );
+}
+
+[data-vinyl-pressing="marble"] .vinyl-pressing-texture {
+  background:
+    conic-gradient(
+      from var(--pressing-seed-angle-alt),
+      color-mix(in srgb, var(--pressing-secondary) 62%, transparent) 0deg,
+      transparent 16deg,
+      color-mix(in srgb, var(--pressing-soft) 46%, transparent) 40deg,
+      transparent 70deg,
+      color-mix(in srgb, var(--pressing-accent) 52%, transparent) 113deg,
+      transparent 150deg,
+      color-mix(in srgb, var(--pressing-secondary) 44%, transparent) 194deg,
+      transparent 237deg,
+      color-mix(in srgb, var(--pressing-pearl) 34%, transparent) 286deg,
+      transparent 329deg,
+      color-mix(in srgb, var(--pressing-secondary) 50%, transparent) 360deg
+    ),
+    radial-gradient(
+      ellipse at 22% 32%,
+      color-mix(in srgb, var(--pressing-pearl) 42%, transparent) 0%,
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse at 73% 66%,
+      color-mix(in srgb, var(--pressing-accent) 35%, transparent) 0%,
+      transparent 44%
+    ),
+    repeating-conic-gradient(
+      from var(--pressing-seed-angle),
+      color-mix(in srgb, #ffffff 6%, transparent) 0deg 2deg,
+      transparent 2deg 16deg
+    );
+  background-blend-mode: screen, overlay, multiply, soft-light;
+  mix-blend-mode: overlay;
+  filter: url("#vinyl-marble-turbulence") var(--pressing-theme-filter, none);
+  opacity: calc(
+    var(--pressing-texture-opacity) * var(--pressing-material-opacity, 1)
+  );
+}
+
+[data-vinyl-pressing="marble"] .vinyl-pressing-texture::before {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  border-radius: 50%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='marbleGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.23' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23marbleGrain)' opacity='0.75'/%3E%3C/svg%3E");
+  background-size: 190px 190px;
+  mix-blend-mode: overlay;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+[data-vinyl-pressing="marble"] .vinyl-grooves {
+  mix-blend-mode: soft-light;
+  opacity: calc(0.68 * var(--pressing-groove-opacity, 1));
+}
+
+/* ── Splatter pressing ─────────────────────────────────────── */
+[data-vinyl-pressing="splatter"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      circle at 34% 24%,
+      color-mix(in srgb, var(--pressing-highlight) 26%, transparent) 0%,
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at center,
+      var(--pressing-primary) 0%,
+      color-mix(in srgb, var(--pressing-primary) 70%, var(--pressing-deep)) 58%,
+      var(--pressing-edge) 100%
+    );
+}
+
+[data-vinyl-pressing="splatter"] .vinyl-pressing-texture {
+  background:
+    radial-gradient(
+      ellipse at 51% 50%,
+      color-mix(in srgb, var(--pressing-secondary) 95%, transparent) 0 2.5%,
+      transparent 3.4%
+    ),
+    radial-gradient(
+      ellipse at 22% 18%,
+      color-mix(in srgb, var(--pressing-secondary) 88%, transparent) 0 2.7%,
+      transparent 4.4%
+    ),
+    radial-gradient(
+      ellipse at 78% 24%,
+      color-mix(in srgb, var(--pressing-secondary) 82%, transparent) 0 2.3%,
+      transparent 4.1%
+    ),
+    radial-gradient(
+      ellipse at 69% 80%,
+      color-mix(in srgb, var(--pressing-secondary) 84%, transparent) 0 3%,
+      transparent 4.8%
+    ),
+    radial-gradient(
+      ellipse at 17% 72%,
+      color-mix(in srgb, var(--pressing-accent) 72%, transparent) 0 2.4%,
+      transparent 4.2%
+    ),
+    radial-gradient(
+      ellipse at 50% 9%,
+      color-mix(in srgb, var(--pressing-secondary) 74%, transparent) 0 1.9%,
+      transparent 3.4%
+    ),
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      transparent 0deg,
+      color-mix(in srgb, var(--pressing-secondary) 82%, transparent) 5deg,
+      transparent 16deg,
+      transparent 39deg,
+      color-mix(in srgb, var(--pressing-secondary) 62%, transparent) 51deg,
+      transparent 65deg,
+      transparent 109deg,
+      color-mix(in srgb, var(--pressing-accent) 58%, transparent) 119deg,
+      transparent 132deg,
+      transparent 182deg,
+      color-mix(in srgb, var(--pressing-secondary) 68%, transparent) 194deg,
+      transparent 211deg,
+      transparent 250deg,
+      color-mix(in srgb, var(--pressing-secondary) 78%, transparent) 262deg,
+      transparent 276deg,
+      transparent 316deg,
+      color-mix(in srgb, var(--pressing-accent) 58%, transparent) 328deg,
+      transparent 342deg,
+      transparent 360deg
+    ),
+    repeating-radial-gradient(
+      circle at var(--pressing-organic-x, 48%) var(--pressing-organic-y, 50%),
+      transparent 0 18px,
+      color-mix(in srgb, var(--pressing-secondary) 15%, transparent)
+        calc(20px * var(--pressing-splatter-scale))
+        calc(21px * var(--pressing-splatter-scale)),
+      transparent calc(25px * var(--pressing-splatter-scale))
+        calc(44px * var(--pressing-splatter-scale))
+    );
+  background-size:
+    100% 100%,
+    calc(84% * var(--pressing-splatter-scale))
+      calc(84% * var(--pressing-splatter-scale)),
+    calc(95% * var(--pressing-splatter-scale))
+      calc(95% * var(--pressing-splatter-scale)),
+    calc(82% * var(--pressing-splatter-scale))
+      calc(82% * var(--pressing-splatter-scale)),
+    calc(94% * var(--pressing-splatter-scale))
+      calc(94% * var(--pressing-splatter-scale)),
+    calc(104% * var(--pressing-splatter-scale))
+      calc(104% * var(--pressing-splatter-scale)),
+    100% 100%,
+    100% 100%;
+  background-position:
+    center,
+    calc(50% + var(--pressing-hash-a)) calc(50% - 19px),
+    calc(50% - 16px) calc(50% + var(--pressing-hash-b)),
+    calc(50% + 18px) calc(50% + 12px),
+    calc(50% - 25px) calc(50% - 7px),
+    center,
+    center,
+    center;
+  background-blend-mode:
+    screen, screen, screen, screen, screen, screen, screen, overlay;
+  mix-blend-mode: screen;
+  filter: url("#vinyl-splatter-warp");
+  opacity: calc(
+    var(--pressing-texture-opacity) * var(--pressing-material-opacity, 1)
+  );
+}
+
+[data-vinyl-pressing="splatter"] .vinyl-pressing-texture::before,
+[data-vinyl-pressing="splatter"] .vinyl-pressing-texture::after {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+[data-vinyl-pressing="splatter"] .vinyl-pressing-texture::before {
+  background:
+    radial-gradient(
+      ellipse at 30% 44%,
+      color-mix(in srgb, var(--pressing-secondary) 74%, transparent) 0 1.4%,
+      transparent 3.2%
+    ),
+    radial-gradient(
+      ellipse at 59% 18%,
+      color-mix(in srgb, var(--pressing-secondary) 66%, transparent) 0 1.1%,
+      transparent 2.8%
+    ),
+    radial-gradient(
+      ellipse at 85% 55%,
+      color-mix(in srgb, var(--pressing-secondary) 58%, transparent) 0 0.9%,
+      transparent 2.3%
+    ),
+    radial-gradient(
+      ellipse at 42% 83%,
+      color-mix(in srgb, var(--pressing-accent) 64%, transparent) 0 1.3%,
+      transparent 3%
+    ),
+    linear-gradient(
+      var(--pressing-seed-angle-alt),
+      transparent 0 43%,
+      color-mix(in srgb, var(--pressing-secondary) 40%, transparent) 47%,
+      transparent 54% 100%
+    );
+  mix-blend-mode: screen;
+  opacity: 0.82;
+}
+
+[data-vinyl-pressing="splatter"] .vinyl-pressing-texture::after {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='splatterNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.42' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23splatterNoise)' opacity='0.8'/%3E%3C/svg%3E");
+  background-size: 130px 130px;
+  -webkit-mask-image: radial-gradient(
+    circle at center,
+    transparent 0 30%,
+    #000 32% 83%,
+    transparent 89%
+  );
+  mask-image: radial-gradient(
+    circle at center,
+    transparent 0 30%,
+    #000 32% 83%,
+    transparent 89%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.15;
+}
+
+[data-vinyl-pressing="splatter"] .vinyl-grooves {
+  mix-blend-mode: multiply;
+  opacity: calc(0.58 * var(--pressing-groove-opacity, 1));
+}
+
+/* ── True translucent / clear colored pressing ─────────────── */
+[data-vinyl-pressing="translucent"] .vinyl-disc {
+  background: color-mix(in srgb, var(--pressing-primary) 18%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(1.22);
+  backdrop-filter: blur(8px) saturate(1.22);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #ffffff 26%, transparent),
+    inset 0 0 0 2px color-mix(in srgb, #ffffff 10%, transparent),
+    inset 0 0 42px color-mix(in srgb, #ffffff 12%, transparent),
+    inset 0 0 116px color-mix(in srgb, var(--pressing-primary) 28%, transparent),
+    0 34px 68px rgba(0, 0, 0, 0.42),
+    0 10px 42px
+      color-mix(in srgb, var(--pressing-primary) 24%, rgba(0, 0, 0, 0.12));
+}
+
+[data-vinyl-pressing="translucent"] .vinyl-translucent-ghost {
+  opacity: var(--pressing-ghost-opacity, 0.24);
+  filter: blur(5px) saturate(1.22) contrast(1.08);
+  mix-blend-mode: overlay;
+}
+
+[data-vinyl-pressing="translucent"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      circle at 28% 20%,
+      color-mix(in srgb, #ffffff 38%, transparent) 0%,
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 67% 72%,
+      color-mix(in srgb, var(--pressing-secondary) 28%, transparent) 0%,
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--pressing-primary) 66%, transparent) 0%,
+      color-mix(in srgb, var(--pressing-deep) 48%, transparent) 78%,
+      color-mix(in srgb, var(--pressing-edge) 62%, transparent) 100%
+    );
+  opacity: calc(var(--pressing-translucency, 0.52) * 1.12);
+}
+
+[data-vinyl-pressing="translucent"] .vinyl-pressing-texture {
+  background:
+    radial-gradient(
+      ellipse at 33% 25%,
+      color-mix(in srgb, #ffffff 28%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 62% 76%,
+      color-mix(in srgb, var(--pressing-secondary) 28%, transparent),
+      transparent 46%
+    ),
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      transparent 0deg,
+      color-mix(in srgb, #ffffff 22%, transparent) 34deg,
+      transparent 82deg,
+      color-mix(in srgb, var(--pressing-pearl) 28%, transparent) 168deg,
+      transparent 230deg,
+      color-mix(in srgb, #ffffff 17%, transparent) 308deg,
+      transparent 360deg
+    );
+  mix-blend-mode: screen;
+  opacity: calc(0.7 * var(--pressing-material-opacity, 1));
+}
+
+[data-vinyl-pressing="translucent"] .vinyl-pressing-depth {
+  background:
+    radial-gradient(
+      circle at center,
+      transparent 0 31%,
+      color-mix(in srgb, #ffffff 8%, transparent) 35%,
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at center,
+      transparent 0 72%,
+      color-mix(in srgb, var(--pressing-primary) 26%, transparent) 87%,
+      color-mix(in srgb, var(--pressing-edge) 36%, transparent) 100%
+    );
+  box-shadow:
+    inset 0 0 24px color-mix(in srgb, #ffffff 18%, transparent),
+    inset 0 0 78px color-mix(in srgb, var(--pressing-primary) 22%, transparent),
+    inset 0 0 130px color-mix(in srgb, #000000 24%, transparent);
+  opacity: 0.76;
+}
+
+[data-vinyl-pressing="translucent"] .vinyl-grooves {
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      color-mix(in srgb, #ffffff 5%, transparent) 0px,
+      transparent 1.25px,
+      color-mix(in srgb, var(--pressing-groove-bright) 34%, transparent) 1.78px,
+      color-mix(in srgb, var(--pressing-groove) 16%, transparent) 2.25px,
+      transparent 3.6px
+    ),
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0px,
+      transparent 9px,
+      color-mix(in srgb, #ffffff 10%, transparent) 10px,
+      transparent 11px,
+      transparent 17px
+    );
+  mix-blend-mode: screen;
+  opacity: calc(0.74 * var(--pressing-groove-opacity, 1));
+}
+
+/* ── Smoky / silver neutral pressing ───────────────────────── */
+[data-vinyl-pressing="smoke"] .vinyl-disc {
+  background: color-mix(in srgb, var(--pressing-primary) 38%, transparent);
+  -webkit-backdrop-filter: blur(5px) saturate(1.04);
+  backdrop-filter: blur(5px) saturate(1.04);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #ffffff 16%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 7%, transparent),
+    inset 0 0 40px color-mix(in srgb, var(--pressing-pearl) 10%, transparent),
+    inset 0 0 116px color-mix(in srgb, #000000 48%, transparent),
+    0 34px 68px rgba(0, 0, 0, 0.52),
+    0 10px 42px
+      color-mix(in srgb, var(--pressing-accent) 14%, rgba(0, 0, 0, 0.24));
+}
+
+[data-vinyl-pressing="smoke"] .vinyl-translucent-ghost {
+  opacity: var(--pressing-ghost-opacity, 0.16);
+  filter: blur(7px) saturate(0.85) contrast(1.18) grayscale(0.35);
+  mix-blend-mode: screen;
+}
+
+[data-vinyl-pressing="smoke"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      ellipse at 28% 20%,
+      color-mix(in srgb, #ffffff 18%, transparent) 0%,
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse at 72% 72%,
+      color-mix(in srgb, var(--pressing-accent) 10%, transparent) 0%,
+      transparent 44%
+    ),
+    radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--pressing-primary) 76%, transparent) 0%,
+      color-mix(in srgb, var(--pressing-deep) 82%, transparent) 76%,
+      color-mix(in srgb, var(--pressing-edge) 86%, transparent) 100%
+    );
+  opacity: var(--pressing-smoke-density, 0.68);
+}
+
+[data-vinyl-pressing="smoke"] .vinyl-pressing-texture {
+  background:
+    conic-gradient(
+      from var(--pressing-seed-angle-alt),
+      color-mix(in srgb, var(--pressing-pearl) 30%, transparent) 0deg,
+      transparent 28deg,
+      color-mix(in srgb, var(--pressing-shadow) 28%, transparent) 74deg,
+      transparent 123deg,
+      color-mix(in srgb, var(--pressing-accent) 16%, transparent) 190deg,
+      transparent 248deg,
+      color-mix(in srgb, #ffffff 14%, transparent) 310deg,
+      transparent 360deg
+    ),
+    radial-gradient(
+      ellipse at 26% 40%,
+      color-mix(in srgb, #ffffff 16%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 76% 52%,
+      color-mix(in srgb, #000000 24%, transparent),
+      transparent 45%
+    );
+  background-blend-mode: screen, screen, multiply;
+  mix-blend-mode: overlay;
+  filter: url("#vinyl-marble-turbulence");
+  opacity: calc(var(--pressing-texture-opacity) * 0.9);
+}
+
+[data-vinyl-pressing="smoke"] .vinyl-grooves {
+  mix-blend-mode: screen;
+  opacity: calc(0.62 * var(--pressing-groove-opacity, 1));
+}
+
+/* ── Dual-tone / split pressing ────────────────────────────── */
+[data-vinyl-pressing="dual-tone"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      circle at 31% 24%,
+      color-mix(in srgb, #ffffff 16%, transparent) 0%,
+      transparent 27%
+    ),
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      color-mix(in oklch, var(--pressing-primary) 88%, var(--pressing-deep) 12%)
+        0deg 166deg,
+      color-mix(
+          in oklch,
+          var(--pressing-secondary) 80%,
+          var(--pressing-deep) 20%
+        )
+        184deg 346deg,
+      color-mix(in oklch, var(--pressing-primary) 88%, var(--pressing-deep) 12%)
+        360deg
+    );
+}
+
+[data-vinyl-pressing="dual-tone"] .vinyl-pressing-texture {
+  background:
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      transparent 0deg 160deg,
+      color-mix(in srgb, #ffffff 20%, transparent) 166deg,
+      color-mix(in srgb, #000000 20%, transparent) 176deg,
+      color-mix(in srgb, var(--pressing-accent) 22%, transparent) 185deg,
+      transparent 194deg 360deg
+    ),
+    conic-gradient(
+      from var(--pressing-seed-angle-alt),
+      transparent 0deg,
+      color-mix(in srgb, var(--pressing-accent) 20%, transparent) 54deg,
+      transparent 120deg,
+      color-mix(in srgb, var(--pressing-pearl) 16%, transparent) 228deg,
+      transparent 360deg
+    ),
+    repeating-conic-gradient(
+      from var(--pressing-seed-angle),
+      color-mix(in srgb, #ffffff 4%, transparent) 0deg 1deg,
+      transparent 1deg 18deg
+    );
+  background-blend-mode: overlay, screen, soft-light;
+  mix-blend-mode: overlay;
+  filter: url("#vinyl-marble-turbulence");
+  opacity: calc(0.76 * var(--pressing-material-opacity, 1));
+}
+
+[data-vinyl-pressing="dual-tone"] .vinyl-grooves {
+  mix-blend-mode: soft-light;
+  opacity: calc(0.7 * var(--pressing-groove-opacity, 1));
+}
+
+/* ── Audiophile black pressing ─────────────────────────────── */
+[data-vinyl-pressing="audiophile-black"] .vinyl-disc {
+  background: #050505;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.045),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+    inset 0 0 44px rgba(255, 255, 255, 0.026),
+    inset 0 0 120px rgba(0, 0, 0, 0.88),
+    0 32px 68px rgba(0, 0, 0, 0.84),
+    0 10px 44px rgba(0, 0, 0, 0.64);
+}
+
+[data-vinyl-pressing="audiophile-black"] .vinyl-pressing-base {
+  background:
+    radial-gradient(
+      circle at 34% 24%,
+      rgba(255, 255, 255, 0.075) 0%,
+      transparent 26%
+    ),
+    radial-gradient(circle at center, #0d0d0d 0%, #050505 74%, #010101 100%);
+}
+
+[data-vinyl-pressing="audiophile-black"] .vinyl-pressing-texture {
+  background:
+    conic-gradient(
+      from var(--pressing-seed-angle),
+      transparent 0deg,
+      color-mix(in srgb, var(--pressing-accent) 16%, transparent) 42deg,
+      transparent 90deg,
+      rgba(255, 255, 255, 0.04) 168deg,
+      transparent 228deg,
+      color-mix(in srgb, var(--pressing-accent) 12%, transparent) 306deg,
+      transparent 360deg
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 32%,
+      rgba(255, 255, 255, 0.025) 33%,
+      transparent 36%
+    );
+  mix-blend-mode: screen;
+  opacity: calc(var(--pressing-texture-opacity) * 0.9);
+}
+
+[data-vinyl-pressing="audiophile-black"] .vinyl-grooves {
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      #090909 0px,
+      color-mix(in srgb, var(--pressing-accent) 10%, #171717) 1.5px,
+      #080808 3px
+    ),
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0 8px,
+      rgba(255, 255, 255, 0.025) 9px,
+      transparent 10px 15px
+    );
+  mix-blend-mode: normal;
+  opacity: 0.86;
+}
+
+[data-vinyl-pressing="audiophile-black"] .vinyl-sheen {
+  mix-blend-mode: screen;
+  opacity: 0.86;
+}

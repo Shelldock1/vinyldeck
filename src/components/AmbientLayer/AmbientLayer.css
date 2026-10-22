@@ -1,0 +1,450 @@
+/* ============================================================
+   AmbientLayer — calm Art Ambient reset
+   - No shader backdrop.
+   - No Beam / Caus / Aur mode visuals.
+   - One simple album-art glow toggle shared by Noir and Glass.
+   - Art Ambient on/off now crossfades properly.
+   ============================================================ */
+
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg, #000000);
+  color: var(--ambient-primary, #d8d8d8);
+  transition: background var(--theme-transition, 600ms ease);
+}
+
+.ambient-layer__base,
+.ambient-layer__velvet,
+.ambient-layer__orb,
+.ambient-layer__swirl,
+.ambient-layer__readability,
+.ambient-layer__vignette,
+.ambient-layer__grain {
+  position: absolute;
+  pointer-events: none;
+}
+
+.ambient-layer__base {
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse at 50% 39%,
+      var(--room-center-light),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at 50% 108%,
+      var(--room-floor-light),
+      transparent 58%
+    ),
+    var(--bg);
+  transition:
+    background 700ms ease,
+    filter 700ms ease;
+}
+
+/*
+   IMPORTANT:
+   This replaces the old instant .ambient-layer--art .ambient-layer__base background swap.
+   Background-image itself does not smoothly animate, so the album glow lives in ::after
+   and crossfades with opacity/transform/filter.
+*/
+.ambient-layer__base::after {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  opacity: 0;
+  transform: scale(0.88);
+  filter: blur(18px) saturate(1.1);
+  background:
+    radial-gradient(
+      circle at 50% 34%,
+      color-mix(in srgb, var(--ambient-primary) 46%, transparent) 0%,
+      color-mix(in srgb, var(--ambient-primary) 24%, transparent) 22%,
+      color-mix(in srgb, var(--ambient-primary) 8%, transparent) 42%,
+      transparent 62%
+    ),
+    radial-gradient(
+      circle at 39% 43%,
+      color-mix(in srgb, var(--ambient-secondary) 36%, transparent) 0%,
+      color-mix(in srgb, var(--ambient-secondary) 12%, transparent) 34%,
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 63% 31%,
+      color-mix(in srgb, var(--ambient-accent) 32%, transparent) 0%,
+      color-mix(in srgb, var(--ambient-accent) 10%, transparent) 32%,
+      transparent 54%
+    );
+  mix-blend-mode: var(--art-base-blend, screen);
+  transition:
+    opacity 850ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1050ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 850ms ease;
+  will-change: opacity, transform, filter;
+}
+
+.ambient-layer--art .ambient-layer__base::after {
+  opacity: var(--art-base-opacity, 0.86);
+  transform: scale(1);
+  filter: blur(0) saturate(1.18);
+}
+
+/* Noir texture: not smoke, not stars — just a tiny black-silk grain/sheen. */
+.ambient-layer__velvet {
+  inset: -12%;
+  z-index: 1;
+  opacity: var(--room-velvet-opacity, 0.12);
+  background:
+    linear-gradient(
+      116deg,
+      transparent 0 34%,
+      rgba(255, 255, 255, 0.028) 45%,
+      transparent 56% 100%
+    ),
+    repeating-linear-gradient(
+      102deg,
+      rgba(255, 255, 255, 0.022) 0 1px,
+      transparent 1px 9px
+    );
+  filter: blur(1px);
+  mix-blend-mode: soft-light;
+  transform: rotate(-2deg);
+  animation: ambientVelvetDrift 30s ease-in-out infinite alternate;
+}
+
+[data-theme="glass"] .ambient-layer__velvet {
+  display: none;
+}
+
+.ambient-layer__orb {
+  z-index: 2;
+  left: 50%;
+  top: 37%;
+  width: var(--art-orb-size, min(46vw, 640px));
+  height: var(--art-orb-size, min(46vw, 640px));
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0) scale(0.78);
+  filter: blur(var(--art-orb-blur, 58px));
+  mix-blend-mode: var(--art-orb-blend, screen);
+  transition:
+    opacity 850ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1050ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 850ms ease;
+  will-change: transform, opacity, filter;
+}
+
+.ambient-layer__orb--primary {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-primary) 100%, transparent) 0%,
+    color-mix(in srgb, var(--ambient-primary) 56%, transparent) 24%,
+    color-mix(in srgb, var(--ambient-primary) 18%, transparent) 50%,
+    transparent 78%
+  );
+  animation: ambientOrbA 18s ease-in-out infinite alternate;
+}
+
+.ambient-layer__orb--secondary {
+  width: calc(var(--art-orb-size, min(46vw, 640px)) * 0.84);
+  height: calc(var(--art-orb-size, min(46vw, 640px)) * 0.84);
+  left: 43%;
+  top: 42%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-secondary) 92%, transparent) 0%,
+    color-mix(in srgb, var(--ambient-secondary) 46%, transparent) 30%,
+    color-mix(in srgb, var(--ambient-secondary) 15%, transparent) 56%,
+    transparent 80%
+  );
+  animation: ambientOrbB 22s ease-in-out infinite alternate-reverse;
+}
+
+.ambient-layer__orb--accent {
+  width: calc(var(--art-orb-size, min(46vw, 640px)) * 0.66);
+  height: calc(var(--art-orb-size, min(46vw, 640px)) * 0.66);
+  left: 59%;
+  top: 33%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ambient-accent) 88%, transparent) 0%,
+    color-mix(in srgb, var(--ambient-accent) 42%, transparent) 32%,
+    color-mix(in srgb, var(--ambient-accent) 13%, transparent) 58%,
+    transparent 82%
+  );
+  animation: ambientOrbC 20s ease-in-out infinite alternate;
+}
+
+.ambient-layer--art .ambient-layer__orb--primary {
+  opacity: calc(var(--ambient-opacity, 0.64) * 1);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+}
+
+.ambient-layer--art .ambient-layer__orb--secondary {
+  opacity: calc(var(--ambient-opacity, 0.64) * 0.76);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+}
+
+.ambient-layer--art .ambient-layer__orb--accent {
+  opacity: calc(var(--ambient-opacity, 0.64) * 0.62);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+}
+
+/* Tiny internal movement: a visible organic swirl without becoming a shader bg. */
+.ambient-layer__swirl {
+  z-index: 3;
+  left: 50%;
+  top: 38%;
+  width: calc(var(--art-orb-size, min(46vw, 640px)) * 1.05);
+  height: calc(var(--art-orb-size, min(46vw, 640px)) * 1.05);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0) scale(0.92);
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  transition:
+    opacity 850ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1050ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 850ms ease;
+  will-change: opacity, transform;
+}
+
+.ambient-layer__swirl--a {
+  background: conic-gradient(
+    from 20deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--ambient-primary) 26%, transparent) 76deg,
+    transparent 138deg,
+    color-mix(in srgb, var(--ambient-accent) 18%, transparent) 224deg,
+    transparent 320deg
+  );
+  animation: ambientSwirlA 28s linear infinite;
+}
+
+.ambient-layer__swirl--b {
+  width: calc(var(--art-orb-size, min(46vw, 640px)) * 0.76);
+  height: calc(var(--art-orb-size, min(46vw, 640px)) * 0.76);
+  background: conic-gradient(
+    from 180deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--ambient-secondary) 22%, transparent) 92deg,
+    transparent 176deg,
+    color-mix(in srgb, var(--ambient-primary) 16%, transparent) 268deg,
+    transparent 360deg
+  );
+  animation: ambientSwirlB 34s linear infinite reverse;
+}
+
+.ambient-layer--art .ambient-layer__swirl--a {
+  opacity: calc(var(--ambient-opacity, 0.64) * 0.56);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+}
+
+.ambient-layer--art .ambient-layer__swirl--b {
+  opacity: calc(var(--ambient-opacity, 0.64) * 0.42);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+}
+
+.ambient-layer__readability {
+  inset: 0;
+  z-index: 4;
+  background:
+    radial-gradient(
+      ellipse at 50% 67%,
+      color-mix(in srgb, var(--bg) 16%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0 58%,
+      color-mix(in srgb, var(--bg) 10%, transparent) 82%,
+      color-mix(in srgb, var(--bg) 22%, transparent) 100%
+    );
+  opacity: var(--room-readability-opacity, 0.28);
+  transition:
+    opacity 750ms ease,
+    background 750ms ease;
+}
+
+.ambient-layer--art .ambient-layer__readability {
+  opacity: var(--room-readability-art-opacity, 0.2);
+}
+
+.ambient-layer__vignette {
+  inset: 0;
+  z-index: 5;
+  background: var(--room-vignette);
+  transition: opacity 800ms ease;
+}
+
+.ambient-layer__grain {
+  inset: -10%;
+  z-index: 6;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  opacity: var(--room-grain-opacity, 0.026);
+  mix-blend-mode: var(--room-grain-blend, overlay);
+  animation: ambientGrainShift 0.12s steps(1) infinite;
+}
+
+/* Theme-specific compositing */
+
+[data-theme="noir"] .ambient-layer--off .ambient-layer__base {
+  background:
+    radial-gradient(
+      ellipse at 50% 40%,
+      rgba(255, 255, 255, 0.015),
+      transparent 42%
+    ),
+    #000000;
+}
+
+[data-theme="noir"] .ambient-layer__base::after {
+  --art-base-opacity: 0.72;
+}
+
+[data-theme="noir"] .ambient-layer__readability {
+  --room-readability-opacity: 0.13;
+  --room-readability-art-opacity: 0.1;
+}
+
+[data-theme="glass"] .ambient-layer__base::after {
+  --art-base-opacity: 0.52;
+  --art-base-blend: normal;
+}
+
+[data-theme="glass"] .ambient-layer__readability {
+  --room-readability-opacity: 0.14;
+  --room-readability-art-opacity: 0.08;
+  background:
+    radial-gradient(
+      ellipse at 50% 67%,
+      rgba(255, 255, 255, 0.16),
+      transparent 33%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0 60%,
+      rgba(255, 255, 255, 0.06) 84%,
+      rgba(255, 255, 255, 0.14) 100%
+    );
+}
+
+[data-theme="glass"] .ambient-layer__orb {
+  filter: blur(var(--art-orb-blur, 66px)) saturate(1.34);
+  mix-blend-mode: normal;
+}
+
+[data-theme="glass"] .ambient-layer__swirl {
+  mix-blend-mode: normal;
+  filter: blur(22px) saturate(1.24);
+}
+
+/* Animation */
+
+@keyframes ambientVelvetDrift {
+  from {
+    transform: translate3d(-2%, -1%, 0) rotate(-2deg);
+  }
+  to {
+    transform: translate3d(2%, 1%, 0) rotate(2deg);
+  }
+}
+
+@keyframes ambientOrbA {
+  from {
+    translate: -18px -8px;
+    scale: 0.98;
+  }
+  to {
+    translate: 16px 10px;
+    scale: 1.04;
+  }
+}
+
+@keyframes ambientOrbB {
+  from {
+    translate: 10px 12px;
+    scale: 0.94;
+  }
+  to {
+    translate: -14px -6px;
+    scale: 1.03;
+  }
+}
+
+@keyframes ambientOrbC {
+  from {
+    translate: -8px 6px;
+    scale: 0.96;
+  }
+  to {
+    translate: 12px -12px;
+    scale: 1.08;
+  }
+}
+
+@keyframes ambientSwirlA {
+  from {
+    rotate: 0deg;
+    scale: 0.96;
+  }
+  to {
+    rotate: 360deg;
+    scale: 1.02;
+  }
+}
+
+@keyframes ambientSwirlB {
+  from {
+    rotate: 0deg;
+    scale: 1.02;
+  }
+  to {
+    rotate: 360deg;
+    scale: 0.96;
+  }
+}
+
+@keyframes ambientGrainShift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(-1%, 1%, 0);
+  }
+  50% {
+    transform: translate3d(1%, -1%, 0);
+  }
+  75% {
+    transform: translate3d(-1%, -1%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-layer__velvet,
+  .ambient-layer__orb,
+  .ambient-layer__swirl,
+  .ambient-layer__grain {
+    animation: none;
+  }
+
+  .ambient-layer__base::after,
+  .ambient-layer__orb,
+  .ambient-layer__swirl,
+  .ambient-layer__readability,
+  .ambient-layer__vignette {
+    transition-duration: 250ms;
+  }
+}

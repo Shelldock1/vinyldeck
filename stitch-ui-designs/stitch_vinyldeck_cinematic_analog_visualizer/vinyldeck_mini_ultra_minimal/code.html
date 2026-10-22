@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck Mini - Ultra-Minimal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;400;700;900&amp;family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#ffffff",
+                      "inverse-primary": "#5d5f5f",
+                      "on-secondary": "#313030",
+                      "primary-fixed": "#e2e2e2",
+                      "on-secondary-fixed-variant": "#474646",
+                      "surface-container": "#201f1f",
+                      "outline-variant": "#444748",
+                      "surface-dim": "#141313",
+                      "outline": "#8e9192",
+                      "surface-container-highest": "#353434",
+                      "surface-container-lowest": "#0e0e0e",
+                      "on-error": "#690005",
+                      "tertiary-container": "#e2e2e2",
+                      "on-tertiary": "#2f3131",
+                      "background": "#141313",
+                      "on-tertiary-fixed-variant": "#454747",
+                      "on-primary-container": "#636565",
+                      "error-container": "#93000a",
+                      "inverse-on-surface": "#313030",
+                      "tertiary-fixed-dim": "#c6c6c7",
+                      "primary-container": "#e2e2e2",
+                      "tertiary-fixed": "#e2e2e2",
+                      "on-tertiary-container": "#636565",
+                      "on-secondary-container": "#bab8b7",
+                      "secondary-container": "#4a4949",
+                      "primary": "#ffffff",
+                      "error": "#ffb4ab",
+                      "secondary-fixed-dim": "#c9c6c5",
+                      "on-surface": "#e5e2e1",
+                      "surface-tint": "#c6c6c7",
+                      "primary-fixed-dim": "#c6c6c7",
+                      "on-error-container": "#ffdad6",
+                      "surface-container-low": "#1c1b1b",
+                      "surface-bright": "#3a3939",
+                      "on-primary": "#2f3131",
+                      "secondary-fixed": "#e5e2e1",
+                      "surface-variant": "#353434",
+                      "surface-container-high": "#2a2a2a",
+                      "on-primary-fixed-variant": "#454747",
+                      "on-background": "#e5e2e1",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "on-surface-variant": "#c4c7c8",
+                      "on-primary-fixed": "#1a1c1c",
+                      "surface": "#141313",
+                      "on-tertiary-fixed": "#1a1c1c",
+                      "inverse-surface": "#e5e2e1",
+                      "secondary": "#c9c6c5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "max-width": "1440px",
+                      "margin-mobile": "24px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-xl": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-xl": [
+                              "72px",
+                              {
+                                      "lineHeight": "80px",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "200"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.15em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>body {
+    /* Simulating a desktop environment for a floating widget */
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBomdsgnD8T0BnSyU_Ctxan3j5LJVeP1quB4tpswM8L39cyelz47gytRWMs-f6lK5QMVHHS1r4ZdFxNYxLAgmNAM81F3dAsf2MG-BvlkgpGsVhzbzR4R1JX_eZqO4YBHWTZJgu3yq5I6KF6lnF5-2JrVy-yxQndskUbmRmrEyeV4mFs5HbQmBY4TsezSBypjD7p1qH-Z2CPFJIW2KzUtOOHOWkI727kh6r3ZMuCx5IX2uPjEwEhOsHLftBHOEJ4cZDbmoEdY3zDSDTl);
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center
+    }
+.glass-chassis {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.5)
+    }
+.machined-recess {
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05)
+    }
+.vinyl-grooves {
+    background: repeating-radial-gradient(#111 0, #111 1px, #0a0a0a 2px, #111 3px)
+    }
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+        }
+    }
+.spin-active {
+    animation: spin 4s linear infinite
+    }
+/* Hover Controls Reveal */
+.controls-overlay {
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+    }
+.mini-player-container:hover .controls-overlay {
+    opacity: 1
+    }
+.ambient-bloom {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    z-index: -1;
+    filter: blur(20px);
+    opacity: 0.5;
+    transition: opacity 0.5s ease
+    }
+.mini-player-container:hover .ambient-bloom {
+    opacity: 0.8;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 70%)
+    }
+/* SVG Progress Ring */
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.1s linear;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    stroke: rgba(255, 255, 255, 0.8);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5))
+    }</style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased">
+<!-- Floating Mini Player -->
+<div class="mini-player-container relative group cursor-pointer w-48 h-48 transition-transform duration-300 hover:scale-105 active:scale-95">
+<!-- Ambient Luminous Depth -->
+<div class="ambient-bloom"></div>
+<!-- Glass Chassis -->
+<div class="glass-chassis absolute inset-0 rounded-full bg-surface-dim/40 border border-outline-variant/30 flex items-center justify-center">
+<!-- Recessed Platter Area -->
+<div class="machined-recess w-[164px] h-[164px] rounded-full bg-surface-container-lowest flex items-center justify-center relative overflow-hidden">
+<!-- Vinyl Record (Spinning) -->
+<div class="spin-active w-[156px] h-[156px] rounded-full vinyl-grooves relative flex items-center justify-center shadow-lg">
+<!-- Label -->
+<div class="w-16 h-16 rounded-full bg-surface-container-highest border border-surface flex items-center justify-center overflow-hidden">
+<img alt="Album Art Center" class="w-full h-full object-cover opacity-80 mix-blend-luminosity" data-alt="A moody, high-end abstract texture reminiscent of a luxury audio brand label. Dark slate greys with subtle metallic flakes. The lighting is precise and theatrical, suggesting premium hardware. Tactile realism mixed with digital minimalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU-hEo41F-JjJaOCSvQO6I-FmXHdEOipvivpUZ-knzCtlWB9wlWxlpCPtPih7KvdBh8Yn37pTEgE9E1IqlZF9X_UOWDoAMalxhek-3GGQgxsjeiBKhUD_3XUCxeng-y0wEZpxvyVZy64QfEPbST34dC5zPuFPbH0GOvz63YKC0PIq3FKl6nvENDw83korTVSBZBDm1T0Gijmze8lGW4RChTGYXGoyV4zwUItgHOJI3UA-vuozOo9VVaVY1O8QYLzwP8WRF8uPPOuAE"/>
+</div>
+<!-- Spindle Hole -->
+<div class="absolute w-2 h-2 bg-surface-dim rounded-full shadow-inner border border-white/10 z-10"></div>
+</div>
+<!-- Hover Controls Overlay (Glassmorphism) -->
+<div class="controls-overlay absolute inset-0 bg-surface-container-lowest/60 backdrop-blur-sm flex items-center justify-center gap-4 z-20">
+<button aria-label="Previous" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center border border-white/5">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="skip_previous" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button aria-label="Pause" class="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center border border-primary/20 backdrop-blur-md">
+<span class="material-symbols-outlined text-primary text-[28px]" data-icon="pause" data-weight="fill" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button aria-label="Next" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center border border-white/5">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="skip_next" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Progress Ring (Outer Edge) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" viewbox="0 0 192 192">
+<circle class="progress-ring__circle" cx="96" cy="96" fill="transparent" r="94" stroke-dasharray="590.62" stroke-dashoffset="147.65" stroke-width="2"> <!-- 75% complete approx -->
+</circle>
+</svg>
+</div>
+<!-- Background decorative image instruction per prompt -->
+<div class="hidden">
+<img alt="bg" data-alt="A sophisticated, ultra-minimalist desktop wallpaper designed for an audiophile interface. Dark, deep charcoal and obsidian blacks dominate the palette. Soft, diffused ambient light blooms subtly from the corners, creating a sense of deep, cinematic space. The texture suggests frosted glass over brushed aluminum, perfectly complementing high-end audio software." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDos0ZT55jB_JRd9u_J9X-MA3toipKLTOad6cXOxZzGRi1jobXXrZDZEf7gnmN8S8q0moOIzpA9tcnpEadvSThh7dMqVfKQ2ki7arwDOn9I6vTqrQkhfmksO2mf4-1ZX_i15p-eayEPrRWTEtNvA0uj8yO4FrlxqoZCkXx8n_kbHDEgqZXP9Z8Fs0RyO5acbgvlW3CqGiCyYUynBYGihClfkEVnGkIptr-4Vg67XCjsE-zHhkwKEvasovZrLibv0lEmry0NTIOBLAnY"/>
+</div>
+</body></html>

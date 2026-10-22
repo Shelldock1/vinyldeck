@@ -1,0 +1,374 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Cinematic Playback</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Sora:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#353535",
+                      "on-error-container": "#ffdad6",
+                      "on-error": "#690005",
+                      "inverse-surface": "#e5e2e2",
+                      "on-background": "#e5e2e2",
+                      "on-primary-fixed": "#161c22",
+                      "primary-fixed": "#dde3eb",
+                      "primary-fixed-dim": "#c1c7cf",
+                      "outline-variant": "#44474a",
+                      "secondary-fixed-dim": "#c6c6c6",
+                      "on-secondary-fixed-variant": "#474747",
+                      "on-primary": "#2b3137",
+                      "surface-container-low": "#1b1b1c",
+                      "surface-dim": "#131314",
+                      "on-primary-container": "#5f656c",
+                      "surface-bright": "#393939",
+                      "tertiary-container": "#f3dfd0",
+                      "inverse-primary": "#595f66",
+                      "on-tertiary-fixed-variant": "#51443a",
+                      "surface-container-highest": "#353535",
+                      "tertiary-fixed-dim": "#d6c3b5",
+                      "on-secondary": "#303030",
+                      "on-surface": "#e5e2e2",
+                      "on-tertiary-container": "#706256",
+                      "on-primary-fixed-variant": "#41474e",
+                      "surface-container-high": "#2a2a2a",
+                      "primary": "#ffffff",
+                      "on-tertiary": "#3a2e24",
+                      "tertiary": "#ffffff",
+                      "error-container": "#93000a",
+                      "error": "#ffb4ab",
+                      "surface": "#131314",
+                      "on-surface-variant": "#c5c6cb",
+                      "surface-container-lowest": "#0e0e0f",
+                      "inverse-on-surface": "#313031",
+                      "secondary-container": "#474747",
+                      "secondary": "#c6c6c6",
+                      "secondary-fixed": "#e2e2e2",
+                      "outline": "#8e9195",
+                      "background": "#131314",
+                      "surface-container": "#201f20",
+                      "primary-container": "#dde3eb",
+                      "on-secondary-fixed": "#1b1b1b",
+                      "on-secondary-container": "#b5b5b5",
+                      "on-tertiary-fixed": "#241a11",
+                      "surface-tint": "#c1c7cf",
+                      "tertiary-fixed": "#f3dfd0",
+                      
+                      // Warm Analog additions
+                      "warm-bronze": "#c28b5e",
+                      "warm-cream": "#f4ebd8",
+                      "vinyl-black": "#0c0b0a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "touch-target": "48px",
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "container-padding": "32px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Sora"
+                      ],
+                      "headline-md": [
+                              "Sora"
+                      ],
+                      "display-lg": [
+                              "Sora"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              backgroundImage: {
+                  'vinyl-grooves': 'radial-gradient(circle, transparent 20%, rgba(255,255,255,0.03) 21%, transparent 22%, transparent 30%, rgba(255,255,255,0.03) 31%, transparent 32%, transparent 40%, rgba(255,255,255,0.03) 41%, transparent 42%, transparent 50%, rgba(255,255,255,0.03) 51%, transparent 52%, transparent 60%, rgba(255,255,255,0.03) 61%, transparent 62%, transparent 70%, rgba(255,255,255,0.03) 71%, transparent 72%, transparent 80%, rgba(255,255,255,0.03) 81%, transparent 82%)',
+                  'bronze-metal': 'linear-gradient(135deg, #a67b5b 0%, #c28b5e 25%, #e0ac83 50%, #c28b5e 75%, #a67b5b 100%)'
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .ambient-bg {
+            background: radial-gradient(circle at 50% 50%, #2a1f18 0%, #000000 80%);
+        }
+        .glass-panel {
+            background: rgba(20, 15, 10, 0.6);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Physics Animations */
+        .vinyl-spin {
+            animation: spin 3s linear infinite;
+            animation-play-state: paused;
+            transition: animation-duration 2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        .is-playing .vinyl-spin {
+            animation-play-state: running;
+            animation-duration: 2s;
+        }
+
+        .vinyl-stop {
+            transition: transform 3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .glow-ring {
+            box-shadow: 0 0 20px rgba(194, 139, 94, 0.2), inset 0 0 10px rgba(194, 139, 94, 0.1);
+            transition: all 1s ease-in-out;
+        }
+        
+        .is-playing .glow-ring {
+            box-shadow: 0 0 50px rgba(194, 139, 94, 0.5), inset 0 0 30px rgba(194, 139, 94, 0.3);
+            animation: pulse-glow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 40px rgba(194, 139, 94, 0.4), inset 0 0 20px rgba(194, 139, 94, 0.2); }
+            100% { box-shadow: 0 0 60px rgba(194, 139, 94, 0.6), inset 0 0 40px rgba(194, 139, 94, 0.4); }
+        }
+
+        .tonearm {
+            transform: rotate(15deg);
+            transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* Spring easing */
+            transform-origin: top right;
+            will-change: transform;
+        }
+
+        .is-playing .tonearm {
+            transform: rotate(25deg);
+        }
+        
+        .headshell {
+            transform: translateY(-5px);
+            transition: transform 0.8s ease-in-out 0.5s;
+        }
+        
+        .is-playing .headshell {
+            transform: translateY(0);
+        }
+
+        .groove-reflection {
+            opacity: 0.3;
+            transition: opacity 2s ease-in-out;
+            animation: groove-orbit 6s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .is-playing .groove-reflection {
+            opacity: 0.8;
+            animation-play-state: running;
+        }
+        
+        @keyframes groove-orbit {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen w-screen overflow-hidden flex flex-col font-body-lg ambient-bg relative" id="playback-container">
+<!-- Texture Overlay (CSS-based noise approach for better performance) -->
+<div class="absolute inset-0 z-50 pointer-events-none opacity-20 mix-blend-overlay" style="background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, #000 1px, transparent 2px);"></div>
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding pt-8 no-border bg-transparent flat no shadows">
+<div class="font-display-lg text-display-lg tracking-tighter text-warm-cream uppercase opacity-80">VinylDeck</div>
+<div class="flex items-center gap-gutter">
+<button class="text-warm-cream opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">palette</span>
+</button>
+<button class="text-warm-cream opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">queue_music</span>
+</button>
+<button class="text-warm-bronze opacity-100 drop-shadow-[0_0_8px_rgba(194,139,94,0.6)] hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fullscreen</span>
+</button>
+<button class="text-warm-cream opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col items-center justify-center relative z-10 w-full h-full pb-32">
+<!-- Center Stage: The Vinyl -->
+<div class="relative w-[614px] h-[614px] max-w-[600px] max-h-[600px] flex items-center justify-center">
+<!-- Glow Ring -->
+<div class="absolute inset-[-10%] rounded-full glow-ring opacity-70 pointer-events-none"></div>
+<!-- Vinyl Record -->
+<div class="w-full h-full rounded-full bg-vinyl-black shadow-2xl relative flex items-center justify-center vinyl-spin vinyl-stop" id="vinyl-disc" style="box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 4px #1a1a1a;">
+<!-- Grooves -->
+<div class="absolute inset-2 rounded-full bg-vinyl-grooves pointer-events-none mix-blend-screen opacity-50"></div>
+<!-- Reflections -->
+<div class="absolute inset-0 rounded-full groove-reflection" style="background: conic-gradient(from 45deg, transparent 0deg, rgba(255,255,255,0.05) 45deg, transparent 90deg, transparent 180deg, rgba(255,255,255,0.05) 225deg, transparent 270deg);"></div>
+<div class="absolute inset-0 rounded-full groove-reflection" style="background: conic-gradient(from 135deg, transparent 0deg, rgba(194,139,94,0.08) 45deg, transparent 90deg, transparent 180deg, rgba(194,139,94,0.08) 225deg, transparent 270deg); animation-direction: reverse; animation-duration: 8s;"></div>
+<!-- Custom Center Label -->
+<div class="w-[35%] h-[35%] rounded-full bg-warm-cream flex flex-col items-center justify-center relative overflow-hidden z-10 border border-black/20" style="box-shadow: inset 0 0 20px rgba(0,0,0,0.2);">
+<!-- Spindle Hole -->
+<div class="absolute w-4 h-4 bg-vinyl-black rounded-full z-20 shadow-inner"></div>
+<!-- Label Art/Text -->
+<div class="absolute inset-0 flex flex-col items-center justify-around py-4 text-vinyl-black font-body-md opacity-80" style="background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);">
+<span class="font-label-caps text-[10px] tracking-widest uppercase">Stereo</span>
+<div class="text-center">
+<h2 class="font-headline-md text-sm font-bold text-warm-bronze">Midnight Rambler</h2>
+<p class="text-[10px] uppercase tracking-wider mt-1">The Rolling Stones</p>
+</div>
+<span class="font-label-caps text-[10px] tracking-widest uppercase">33 ⅓ RPM</span>
+</div>
+</div>
+</div>
+<!-- Tonearm (Skeuomorphic Touch) -->
+<div class="absolute top-[10%] -right-[15%] w-16 h-[80%] z-20 origin-top pointer-events-none tonearm" id="tonearm-assembly">
+<!-- Pivot -->
+<div class="absolute top-0 right-0 w-24 h-24 bg-surface-variant rounded-full shadow-2xl border-2 border-outline-variant flex items-center justify-center bg-bronze-metal z-30">
+<div class="w-16 h-16 bg-surface-dim rounded-full shadow-inner border border-surface-variant flex items-center justify-center">
+<div class="w-4 h-4 bg-warm-bronze rounded-full shadow-lg"></div>
+</div>
+</div>
+<!-- Arm -->
+<div class="absolute top-12 right-[42px] w-2 h-full bg-bronze-metal rounded-full shadow-lg z-20"></div>
+<!-- Headshell -->
+<div class="absolute bottom-0 right-[38px] w-8 h-16 bg-surface-variant rounded-sm shadow-xl border-t border-outline-variant transform rotate-12 headshell z-10">
+<div class="absolute -left-1 top-2 w-2 h-4 bg-warm-bronze"></div>
+<div class="absolute -bottom-1 right-2 w-1 h-3 bg-white/20 shadow-sm rounded-b-sm"></div> <!-- Stylus visual hint -->
+</div>
+</div>
+</div>
+<!-- Track Info & Controls Area (Bottom edge) -->
+<div class="absolute bottom-32 left-0 w-full px-container-padding flex flex-col items-center gap-8">
+<!-- Metadata -->
+<div class="text-center space-y-2">
+<h1 class="font-headline-lg text-headline-lg text-warm-cream drop-shadow-md">Midnight Rambler</h1>
+<p class="font-body-lg text-body-lg text-warm-bronze opacity-80">Let It Bleed • 1969</p>
+</div>
+<!-- Playback Progress Ring / Light Path -->
+<div class="w-full max-w-2xl flex items-center gap-4 px-8">
+<span class="font-label-caps text-label-caps text-warm-cream opacity-50" id="time-current">02:45</span>
+<div class="flex-1 h-[2px] bg-white/10 relative rounded-full overflow-hidden">
+<div class="absolute top-0 left-0 h-full w-[45%] bg-warm-bronze shadow-[0_0_10px_rgba(194,139,94,0.8)] transition-all duration-1000 ease-linear" id="progress-bar"></div>
+</div>
+<span class="font-label-caps text-label-caps text-warm-cream opacity-50">-04:12</span>
+</div>
+<!-- Controls -->
+<div class="flex items-center gap-8">
+<button class="w-12 h-12 rounded-full glass-panel flex items-center justify-center text-warm-cream opacity-60 hover:opacity-100 hover:text-warm-bronze transition-all hover:shadow-[0_0_15px_rgba(194,139,94,0.3)]">
+<span class="material-symbols-outlined text-[24px]">shuffle</span>
+</button>
+<button class="w-16 h-16 rounded-full glass-panel flex items-center justify-center text-warm-cream hover:text-warm-bronze transition-all hover:scale-105">
+<span class="material-symbols-outlined text-[32px] font-light">skip_previous</span>
+</button>
+<!-- Play/Pause Button -->
+<button class="w-24 h-24 rounded-full bg-warm-bronze flex items-center justify-center text-vinyl-black shadow-[0_0_30px_rgba(194,139,94,0.4)] hover:shadow-[0_0_50px_rgba(194,139,94,0.6)] hover:scale-105 transition-all relative overflow-hidden" id="play-pause-btn" onclick="togglePlayback()">
+<span class="material-symbols-outlined text-[48px] transition-transform duration-300" id="play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="w-16 h-16 rounded-full glass-panel flex items-center justify-center text-warm-cream hover:text-warm-bronze transition-all hover:scale-105">
+<span class="material-symbols-outlined text-[32px] font-light">skip_next</span>
+</button>
+<button class="w-12 h-12 rounded-full glass-panel flex items-center justify-center text-warm-cream opacity-60 hover:opacity-100 hover:text-warm-bronze transition-all hover:shadow-[0_0_15px_rgba(194,139,94,0.3)]">
+<span class="material-symbols-outlined text-[24px]">repeat</span>
+</button>
+</div>
+</div>
+</main>
+<script>
+    let isPlaying = false;
+    let progressInterval;
+    let progress = 45; // Start at 45% based on visual
+    
+    // Simulate physics rotation tracking for smooth stop
+    const vinylDisc = document.getElementById('vinyl-disc');
+    
+    function getRotationDegrees(element) {
+        const st = window.getComputedStyle(element, null);
+        const tr = st.getPropertyValue("-webkit-transform") ||
+                 st.getPropertyValue("-moz-transform") ||
+                 st.getPropertyValue("-ms-transform") ||
+                 st.getPropertyValue("-o-transform") ||
+                 st.getPropertyValue("transform") ||
+                 "none";
+                 
+        if (tr === "none") return 0;
+        
+        const values = tr.split('(')[1].split(')')[0].split(',');
+        const a = values[0];
+        const b = values[1];
+        let angle = Math.round(Math.atan2(b, a) * (180/Math.PI));
+        return (angle < 0) ? angle + 360 : angle;
+    }
+
+    function togglePlayback() {
+        const container = document.getElementById('playback-container');
+        const icon = document.getElementById('play-icon');
+        const progressBar = document.getElementById('progress-bar');
+        
+        isPlaying = !isPlaying;
+        
+        if (isPlaying) {
+            // Play Sequence
+            container.classList.add('is-playing');
+            
+            // Clean up any inline transform from a previous stop
+            vinylDisc.style.transform = '';
+            
+            // Icon transition
+            icon.style.transform = 'scale(0.8) rotate(90deg)';
+            setTimeout(() => {
+                icon.textContent = 'pause';
+                icon.style.transform = 'scale(1) rotate(0deg)';
+            }, 150);
+            
+            // Simulate progress
+            clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if(progress < 100) {
+                    progress += 0.1;
+                    progressBar.style.width = `${progress}%`;
+                }
+            }, 1000);
+            
+        } else {
+            // Pause Sequence
+            container.classList.remove('is-playing');
+            
+            // Capture current rotation to apply to inline style for smooth deceleration
+            // This is a simplified physics approach for CSS animations
+            const currentRot = getRotationDegrees(vinylDisc);
+            // Add a bit more rotation to simulate inertia stopping
+            vinylDisc.style.transform = `rotate(${currentRot + 45}deg)`;
+            
+            // Icon transition
+            icon.style.transform = 'scale(0.8) rotate(-90deg)';
+            setTimeout(() => {
+                icon.textContent = 'play_arrow';
+                icon.style.transform = 'scale(1) rotate(0deg)';
+            }, 150);
+            
+            clearInterval(progressInterval);
+        }
+    }
+    
+    // Initialize in paused state
+    document.getElementById('play-icon').textContent = 'play_arrow';
+</script>
+</body></html>

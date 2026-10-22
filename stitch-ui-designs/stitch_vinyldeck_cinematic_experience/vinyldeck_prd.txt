@@ -1,0 +1,24 @@
+# VinylDeck Product Requirements
+
+## Overview
+VinylDeck is an immersive, fullscreen vinyl record player experience for Spotify Desktop. It prioritizes emotion, tactile realism, and cinematic atmosphere over utility.
+
+## Key Screens / Themes
+1. **Noir Theme**: The core experience in deep cinematic blacks. Features a large centered spinning vinyl, album art label, and brushed metal tonearm.
+2. **Glass Theme**: Translucent, frosted Apple-style interface with blurred background orbs.
+3. **Aurora Theme**: Midnight cyan and teal colorway with ethereal glow accents.
+4. **Vapor Theme**: Synthwave-inspired magenta and purple neon aesthetic.
+5. **Paper Theme**: Warm analog cream and bronze tones for a retro-luxe feel.
+
+## Visual Requirements
+- 45-60% screen occupied by a realistic spinning vinyl.
+- Realistic grooves, reflective sheen, and physical tonearm.
+- Glassmorphism UI controls floating below the record.
+- Progress ring integrated around the vinyl circumference.
+- Elegant, minimal typography.
+
+## Interaction & Motion (Instructional)
+- Continuous rotation during playback.
+- Subtle vinyl wobble and light reflection shifts.
+- Floating background color orbs.
+- Spring-easing for UI transitions.

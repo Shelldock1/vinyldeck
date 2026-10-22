@@ -1,0 +1,224 @@
+
+   Source: C:\Coding\vinyldeck\stitch-ui-designs
+
+Mode            Length Hierarchy
+----            ------ ---------
+d----          0.00  B stitch-ui-designs
+d----        826.00  B ├── stitch_vinyldeck_cinematic_analog_visualizer
+-----        826.00  B │   ├── web_assets.md
+d----          6.86 KB │   ├── aurora_cinematic
+-----          6.86 KB │   │   └── DESIGN.md
+d----          7.45 KB │   ├── glass
+-----          7.45 KB │   │   └── DESIGN.md
+d----          7.01 KB │   ├── noir
+-----          7.01 KB │   │   └── DESIGN.md
+d----          6.82 KB │   ├── paper
+-----          6.82 KB │   │   └── DESIGN.md
+d----          7.35 KB │   ├── vapor
+-----          7.35 KB │   │   └── DESIGN.md
+d----          1.51 MB │   ├── vinyldeck_animated_playback_experience
+-----         19.10 KB │   │   ├── code.html
+-a---          1.49 MB │   │   └── screen.png
+d----        514.25 KB │   ├── vinyldeck_aurora_experience_1
+-----         16.78 KB │   │   ├── code.html
+-a---        497.47 KB │   │   └── screen.png
+d----        599.28 KB │   ├── vinyldeck_aurora_experience_2
+-----         15.20 KB │   │   ├── code.html
+-a---        584.08 KB │   │   └── screen.png
+d----        720.20 KB │   ├── vinyldeck_aurora_experience_fixed
+-----         16.04 KB │   │   ├── code.html
+-a---        704.16 KB │   │   └── screen.png
+d----          6.05 KB │   ├── vinyldeck_cinematic_collection
+-----          6.05 KB │   │   └── DESIGN.md
+d----          1.46 MB │   ├── vinyldeck_fullscreen_cinematic_mode
+-----         19.69 KB │   │   ├── code.html
+-a---          1.44 MB │   │   └── screen.png
+d----        452.13 KB │   ├── vinyldeck_glass_experience_1
+-----         15.27 KB │   │   ├── code.html
+-a---        436.87 KB │   │   └── screen.png
+d----        309.06 KB │   ├── vinyldeck_glass_experience_2
+-----         17.37 KB │   │   ├── code.html
+-a---        291.69 KB │   │   └── screen.png
+d----        476.67 KB │   ├── vinyldeck_glass_experience_fixed
+-----         14.86 KB │   │   ├── code.html
+-a---        461.81 KB │   │   └── screen.png
+d----          1.22 MB │   ├── vinyldeck_master_cinematic_experience
+-----         23.53 KB │   │   ├── code.html
+-a---          1.20 MB │   │   └── screen.png
+d----          1.22 MB │   ├── vinyldeck_master_cinematic_experience_html
+-----         23.54 KB │   │   ├── code.html
+-a---          1.20 MB │   │   └── screen.png
+d----         75.69 KB │   ├── vinyldeck_mini_compact_square
+-----         12.45 KB │   │   ├── code.html
+-a---         63.24 KB │   │   └── screen.png
+d----        860.11 KB │   ├── vinyldeck_mini_transparent_acrylic
+-----         10.86 KB │   │   ├── code.html
+-a---        849.24 KB │   │   └── screen.png
+d----        705.67 KB │   ├── vinyldeck_mini_ultra_minimal
+-----         12.34 KB │   │   ├── code.html
+-a---        693.33 KB │   │   └── screen.png
+d----        250.87 KB │   ├── vinyldeck_mini_vertical
+-----         15.70 KB │   │   ├── code.html
+-a---        235.16 KB │   │   └── screen.png
+d----          6.74 KB │   ├── vinyldeck_narrative
+-----          6.74 KB │   │   └── DESIGN.md
+d----        419.05 KB │   ├── vinyldeck_noir_experience_2
+-----         14.03 KB │   │   ├── code.html
+-a---        405.02 KB │   │   └── screen.png
+d----        238.77 KB │   ├── vinyldeck_noir_experience_3
+-----         14.60 KB │   │   ├── code.html
+-a---        224.17 KB │   │   └── screen.png
+d----          1.00 MB │   ├── vinyldeck_noir_experience_4
+-----         18.71 KB │   │   ├── code.html
+-a---       1006.66 KB │   │   └── screen.png
+d----        551.00 KB │   ├── vinyldeck_noir_experience_5
+-----         15.07 KB │   │   ├── code.html
+-a---        535.93 KB │   │   └── screen.png
+d----        588.21 KB │   ├── vinyldeck_noir_experience_fixed
+-----         15.07 KB │   │   ├── code.html
+-a---        573.14 KB │   │   └── screen.png
+d----        305.12 KB │   ├── vinyldeck_paper_experience_1
+-----         18.63 KB │   │   ├── code.html
+-a---        286.49 KB │   │   └── screen.png
+d----        369.20 KB │   ├── vinyldeck_paper_experience_2
+-----         15.63 KB │   │   ├── code.html
+-a---        353.57 KB │   │   └── screen.png
+d----          1.53 MB │   ├── vinyldeck_playback_interactions
+-----         21.67 KB │   │   ├── code.html
+-a---          1.51 MB │   │   └── screen.png
+d----          1.45 MB │   ├── vinyldeck_refined_noir_experience
+-----         18.18 KB │   │   ├── code.html
+-a---          1.43 MB │   │   └── screen.png
+d----        587.18 KB │   ├── vinyldeck_vapor_experience_1
+-----         14.18 KB │   │   ├── code.html
+-a---        573.00 KB │   │   └── screen.png
+d----        380.46 KB │   └── vinyldeck_vapor_experience_2
+-----         19.27 KB │       ├── code.html
+-a---        361.18 KB │       └── screen.png
+d----          0.00  B └── stitch_vinyldeck_cinematic_experience
+d----        421.04 KB     ├── vinyldeck_acrylic_mini_player
+-----         14.18 KB     │   ├── code.html
+-a---        406.86 KB     │   └── screen.png
+d----        368.11 KB     ├── vinyldeck_acrylic_mini_player_animated
+-----         14.98 KB     │   ├── code.html
+-a---        353.12 KB     │   └── screen.png
+d----        295.04 KB     ├── vinyldeck_acrylic_mini_player_high_fidelity_motion
+-----         18.68 KB     │   ├── code.html
+-a---        276.36 KB     │   └── screen.png
+d----        432.40 KB     ├── vinyldeck_advanced_settings_1
+-----         23.43 KB     │   ├── code.html
+-a---        408.97 KB     │   └── screen.png
+d----        161.92 KB     ├── vinyldeck_advanced_settings_2
+-----         16.99 KB     │   ├── code.html
+-a---        144.93 KB     │   └── screen.png
+d----          1.29 MB     ├── vinyldeck_analog_fullscreen
+-----         15.67 KB     │   ├── code.html
+-a---          1.27 MB     │   └── screen.png
+d----          1.39 MB     ├── vinyldeck_analog_motion_mode
+-----         17.40 KB     │   ├── code.html
+-a---          1.37 MB     │   └── screen.png
+d----        472.53 KB     ├── vinyldeck_aurora_fullscreen
+-----         15.62 KB     │   ├── code.html
+-a---        456.91 KB     │   └── screen.png
+d----        489.81 KB     ├── vinyldeck_aurora_motion_mode
+-----         18.83 KB     │   ├── code.html
+-a---        470.98 KB     │   └── screen.png
+d----          1.05 MB     ├── vinyldeck_aurora_theme
+-----         17.41 KB     │   ├── code.html
+-a---          1.03 MB     │   └── screen.png
+d----          1.39 MB     ├── vinyldeck_cinematic_playback_interaction_analog
+-----         18.17 KB     │   ├── code.html
+-a---          1.38 MB     │   └── screen.png
+d----          1.46 MB     ├── vinyldeck_cinematic_playback_interaction_noir
+-----         21.88 KB     │   ├── code.html
+-a---          1.44 MB     │   └── screen.png
+d----          8.05 KB     ├── vinyldeck_cinematic_system
+-----          8.05 KB     │   └── DESIGN.md
+d----          1.23 MB     ├── vinyldeck_glass_high_fidelity_motion
+-----         11.67 KB     │   ├── code.html
+-a---          1.22 MB     │   └── screen.png
+d----        326.07 KB     ├── vinyldeck_glass_theme
+-----         11.91 KB     │   ├── code.html
+-a---        314.16 KB     │   └── screen.png
+d----         47.33 KB     ├── vinyldeck_minimal_widget
+-----         11.94 KB     │   ├── code.html
+-a---         35.39 KB     │   └── screen.png
+d----         50.60 KB     ├── vinyldeck_minimal_widget_animated
+-----         13.20 KB     │   ├── code.html
+-a---         37.40 KB     │   └── screen.png
+d----        247.41 KB     ├── vinyldeck_monochrome_fullscreen
+-----         11.37 KB     │   ├── code.html
+-a---        236.04 KB     │   └── screen.png
+d----        233.49 KB     ├── vinyldeck_monochrome_motion_mode
+-----         13.79 KB     │   ├── code.html
+-a---        219.70 KB     │   └── screen.png
+d----        332.85 KB     ├── vinyldeck_noir_fullscreen
+-----         13.48 KB     │   ├── code.html
+-a---        319.36 KB     │   └── screen.png
+d----          1.48 MB     ├── vinyldeck_noir_fullscreen_high_fidelity_motion
+-----         19.24 KB     │   ├── code.html
+-a---          1.46 MB     │   └── screen.png
+d----          1.50 MB     ├── vinyldeck_noir_high_fidelity_motion
+-----         17.98 KB     │   ├── code.html
+-a---          1.48 MB     │   └── screen.png
+d----        167.25 KB     ├── vinyldeck_noir_mini_player
+-----         14.18 KB     │   ├── code.html
+-a---        153.07 KB     │   └── screen.png
+d----        170.76 KB     ├── vinyldeck_noir_mini_player_animated
+-----         16.02 KB     │   ├── code.html
+-a---        154.74 KB     │   └── screen.png
+d----        339.43 KB     ├── vinyldeck_noir_motion_mode
+-----         17.07 KB     │   ├── code.html
+-a---        322.36 KB     │   └── screen.png
+d----        430.35 KB     ├── vinyldeck_noir_theme_1
+-----         13.82 KB     │   ├── code.html
+-a---        416.53 KB     │   └── screen.png
+d----        428.34 KB     ├── vinyldeck_noir_theme_2
+-----         13.83 KB     │   ├── code.html
+-a---        414.51 KB     │   └── screen.png
+d----          1.22 MB     ├── vinyldeck_paper_theme
+-----         16.64 KB     │   ├── code.html
+-a---          1.20 MB     │   └── screen.png
+d----        428.78 KB     ├── vinyldeck_player_flow
+-----         13.83 KB     │   ├── code.html
+-a---        414.95 KB     │   └── screen.png
+d----        488.90 KB     ├── vinyldeck_quick_theme_selector_1
+-----         13.60 KB     │   ├── code.html
+-a---        475.30 KB     │   └── screen.png
+d----        420.59 KB     ├── vinyldeck_quick_theme_selector_2
+-----         18.07 KB     │   ├── code.html
+-a---        402.53 KB     │   └── screen.png
+d----        850.95 KB     ├── vinyldeck_settings_customization_1
+-----         28.62 KB     │   ├── code.html
+-a---        822.33 KB     │   └── screen.png
+d----        732.02 KB     ├── vinyldeck_settings_customization_2
+-----         21.88 KB     │   ├── code.html
+-a---        710.13 KB     │   └── screen.png
+d----        129.12 KB     ├── vinyldeck_square_mini_player
+-----         13.06 KB     │   ├── code.html
+-a---        116.06 KB     │   └── screen.png
+d----        130.66 KB     ├── vinyldeck_square_mini_player_animated
+-----         14.89 KB     │   ├── code.html
+-a---        115.77 KB     │   └── screen.png
+d----        850.22 KB     ├── vinyldeck_vapor_fullscreen
+-----         16.48 KB     │   ├── code.html
+-a---        833.74 KB     │   └── screen.png
+d----        259.81 KB     ├── vinyldeck_vapor_mini_player
+-----         10.69 KB     │   ├── code.html
+-a---        249.12 KB     │   └── screen.png
+d----        263.55 KB     ├── vinyldeck_vapor_mini_player_animated
+-----         13.27 KB     │   ├── code.html
+-a---        250.29 KB     │   └── screen.png
+d----        910.21 KB     ├── vinyldeck_vapor_motion_mode
+-----         20.96 KB     │   ├── code.html
+-a---        889.25 KB     │   └── screen.png
+d----        499.45 KB     ├── vinyldeck_vapor_theme
+-----         14.04 KB     │   ├── code.html
+-a---        485.41 KB     │   └── screen.png
+d----        209.29 KB     ├── vinyldeck_vertical_mini_player
+-----         13.23 KB     │   ├── code.html
+-a---        196.06 KB     │   └── screen.png
+d----        357.80 KB     └── vinyldeck_vertical_mini_player_animated
+-----         14.40 KB         ├── code.html
+-a---        343.40 KB         └── screen.png
+

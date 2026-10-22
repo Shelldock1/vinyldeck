@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Noir</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Space Grotesk, Inter, JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#381e72",
+                    "secondary-container": "#4d4465",
+                    "inverse-on-surface": "#322f35",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "secondary-fixed": "#e9ddff",
+                    "surface-bright": "#3b383e",
+                    "on-surface-variant": "#cbc4d2",
+                    "tertiary-fixed": "#ffdf93",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "on-surface": "#e6e0e9",
+                    "surface": "#141218",
+                    "outline-variant": "#494551",
+                    "primary": "#cfbcff",
+                    "on-secondary-container": "#bfb2da",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "on-error-container": "#ffdad6",
+                    "outline": "#948e9c",
+                    "primary-container": "#6750a4",
+                    "surface-variant": "#36343a",
+                    "secondary": "#cdc0e9",
+                    "on-secondary-fixed": "#1f1635",
+                    "primary-fixed-dim": "#cfbcff",
+                    "surface-container-highest": "#36343a",
+                    "surface-tint": "#cfbcff",
+                    "on-secondary": "#342b4b",
+                    "tertiary": "#e7c365",
+                    "on-tertiary-container": "#503d00",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "on-primary-container": "#e0d2ff",
+                    "inverse-surface": "#e6e0e9",
+                    "on-background": "#e6e0e9",
+                    "primary-fixed": "#e9ddff",
+                    "tertiary-container": "#c9a74d",
+                    "surface-dim": "#141218",
+                    "error": "#ffb4ab",
+                    "inverse-primary": "#6750a4",
+                    "on-error": "#690005",
+                    "surface-container-low": "#1d1b20",
+                    "on-primary-fixed": "#22005d",
+                    "surface-container-lowest": "#0f0d13",
+                    "error-container": "#93000a",
+                    "on-tertiary": "#3e2e00",
+                    "surface-container": "#211f24",
+                    "on-tertiary-fixed": "#241a00",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "surface-container-high": "#2b292f",
+                    "background": "#141218"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "container-padding": "32px",
+                    "component-gap": "16px",
+                    "unit": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Space Grotesk"],
+                    "body-lg": ["Inter"],
+                    "label-mono": ["JetBrains Mono"],
+                    "body-sm": ["Inter"],
+                    "display-lg": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-mono": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom Keyframes for the Turntable */
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex antialiased overflow-hidden font-body-lg text-body-lg selection:bg-primary/30 selection:text-primary">
+<!-- DESKTOP NAV: SideNavBar -->
+<nav class="hidden md:flex h-full w-64 fixed left-0 top-0 z-[60] bg-surface-container-lowest dark:bg-surface-container-lowest border-r border-outline-variant/10 shadow-xl dark:shadow-none flex-col p-4 justify-between">
+<div>
+<div class="mb-12 px-2">
+<h1 class="font-headline-md text-headline-md text-primary">VinylDeck Pro</h1>
+<p class="font-label-mono text-label-mono text-outline mt-2 tracking-widest">Noir Edition Active</p>
+</div>
+<ul class="space-y-unit">
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all active:translate-x-1 transition-transform font-body-lg text-body-lg rounded-full" href="#">
+<span class="material-symbols-outlined">subscriptions</span>
+                        Library
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-full active:translate-x-1 transition-transform font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+                        Live
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all active:translate-x-1 transition-transform font-body-lg text-body-lg rounded-full" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+                        Studios
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all active:translate-x-1 transition-transform font-body-lg text-body-lg rounded-full" href="#">
+<span class="material-symbols-outlined">lock</span>
+                        Vault
+                    </a>
+</li>
+</ul>
+</div>
+<div class="flex items-center gap-4 p-2 mt-auto border-t border-outline-variant/10 pt-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant border border-outline-variant flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover grayscale opacity-80" data-alt="A high-contrast black and white portrait of a person. The lighting is dramatic, emphasizing facial contours with deep shadows, fitting a minimalist monochrome UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGeQxAqHG5Wu8xqFn8_r7liE9IMVFIqQmjxiFe8lAE8vhkLJPhRK04u0V5F5PNrqc5NigU2wfBN7TFoZPAfTF3WMWWuLmRmZa_ra3O3BEU7FPYAxRtMlzhS6kuewx-KJqC9jmbYmlHVQ6QRGyMJCi15a6gx7_MKHQEgDDG_A2mPECITox87qL9jpcVwygFoKe00IYOrFKsYmpHrGOMwwiySdIcqea2Xf9KGe_zWIMlDUNDeUWBuQG3-CVabpqsfujQDW5hjD5rsIv4"/>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface">Admin</span>
+</div>
+</nav>
+<!-- MOBILE NAV: BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-container-padding pb-8 pt-4 bg-surface-container-high/90 dark:bg-surface-container-high/90 backdrop-blur-2xl rounded-t-full shadow-[0_-8px_30px_rgb(0,0,0,0.12)] border-t border-white/10">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full p-3 scale-110 shadow-lg shadow-primary/20 active:scale-90 transition-transform font-label-mono text-label-mono" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="mt-1">Deck</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-primary transition-all duration-300 active:scale-90 transition-transform font-label-mono text-label-mono" href="#">
+<span class="material-symbols-outlined">equalizer</span>
+<span class="mt-1">Mixer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-primary transition-all duration-300 active:scale-90 transition-transform font-label-mono text-label-mono" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="mt-1">Crate</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-primary transition-all duration-300 active:scale-90 transition-transform font-label-mono text-label-mono" href="#">
+<span class="material-symbols-outlined">radio</span>
+<span class="mt-1">Tuner</span>
+</a>
+</nav>
+<!-- MAIN CANVAS: The Noir Experience -->
+<main class="flex-1 md:ml-64 relative h-screen w-full flex items-center justify-center bg-surface-container-lowest">
+<!-- Ambient Texture Layer -->
+<div class="absolute inset-0 opacity-[0.04] z-0 mix-blend-screen pointer-events-none" data-alt="A macro photograph of brushed black anodized aluminum metal texture. The lighting is harsh and directional, creating deep shadows and surgical white highlights on the microscopic scratches and grain of the metal surface. The overall mood is industrial, ultra-premium, and monochrome, fitting a dark mode luxury interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCZfA_ejnFfADkO_bShNjHbgxXUoNgpbYuW-0He-V8_KqH_EDSSgrxYArUS5HVUahI4LDlPb04hOWOxXPIsiZyrz56QIkIWKT5fw2GJodjDvDKGbw7PzCS2S1LB25TGhKHR--MvK-V9oMZs2YCZjDZuW8xZreVbcH6zKgpiSN6jKrFPmbPhJj5fmMtkuWIBEa1QeTHc0c1242WL4tKQXfeN6gLAR3GHSJJutgfRL9YTPgrT_GxciWrhNpmyD-uaWTECoKOfDZfTbvi-'); background-size: cover;"></div>
+<!-- Track Info (Top Left anchoring) -->
+<div class="absolute top-12 left-6 md:left-12 z-20 flex flex-col gap-unit">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<p class="font-label-mono text-label-mono text-error tracking-widest uppercase">Live Output</p>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface tracking-tighter mix-blend-difference">Analog Sequence</h2>
+<p class="font-body-lg text-body-lg text-outline">Terminal Void • 33 RPM</p>
+<!-- Surgical minimalist stats -->
+<div class="flex gap-8 mt-6 border-t border-outline-variant/30 pt-4 w-max">
+<div>
+<p class="font-label-mono text-label-mono text-outline mb-1">PITCH</p>
+<p class="font-body-sm text-body-sm text-on-surface">+0.00%</p>
+</div>
+<div>
+<p class="font-label-mono text-label-mono text-outline mb-1">FORCE</p>
+<p class="font-body-sm text-body-sm text-on-surface">1.8g</p>
+</div>
+</div>
+</div>
+<!-- The Platter (Giant Vinyl) -->
+<div class="relative w-[320px] h-[320px] md:w-[700px] md:h-[700px] rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.9),inset_0_1px_2px_rgba(255,255,255,0.05)] border border-outline-variant/20 bg-surface z-10 flex items-center justify-center animate-spin-slow">
+<!-- Grooves Texture -->
+<div class="absolute inset-1 rounded-full border border-outline-variant/10 shadow-[inset_0_0_40px_rgba(0,0,0,1)] bg-[repeating-radial-gradient(circle_at_center,transparent_0,transparent_3px,rgba(255,255,255,0.015)_4px,transparent_5px)]"></div>
+<div class="absolute inset-4 rounded-full bg-[repeating-radial-gradient(circle_at_center,transparent_0,transparent_1px,rgba(0,0,0,0.5)_2px,transparent_3px)] opacity-50"></div>
+<!-- Inner Label (Surgical White on Black) -->
+<div class="absolute w-[30%] h-[30%] rounded-full bg-surface-container shadow-[0_10px_30px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.1)] border border-outline-variant/50 flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Spindle -->
+<div class="absolute inset-0 border-[4px] border-surface-container-highest rounded-full"></div>
+<div class="w-6 h-6 bg-surface-container-lowest rounded-full shadow-[inset_0_4px_8px_rgba(0,0,0,1)] border border-outline-variant z-10 flex items-center justify-center">
+<div class="w-1.5 h-1.5 bg-outline rounded-full"></div>
+</div>
+<!-- Label Art/Text -->
+<div class="absolute bottom-4 font-label-mono text-[8px] text-outline tracking-widest uppercase opacity-50">Side A</div>
+</div>
+</div>
+<!-- Tonearm (Brushed metal intersection) -->
+<div class="absolute top-1/4 right-[-5%] md:right-[15%] w-6 h-[409px] md:h-[512px] origin-top bg-gradient-to-b from-outline-variant via-surface-variant to-outline-variant rounded-full shadow-2xl border-l border-r border-white/10 rotate-12 z-20 pointer-events-none transition-transform duration-1000 ease-in-out">
+<!-- Pivot -->
+<div class="absolute -top-8 -left-8 w-24 h-24 rounded-full bg-surface-container-highest border border-outline-variant/80 shadow-[0_10px_30px_rgba(0,0,0,0.8),inset_0_2px_4px_rgba(255,255,255,0.1)] flex items-center justify-center">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest shadow-[inset_0_2px_10px_rgba(0,0,0,1)] border border-outline-variant/40"></div>
+</div>
+<!-- Headshell -->
+<div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-16 bg-surface-bright border border-outline-variant/50 shadow-lg origin-top rotate-[20deg] rounded-sm flex items-end justify-center pb-2">
+<div class="w-1 h-3 bg-error rounded-full opacity-80"></div>
+</div>
+</div>
+<!-- Minimal Transport Controls -->
+<div class="absolute bottom-32 md:bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-12 z-30">
+<button class="text-outline hover:text-primary transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-3xl font-light">fast_rewind</span>
+</button>
+<!-- Play Button with Tactile Internal Glow -->
+<button class="w-20 h-20 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,0.05),inset_0_-4px_10px_rgba(0,0,0,0.4)] active:shadow-[inset_0_4px_12px_rgba(0,0,0,0.6)] active:translate-y-1 transition-all group focus:outline-none">
+<div class="w-16 h-16 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] border border-outline-variant/10 group-hover:border-primary/30 transition-colors">
+<span class="material-symbols-outlined text-4xl text-on-surface group-hover:text-primary transition-colors" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</button>
+<button class="text-outline hover:text-primary transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-3xl font-light">fast_forward</span>
+</button>
+</div>
+</main>
+</body></html>

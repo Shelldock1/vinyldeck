@@ -1,0 +1,314 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Aurora Theme</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Sora:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes aurora-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .bg-aurora {
+            background: linear-gradient(-45deg, #0f172a, #0d9488, #0284c7, #0f172a);
+            background-size: 400% 400%;
+            animation: aurora-shift 20s ease infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .vinyl-spin {
+            animation: spin 4s linear infinite;
+        }
+
+        .glass-panel {
+            background: rgba(13, 148, 136, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(45, 212, 191, 0.2);
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.1);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+        }
+        
+        .glow-accent {
+            box-shadow: 0 0 15px rgba(45, 212, 191, 0.4);
+        }
+        
+        .progress-glow {
+            box-shadow: 0 0 10px rgba(45, 212, 191, 0.8);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#0f172a",
+                      "on-error-container": "#ffdad6",
+                      "surface-variant": "#1e293b",
+                      "on-secondary-container": "#94a3b8",
+                      "on-secondary-fixed": "#1e293b",
+                      "on-secondary": "#334155",
+                      "on-tertiary-fixed-variant": "#51443a",
+                      "primary-fixed-dim": "#99f6e4",
+                      "on-surface-variant": "#94a3b8",
+                      "primary-fixed": "#ccfbf1",
+                      "tertiary-container": "#0369a1",
+                      "on-error": "#690005",
+                      "error-container": "#93000a",
+                      "surface-container-high": "#1e293b",
+                      "surface-container-highest": "#334155",
+                      "outline": "#64748b",
+                      "outline-variant": "#475569",
+                      "secondary-container": "#334155",
+                      "secondary-fixed": "#e2e2e2",
+                      "primary": "#2dd4bf",
+                      "on-tertiary-container": "#e0f2fe",
+                      "surface-container-low": "#0f172a",
+                      "surface": "#0f172a",
+                      "surface-container": "#1e293b",
+                      "tertiary-fixed": "#0ea5e9",
+                      "on-primary": "#042f2e",
+                      "surface-tint": "#5eead4",
+                      "tertiary": "#38bdf8",
+                      "on-secondary-fixed-variant": "#475569",
+                      "inverse-on-surface": "#f8fafc",
+                      "on-primary-fixed": "#042f2e",
+                      "on-tertiary": "#082f49",
+                      "surface-dim": "#0f172a",
+                      "on-primary-container": "#134e4a",
+                      "surface-container-lowest": "#020617",
+                      "on-surface": "#f8fafc",
+                      "tertiary-fixed-dim": "#7dd3fc",
+                      "secondary": "#94a3b8",
+                      "on-primary-fixed-variant": "#0f766e",
+                      "inverse-primary": "#0f766e",
+                      "inverse-surface": "#e2e8f0",
+                      "secondary-fixed-dim": "#cbd5e1",
+                      "primary-container": "#115e59",
+                      "error": "#ffb4ab",
+                      "on-tertiary-fixed": "#0c4a6e",
+                      "surface-bright": "#334155",
+                      "on-background": "#f8fafc",
+                      "accent-teal": "#14b8a6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding": "32px",
+                      "touch-target": "48px",
+                      "unit": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-md": ["Inter"],
+                      "headline-md": ["Sora"],
+                      "headline-lg": ["Sora"],
+                      "display-lg": ["Sora"],
+                      "body-lg": ["Inter"],
+                      "label-caps": ["JetBrains Mono"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-aurora text-on-background min-h-screen flex flex-col font-body-md overflow-hidden antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding pt-8 bg-transparent no-border flat no shadows">
+<div class="font-display-lg text-display-lg-mobile md:text-display-lg tracking-tighter text-primary uppercase glow-text">
+            VinylDeck
+        </div>
+<div class="flex gap-4">
+<button aria-label="palette" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all p-2 rounded-full hover:bg-surface/20">
+<span class="material-symbols-outlined" data-icon="palette">palette</span>
+</button>
+<button aria-label="queue_music" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all p-2 rounded-full hover:bg-surface/20">
+<span class="material-symbols-outlined" data-icon="queue_music">queue_music</span>
+</button>
+<button aria-label="fullscreen" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all p-2 rounded-full hover:bg-surface/20">
+<span class="material-symbols-outlined" data-icon="fullscreen">fullscreen</span>
+</button>
+<button aria-label="settings" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all p-2 rounded-full hover:bg-surface/20">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col lg:flex-row items-center justify-center p-container-padding pt-32 pb-32 gap-12 relative h-screen">
+<!-- Ambient Glow behind Vinyl -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+<!-- Left Column: Album Art & Info (Hidden on very small screens, prominent on desktop) -->
+<div class="hidden lg:flex flex-col gap-8 w-1/3 z-10">
+<div class="glass-panel p-6 rounded-2xl glow-accent">
+<div class="aspect-square bg-surface-container-high rounded-xl overflow-hidden relative group">
+<img alt="Album Cover" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A macro shot of a sleek, dark teal vinyl record surface reflecting neon blue and green light. The grooves are deeply textured and create a mesmerizing geometric pattern. The lighting is moody and cinematic, highlighting the mechanical beauty of the analog format against a pitch-black background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChAoff-wLJQ96NhDaeExYYNY0G2FZy5b6flCQ7HCmFG1DPW4Bz2ADhCaHaaWZjKNzwcMDVOHvTnQQV4WDGZIONNp2-stUkQoWFg6w_Kq1dT0fa50Sikonz-1lNMhrlh5HoZ7ZYAFGlC895PRKRrNXjjH8XgT6DNPinFtRDS8A48SSulPkHz2IE9PRp9D5vSwyZitj8EUx4sZHsFH0O-sTY5N2dgLqe1Yy2I4-rW7sx82A5Tz5Di525Qb6WSwCIeHXGlFb5SAqgNphx">
+<div class="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent flex items-end p-6">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background glow-text">Midnight Aurora</h2>
+<p class="font-body-lg text-body-lg text-primary mt-2">Synthwave Sessions</p>
+</div>
+</div>
+</div>
+</div>
+<!-- EQ Visualizer Placeholder -->
+<div class="glass-panel h-24 rounded-2xl flex items-end justify-between p-4 gap-1 overflow-hidden">
+<div class="w-full h-full flex items-end gap-1" id="eq-bars">
+<!-- JS will populate bars -->
+</div>
+</div>
+</div>
+<!-- Center: The Vinyl -->
+<div class="relative w-full max-w-[500px] aspect-square z-20 flex-shrink-0">
+<!-- Turntable Platter Base -->
+<div class="absolute inset-4 rounded-full bg-surface-container-highest shadow-2xl border border-surface-variant flex items-center justify-center">
+<!-- Record -->
+<div class="w-[90%] h-[90%] rounded-full bg-[#0a0a0a] vinyl-spin relative overflow-hidden shadow-[0_0_30px_rgba(45,212,191,0.2)]">
+<!-- Grooves (CSS generated) -->
+<div class="absolute inset-0 rounded-full border border-white/5 m-2"></div>
+<div class="absolute inset-0 rounded-full border border-white/5 m-4"></div>
+<div class="absolute inset-0 rounded-full border border-white/5 m-8"></div>
+<div class="absolute inset-0 rounded-full border border-white/5 m-12"></div>
+<div class="absolute inset-0 rounded-full border border-white/5 m-16"></div>
+<div class="absolute inset-0 rounded-full border border-white/5 m-20"></div>
+<!-- Cyan/Teal reflection overlay -->
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-tertiary/10 mix-blend-screen pointer-events-none"></div>
+<!-- Center Label -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/3 h-1/3 rounded-full bg-gradient-to-br from-primary-container to-surface-container border-2 border-primary/30 flex items-center justify-center">
+<div class="w-4 h-4 bg-background rounded-full border border-surface-variant z-10"></div>
+<img alt="Label Art" class="absolute inset-0 w-full h-full object-cover rounded-full opacity-60 mix-blend-overlay" data-alt="A close up abstract pattern of swirling teal and deep blue ink in water, resembling an aurora borealis. The colors are highly saturated and contrast sharply with dark shadows, creating a deep, luminous effect." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClTpaG5HPlVXSEXUg9ormRNXEOjVtEbyhXeVQSOM04xCOqf_lmWEk2xiC_sfTzmG0mMyeEXnuSTNIK9C8quhDSXddkGzwwg26J8P0dSHABi_WMnHZSIFD0FNRHz6qp4Gg09VXYQ5-Qn5Oq2GR332xpCl0-Yl-bzcOgMiVzzTLh7O8Qp3okSYNRoVTF3CV8PCk1g4DSVtSodqt7I0ZNeaI2TxNZmlSPF1qfNBjoQQ6kPpc9S3GVO9_32hFlSz6HLuLn91KTkSfn0Z5g">
+</div>
+</div>
+<!-- Tonearm (Static aesthetic piece) -->
+<div class="absolute top-10 -right-10 w-8 h-48 origin-top-left transform rotate-12 drop-shadow-2xl z-30 hidden md:block">
+<div class="w-4 h-full bg-gradient-to-b from-secondary to-surface-variant rounded-full relative">
+<div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-8 h-12 bg-surface border border-outline rounded-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right/Bottom Column: Playback Controls -->
+<div class="w-full lg:w-1/3 z-10 flex flex-col gap-6">
+<!-- Mobile Track Info (Visible only on small screens) -->
+<div class="lg:hidden text-center mb-4">
+<h2 class="font-headline-md text-headline-md text-on-background glow-text">Midnight Aurora</h2>
+<p class="font-body-md text-body-md text-primary mt-1">Synthwave Sessions</p>
+</div>
+<div class="glass-panel p-8 rounded-3xl w-full max-w-md mx-auto">
+<!-- Timeline -->
+<div class="mb-8">
+<div class="flex justify-between font-label-caps text-label-caps text-secondary mb-3">
+<span>02:14</span>
+<span>05:42</span>
+</div>
+<div class="w-full h-1 bg-surface-variant rounded-full relative cursor-pointer">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full progress-glow w-1/3"></div>
+<div class="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-primary rounded-full shadow-[0_0_10px_rgba(45,212,191,1)]"></div>
+</div>
+</div>
+<!-- Controls -->
+<div class="flex justify-between items-center px-4">
+<button aria-label="shuffle" class="text-secondary hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="shuffle">shuffle</span>
+</button>
+<div class="flex items-center gap-6">
+<button aria-label="skip_previous" class="text-on-background hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="skip_previous" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button aria-label="play_pause" class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-on-primary hover:scale-105 transition-transform shadow-[0_0_20px_rgba(45,212,191,0.5)]">
+<span class="material-symbols-outlined text-4xl" data-icon="pause" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button aria-label="skip_next" class="text-on-background hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="skip_next" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+</div>
+<button aria-label="repeat" class="text-secondary hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="repeat">repeat</span>
+</button>
+</div>
+</div>
+<!-- Volume Control -->
+<div class="glass-panel px-6 py-4 rounded-2xl w-full max-w-md mx-auto flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary" data-icon="volume_up">volume_up</span>
+<div class="w-full h-1 bg-surface-variant rounded-full relative cursor-pointer">
+<div class="absolute top-0 left-0 h-full bg-primary/70 rounded-full w-3/4"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-touch-target px-gutter pb-safe bg-surface/10 backdrop-blur-xl border-t border-white/10 shadow-2xl md:hidden rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] translate-y-[-2px] transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="album" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="font-label-caps text-label-caps">Player</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="library_music">library_music</span>
+<span class="font-label-caps text-label-caps">Collection</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="Graphic_Eq">graphic_eq</span>
+<span class="font-label-caps text-label-caps">Mixes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="explore">explore</span>
+<span class="font-label-caps text-label-caps">Discovery</span>
+</a>
+</nav>
+<script>
+        // Simple JS to generate random EQ bars for visual effect
+        document.addEventListener('DOMContentLoaded', () => {
+            const eqContainer = document.getElementById('eq-bars');
+            if(eqContainer) {
+                const numBars = 30;
+                for(let i=0; i<numBars; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'w-full bg-primary/40 rounded-t-sm transition-all duration-100 ease-in-out';
+                    bar.style.height = `${Math.random() * 100}%`;
+                    eqContainer.appendChild(bar);
+                }
+
+                setInterval(() => {
+                    const bars = eqContainer.children;
+                    for(let i=0; i<bars.length; i++) {
+                        bars[i].style.height = `${20 + Math.random() * 80}%`;
+                        if(Math.random() > 0.8) {
+                            bars[i].classList.add('bg-primary');
+                            bars[i].classList.remove('bg-primary/40');
+                        } else {
+                            bars[i].classList.remove('bg-primary');
+                            bars[i].classList.add('bg-primary/40');
+                        }
+                    }
+                }, 150);
+            }
+        });
+    </script>
+</body></html>

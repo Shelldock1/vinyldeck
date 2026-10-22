@@ -1,0 +1,229 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Vapor Theme</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#0a0014", // Deep purple
+                        "surface": "#120524",
+                        "surface-variant": "#220a40",
+                        "primary": "#ff00ff", // Neon magenta
+                        "on-primary": "#ffffff",
+                        "secondary": "#00ffff", // Cyan accent
+                        "on-background": "#e5e2e2",
+                        "on-surface": "#e5e2e2",
+                        "on-surface-variant": "#b5b5b5",
+                        "outline": "#ff00ff",
+                        "surface-container-low": "#180830",
+                        "surface-container": "#1e0b3c",
+                        "surface-container-high": "#28104c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding": "32px",
+                        "touch-target": "48px",
+                        "unit": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Sora"],
+                        "headline-lg": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "500" }]
+                    },
+                    "animation": {
+                        'spin-slow': 'spin 8s linear infinite',
+                        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    "keyframes": {
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, filter: 'drop-shadow(0 0 8px rgba(255,0,255,0.8))' },
+                            '50%': { opacity: .7, filter: 'drop-shadow(0 0 2px rgba(255,0,255,0.4))' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .retro-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255, 0, 255, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 0, 255, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: bottom;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .neon-text {
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+        }
+        .glass-panel {
+            background: rgba(18, 5, 36, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 0, 255, 0.2);
+        }
+        .vinyl-grooves {
+            background: repeating-radial-gradient(
+                #111 0, 
+                #111 2px, 
+                #222 3px, 
+                #222 4px
+            );
+            box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.5), 0 0 30px rgba(255, 0, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-hidden flex flex-col relative">
+<!-- Retro Grid Background -->
+<div class="retro-grid"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-transparent to-background z-0 pointer-events-none"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding pt-8 bg-transparent flat no shadows">
+<h1 class="font-display-lg text-display-lg tracking-tighter text-primary uppercase neon-text">VinylDeck</h1>
+<div class="flex gap-4">
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined">palette</span>
+</button>
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined">queue_music</span>
+</button>
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined">fullscreen</span>
+</button>
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all Active: scale-95 duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas (16:9 Aspect Ratio Container for center stage) -->
+<main class="flex-1 flex flex-col items-center justify-center relative z-10 w-full max-w-[1820px] mx-auto aspect-video px-container-padding">
+<!-- Stage: Vinyl Record Player -->
+<div class="relative w-full max-w-2xl aspect-square flex items-center justify-center mt-16 md:mt-0">
+<!-- Turntable Base -->
+<div class="absolute w-[110%] h-[110%] glass-panel rounded-full blur-[2px] opacity-30"></div>
+<!-- Vinyl Record -->
+<div class="w-[85%] h-[85%] rounded-full vinyl-grooves animate-spin-slow relative flex items-center justify-center border-4 border-[#0a0a0a]">
+<!-- Record Label -->
+<div class="w-[33%] h-[33%] rounded-full bg-surface-container-high relative flex items-center justify-center overflow-hidden" data-alt="A stylized synthwave sunset graphic acting as a record label. It features a glowing wireframe sun setting over a digital grid horizon, rendered in vivid neon magenta and cyan against a deep cosmic purple background. The mood is nostalgic 80s retro-futurism." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA7t-9kLZV0CvQbUqIDLUSSnu984TrzgOlY8jCb5IRR0BKgzVcxU1-PjY056GLSljdFcLmC1WqHTEsWxY2cavsWJT0Coy7l2W6YnWPGbEQV6bSmgvzY2Df9wZeXcsescwby-CBVISSP9tl1a9yJ7n1n4XqDvMtcNX-SNKBl8bmAAtrWd_F8G0K123KbuLHpXi4bl_qjDPcWzDmXGgWWZqUE2aPFSBMMPd9nBzmj5n4J5DofUYbinhycVbNz2a47oBbb2eOJvLh5g4-U'); background-size: cover; background-position: center;">
+<!-- Center Hole -->
+<div class="w-4 h-4 rounded-full bg-background border border-surface border-opacity-50"></div>
+</div>
+<!-- Light Reflection Streak -->
+<div class="absolute inset-0 rounded-full border border-primary/20 pointer-events-none" style="background: linear-gradient(135deg, transparent 40%, rgba(255,0,255,0.1) 50%, transparent 60%);"></div>
+</div>
+<!-- Tonearm (Skeuomorphic touch) -->
+<div class="absolute right-[-10%] bottom-[10%] w-32 h-64 origin-bottom-right rotate-[15deg]">
+<div class="w-4 h-full bg-gradient-to-r from-[#222] to-[#555] rounded-full relative">
+<!-- Pivot -->
+<div class="absolute bottom-[-10px] left-[-10px] w-10 h-10 rounded-full bg-gradient-to-br from-[#444] to-[#111] border-2 border-[#333]"></div>
+<!-- Headshell -->
+<div class="absolute top-0 left-[-8px] w-8 h-16 bg-surface-variant rounded-sm border border-secondary shadow-[0_0_10px_rgba(0,255,255,0.3)]"></div>
+</div>
+</div>
+</div>
+<!-- Playback Controls (Glassmorphism & Neon) -->
+<div class="glass-panel w-full max-w-3xl mt-12 rounded-xl p-6 flex flex-col gap-6 z-20">
+<!-- Track Info -->
+<div class="text-center">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Midnight City Chase</h2>
+<p class="font-body-md text-body-md text-secondary mt-1 tracking-widest uppercase">Synthwave Syndicate</p>
+</div>
+<!-- Progress Bar -->
+<div class="flex items-center gap-4 w-full">
+<span class="font-label-caps text-label-caps text-on-surface-variant">02:14</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full w-[45%] bg-primary shadow-[0_0_10px_#ff00ff]"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">04:55</span>
+</div>
+<!-- Controls -->
+<div class="flex items-center justify-center gap-8">
+<button class="text-on-surface-variant hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-3xl">shuffle</span>
+</button>
+<button class="text-on-background hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-4xl">skip_previous</span>
+</button>
+<button class="w-16 h-16 rounded-full bg-surface-variant border-2 border-primary flex items-center justify-center text-primary shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:shadow-[0_0_30px_rgba(255,0,255,0.6)] transition-all animate-pulse-glow">
+<span class="material-symbols-outlined text-4xl" data-weight="fill">pause</span>
+</button>
+<button class="text-on-background hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-4xl">skip_next</span>
+</button>
+<button class="text-on-surface-variant hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-3xl">repeat</span>
+</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Hidden on md, visible on mobile if needed, but per instructions, keeping top-level active structure) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-touch-target px-gutter pb-safe bg-surface/10 backdrop-blur-xl border-t border-white/10 shadow-2xl md:hidden">
+<a class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity Active: translate-y-[-2px] transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">album</span>
+            Player
+        </a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1">library_music</span>
+            Collection
+        </a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1">graphic_eq</span>
+            Mixes
+        </a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity" href="#">
+<span class="material-symbols-outlined mb-1">explore</span>
+            Discovery
+        </a>
+</nav>
+<!-- Side Navigation for Web (Replacing Bottom Nav logically per rules, usually hidden on mobile) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full w-24 flex-col items-center justify-center gap-12 z-40 bg-surface/10 backdrop-blur-md border-r border-white/5 pt-20">
+<a class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(255,0,255,0.8)] font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity relative group" href="#">
+<span class="material-symbols-outlined text-3xl mb-2">album</span>
+<span class="absolute left-full ml-4 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-surface-variant px-3 py-1 rounded text-primary">Player</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity relative group" href="#">
+<span class="material-symbols-outlined text-3xl mb-2">library_music</span>
+<span class="absolute left-full ml-4 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-surface-variant px-3 py-1 rounded text-on-surface">Collection</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity relative group" href="#">
+<span class="material-symbols-outlined text-3xl mb-2">graphic_eq</span>
+<span class="absolute left-full ml-4 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-surface-variant px-3 py-1 rounded text-on-surface">Mixes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 font-label-caps text-label-caps hover:opacity-100 hover:text-primary transition-opacity relative group" href="#">
+<span class="material-symbols-outlined text-3xl mb-2">explore</span>
+<span class="absolute left-full ml-4 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-surface-variant px-3 py-1 rounded text-on-surface">Discovery</span>
+</a>
+</nav>
+</body></html>

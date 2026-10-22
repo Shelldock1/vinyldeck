@@ -1,0 +1,190 @@
+.mini-view {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 48%,
+      color-mix(in srgb, var(--ui-accent) 8%, transparent),
+      transparent 54%
+    ),
+    var(--bg, #000000);
+}
+
+.mini-view .ambient-layer,
+.mini-view .vapor-grid {
+  z-index: 0;
+}
+
+.mini-view__centerpiece {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate3d(-50%, -50%, 0);
+}
+
+.mini-view__track {
+  position: absolute;
+  left: 50%;
+  top: calc(46% + var(--mini-track-offset, 100px));
+  z-index: 3;
+  width: min(var(--mini-track-width, 230px), calc(100vw - var(--mini-track-gutter, 26px)));
+  opacity: 1;
+  transform: translateX(-50%) scale(var(--mini-track-scale, 0.72));
+  transform-origin: top center;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mini-view--compact .mini-view__track {
+  opacity: 0;
+  transform: translateX(-50%) scale(var(--mini-track-compact-scale, 0.64));
+}
+
+.mini-view__track .track-info {
+  padding: 0;
+}
+
+.mini-view__track .track-info__title {
+  font-size: 18px;
+}
+
+.mini-view__track .track-info__artist {
+  font-size: 11px;
+}
+
+.mini-view__track .track-info__album {
+  font-size: 9px;
+}
+
+.mini-view__controls {
+  position: absolute;
+  left: 50%;
+  bottom: var(--mini-control-bottom, 13px);
+  z-index: 6;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-50%, var(--mini-control-translate, 14px), 0)
+    scale(var(--mini-controls-scale, 0.68));
+  transform-origin: bottom center;
+  transition:
+    opacity 260ms ease,
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mini-view__controls--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(-50%, 0, 0)
+    scale(var(--mini-controls-scale, 0.68));
+}
+
+.mini-view__controls .controls-pill {
+  padding:
+    var(--mini-control-pad-y, 8px)
+    var(--mini-control-pad-x, 14px);
+}
+
+.mini-view__return {
+  position: absolute;
+  top: var(--mini-return-offset, 10px);
+  right: var(--mini-return-offset, 10px);
+  z-index: 7;
+  width: var(--mini-return-size, 30px);
+  height: var(--mini-return-size, 30px);
+  color: var(--ui-text-primary);
+  background: color-mix(in srgb, var(--ui-bg) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 78%, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(8px, -8px, 0) scale(0.88);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 24px rgba(0, 0, 0, 0.28);
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    background var(--theme-transition),
+    border-color var(--theme-transition);
+}
+
+.mini-view__return--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.mini-view__return:hover {
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--ui-bg));
+  border-color: color-mix(in srgb, var(--ui-accent) 32%, var(--ui-border));
+}
+
+.mini-view__return:active {
+  transform: translate3d(0, 0, 0) scale(0.94);
+}
+
+/* Liquid Glass material pass for mini return control. */
+.mini-view__return {
+  overflow: hidden;
+  background: var(--surface-bg);
+  border-color: var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+}
+
+.mini-view__return > svg {
+  position: relative;
+  z-index: 1;
+  width: var(--mini-return-icon-size, 16px);
+  height: var(--mini-return-icon-size, 16px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Mini Transparency — Mini-only Acrylic blur-through mode.
+   The native blur is applied by the Rust backend (window effects);
+   these rules just get every opaque paint layer out of the way so
+   the desktop behind the window is actually visible, with the
+   vinyl, track text, and controls floating on top of it.
+   ══════════════════════════════════════════════════════════════ */
+
+.mini-view--transparent {
+  background: transparent !important;
+}
+
+.mini-view--transparent .ambient-layer {
+  background: transparent !important;
+}
+
+.mini-view--transparent .ambient-layer__base,
+.mini-view--transparent .ambient-layer__velvet,
+.mini-view--transparent .ambient-layer__vignette {
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+.mini-view--transparent .ambient-layer__readability {
+  opacity: 0 !important;
+}
+
+/* Album-art glow orbs stay: they already render as blend-mode gradients
+   with no opaque fill, so they read as color bloom over the desktop blur
+   instead of a solid backdrop. */
+
+.mini-view--transparent .mini-view__track .track-info__title,
+.mini-view--transparent .mini-view__track .track-info__artist,
+.mini-view--transparent .mini-view__track .track-info__album {
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    0 2px 14px rgba(0, 0, 0, 0.45);
+}

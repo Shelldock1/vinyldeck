@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Paper Experience</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#381e72",
+                      "secondary-container": "#4d4465",
+                      "inverse-on-surface": "#322f35",
+                      "tertiary-fixed-dim": "#e7c365",
+                      "secondary-fixed": "#e9ddff",
+                      "surface-bright": "#3b383e",
+                      "on-surface-variant": "#cbc4d2",
+                      "tertiary-fixed": "#ffdf93",
+                      "secondary-fixed-dim": "#cdc0e9",
+                      "on-surface": "#e6e0e9",
+                      "surface": "#141218",
+                      "outline-variant": "#494551",
+                      "primary": "#cfbcff",
+                      "on-secondary-container": "#bfb2da",
+                      "on-secondary-fixed-variant": "#4b4263",
+                      "on-error-container": "#ffdad6",
+                      "outline": "#948e9c",
+                      "primary-container": "#6750a4",
+                      "surface-variant": "#36343a",
+                      "secondary": "#cdc0e9",
+                      "on-secondary-fixed": "#1f1635",
+                      "primary-fixed-dim": "#cfbcff",
+                      "surface-container-highest": "#36343a",
+                      "surface-tint": "#cfbcff",
+                      "on-secondary": "#342b4b",
+                      "tertiary": "#e7c365",
+                      "on-tertiary-container": "#503d00",
+                      "on-primary-fixed-variant": "#4f378a",
+                      "on-primary-container": "#e0d2ff",
+                      "inverse-surface": "#e6e0e9",
+                      "on-background": "#e6e0e9",
+                      "primary-fixed": "#e9ddff",
+                      "tertiary-container": "#c9a74d",
+                      "surface-dim": "#141218",
+                      "error": "#ffb4ab",
+                      "inverse-primary": "#6750a4",
+                      "on-error": "#690005",
+                      "surface-container-low": "#1d1b20",
+                      "on-primary-fixed": "#22005d",
+                      "surface-container-lowest": "#0f0d13",
+                      "error-container": "#93000a",
+                      "on-tertiary": "#3e2e00",
+                      "surface-container": "#211f24",
+                      "on-tertiary-fixed": "#241a00",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "surface-container-high": "#2b292f",
+                      "background": "#141218"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "container-padding": "32px",
+                      "component-gap": "16px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Space Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-mono": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Paper theme specific styles */
+        body {
+            /* Warm cream base with subtle noise texture simulated by color */
+            background-color: #f5f0e6; 
+            color: #3e2e00; /* Warm dark brown text */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+        
+        .paper-card {
+            background-color: #ffffff;
+            box-shadow: 4px 8px 12px rgba(0, 0, 0, 0.05), 
+                        inset 0 0 0 1px rgba(231, 195, 101, 0.1); /* bronze accent border */
+            border-radius: 0.25rem;
+        }
+
+        .vinyl-platter {
+            background: radial-gradient(circle, #222 10%, #111 50%, #000 90%);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 
+                        0 4px 20px rgba(0,0,0,0.2),
+                        0 0 0 4px #e7c365; /* Bronze edge */
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vinyl-grooves {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-radial-gradient(
+                circle,
+                transparent,
+                transparent 4px,
+                rgba(255,255,255,0.03) 5px,
+                transparent 6px
+            );
+            border-radius: 50%;
+        }
+
+        .record-label {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30%; height: 30%;
+            background-color: #c9a74d; /* Tertiary container / warm bronze */
+            border-radius: 50%;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .record-hole {
+            width: 5%; height: 5%;
+            background-color: #f5f0e6;
+            border-radius: 50%;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .tonearm {
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            width: 10px;
+            height: 40%;
+            background: linear-gradient(90deg, #b08d57, #e7c365, #b08d57); /* Brass gradient */
+            transform-origin: top center;
+            transform: rotate(-15deg);
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .tonearm-base {
+            position: absolute;
+            top: 8%;
+            right: 8%;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #555, #222);
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            border: 2px solid #e7c365;
+        }
+
+        .playing .vinyl-platter {
+            animation: spin 4s linear infinite;
+        }
+        
+        .playing .tonearm {
+            transform: rotate(15deg);
+            transition: transform 1s ease;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Override dark mode for this specific theme since it's light/cream based */
+        .dark .text-primary, .dark .text-on-surface-variant {
+            color: #3e2e00; /* Force dark text on cream bg */
+        }
+        
+        .dark .bg-surface\/80 {
+            background-color: rgba(245, 240, 230, 0.9); /* Cream bg for nav */
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen pb-32 md:pb-0 md:pl-64 flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-outline-variant/20 dark:border-outline-variant/20 shadow-sm dark:shadow-none flex justify-between items-center px-gutter py-4 w-full max-w-none md:pl-[calc(16rem+24px)]" style="background-color: rgba(245, 240, 230, 0.95); border-bottom-color: rgba(231, 195, 101, 0.3);">
+<div class="flex items-center gap-8">
+<h1 class="font-display-lg text-[24px] md:text-[32px] tracking-tighter text-tertiary-container font-bold">VinylDeck</h1>
+<nav class="hidden md:flex gap-6">
+<a class="font-headline-md text-[16px] text-tertiary-container border-b-2 border-tertiary-container pb-1 hover:text-tertiary transition-colors duration-300" href="#">Collection</a>
+<a class="font-headline-md text-[16px] text-on-surface-variant hover:text-tertiary-container transition-colors duration-300" href="#">Discovery</a>
+<a class="font-headline-md text-[16px] text-on-surface-variant hover:text-tertiary-container transition-colors duration-300" href="#">Studios</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-tertiary-container">
+<button class="active:scale-95 transition-transform hover:text-tertiary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+<button class="active:scale-95 transition-transform hover:text-tertiary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-full p-4 bg-surface-container-lowest dark:bg-surface-container-lowest text-secondary dark:text-secondary h-full w-64 fixed left-0 top-0 z-[60] border-r border-outline-variant/10 shadow-xl dark:shadow-none" style="background-color: #fff; border-right-color: rgba(231, 195, 101, 0.2);">
+<div class="mb-12 mt-4 px-4 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-container/20 flex items-center justify-center border border-tertiary-container/30">
+<span class="material-symbols-outlined text-tertiary-container">person</span>
+</div>
+<div>
+<h2 class="font-headline-md text-[18px] text-tertiary-container font-bold">VinylDeck Pro</h2>
+<p class="font-body-sm text-[12px] text-on-surface-variant">Paper Edition Active</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 font-body-lg text-[16px]">
+<a class="flex items-center gap-4 px-4 py-3 bg-tertiary-container text-white rounded-md shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined">subscriptions</span>
+                Library
+            </a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-tertiary-container/10 transition-all rounded-md" href="#">
+<span class="material-symbols-outlined">graphic_eq</span>
+                Live
+            </a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-tertiary-container/10 transition-all rounded-md" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+                Studios
+            </a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-tertiary-container/10 transition-all rounded-md" href="#">
+<span class="material-symbols-outlined">lock</span>
+                Vault
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow pt-24 px-gutter md:px-container-padding max-w-7xl mx-auto w-full flex flex-col items-center justify-center">
+<div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-12 mb-20">
+<!-- Turntable Area -->
+<div class="md:col-span-7 flex justify-center relative p-8 paper-card">
+<div class="relative w-full aspect-square max-w-[400px] mx-auto rounded-lg bg-[#e8e4db] p-4 shadow-inner border border-[#d5ccb8]">
+<div class="tonearm-base"></div>
+<div class="tonearm"></div>
+<div class="w-full h-full rounded-full border border-gray-300 p-2 relative">
+<div class="w-full h-full vinyl-platter" id="platter">
+<div class="vinyl-grooves"></div>
+<div class="record-label">
+<div class="text-center w-full relative">
+<span class="block text-[8px] font-bold text-white uppercase tracking-wider mb-1">Analog</span>
+<div class="record-hole absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Plinth Controls -->
+<div class="absolute bottom-6 right-6 flex gap-3">
+<button class="w-10 h-10 rounded-full bg-[#c9a74d] text-white shadow-md flex items-center justify-center hover:bg-[#b8953a] transition-colors active:translate-y-1" id="playBtn">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Track Info / Controls Area -->
+<div class="md:col-span-5 flex flex-col gap-6">
+<div class="paper-card p-6 border-l-4 border-[#c9a74d]">
+<p class="font-label-mono text-label-mono text-[#c9a74d] mb-2 uppercase tracking-widest">Now Playing</p>
+<h2 class="font-headline-md text-[32px] text-[#3e2e00] font-bold leading-tight mb-1">Kind of Blue</h2>
+<p class="font-body-lg text-[18px] text-[#594400]">Miles Davis</p>
+<div class="mt-6 flex items-center gap-4">
+<span class="font-label-mono text-[10px] text-gray-500">33 ⅓ RPM</span>
+<div class="h-px bg-gray-300 flex-grow"></div>
+<span class="font-label-mono text-[10px] text-gray-500">STEREO</span>
+</div>
+</div>
+<div class="paper-card p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center text-[#594400]">
+<span class="material-symbols-outlined hover:text-[#c9a74d] cursor-pointer transition-colors" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+<span class="material-symbols-outlined text-[32px] hover:text-[#c9a74d] cursor-pointer transition-colors" style="font-variation-settings: 'FILL' 1;">pause</span>
+<span class="material-symbols-outlined hover:text-[#c9a74d] cursor-pointer transition-colors" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</div>
+<div class="mt-4">
+<div class="flex justify-between mb-1">
+<span class="font-label-mono text-[10px] text-gray-500">02:14</span>
+<span class="font-label-mono text-[10px] text-gray-500">09:22</span>
+</div>
+<div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden shadow-inner">
+<div class="bg-[#c9a74d] w-1/4 h-full rounded-full relative">
+<div class="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden bg-surface-container-high/90 dark:bg-surface-container-high/90 backdrop-blur-2xl fixed bottom-0 w-full rounded-t-full z-50 border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-container-padding pb-8 pt-4" style="background-color: rgba(255, 255, 255, 0.95); border-top: 1px solid rgba(231, 195, 101, 0.2);">
+<button class="flex flex-col items-center justify-center bg-tertiary-container text-white rounded-full p-3 scale-110 shadow-lg shadow-tertiary-container/30 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="font-label-mono text-label-mono mt-1 text-[10px]">Deck</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-tertiary-container transition-all duration-300 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">equalizer</span>
+<span class="font-label-mono text-label-mono mt-1 text-[10px]">Mixer</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-tertiary-container transition-all duration-300 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+<span class="font-label-mono text-label-mono mt-1 text-[10px]">Crate</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-tertiary-container transition-all duration-300 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">radio</span>
+<span class="font-label-mono text-label-mono mt-1 text-[10px]">Tuner</span>
+</button>
+</nav>
+<script>
+        // Simple play interaction
+        const playBtn = document.getElementById('playBtn');
+        const turntable = document.querySelector('.relative.w-full.aspect-square');
+        let isPlaying = false;
+
+        playBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                turntable.classList.add('playing');
+                playBtn.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">pause</span>';
+            } else {
+                turntable.classList.remove('playing');
+                playBtn.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">play_arrow</span>';
+            }
+        });
+    </script>
+</body></html>

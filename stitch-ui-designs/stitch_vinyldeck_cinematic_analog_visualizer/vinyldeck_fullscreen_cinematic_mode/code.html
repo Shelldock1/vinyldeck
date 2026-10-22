@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Noir Meditative Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;300;400&amp;family=Inter:wght@300;400&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c9c6c5",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "outline": "#8e9192",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "surface-tint": "#c6c6c7",
+                        "secondary-container": "#4a4949",
+                        "primary-fixed": "#e2e2e2",
+                        "on-primary": "#2f3131",
+                        "surface-container": "#201f1f",
+                        "on-tertiary-container": "#636565",
+                        "surface": "#141313",
+                        "on-background": "#e5e2e1",
+                        "surface-container-highest": "#353434",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-low": "#1c1b1b",
+                        "error-container": "#93000a",
+                        "surface-bright": "#3a3939",
+                        "secondary-fixed": "#e5e2e1",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#bab8b7",
+                        "on-surface-variant": "#c4c7c8",
+                        "secondary": "#c9c6c5",
+                        "primary": "#ffffff",
+                        "on-error-container": "#ffdad6",
+                        "inverse-surface": "#e5e2e1",
+                        "tertiary": "#ffffff",
+                        "outline-variant": "#444748",
+                        "on-secondary": "#313030",
+                        "on-primary-fixed": "#1a1c1c",
+                        "primary-container": "#e2e2e2",
+                        "inverse-primary": "#5d5f5f",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#e2e2e2",
+                        "on-primary-fixed-variant": "#454747",
+                        "tertiary-fixed": "#e2e2e2",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "on-secondary-fixed-variant": "#474646",
+                        "surface-variant": "#353434",
+                        "surface-dim": "#141313",
+                        "on-primary-container": "#636565",
+                        "background": "#050505",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "surface-container-high": "#2a2a2a",
+                        "on-tertiary": "#2f3131"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "max-width": "1440px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "24px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "display-xl": ["Hanken Grotesk"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.2em", "fontWeight": "400"}],
+                        "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "0.02em", "fontWeight": "300"}],
+                        "display-xl": ["72px", {"lineHeight": "80px", "letterSpacing": "-0.04em", "fontWeight": "200"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "300"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.03;
+            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+        }
+        
+        .vignette-heavy {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 90;
+            background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.95) 100%);
+        }
+
+        .vinyl-grooves-meditative {
+            background: repeating-radial-gradient(
+                #030303 0%,
+                #030303 0.2%,
+                #0a0a0a 0.4%,
+                #030303 0.6%
+            );
+            position: relative;
+            box-shadow: 
+                inset 0 0 60px rgba(0,0,0,0.95),
+                0 30px 80px rgba(0,0,0,0.9),
+                0 0 40px rgba(255,255,255,0.02);
+        }
+        
+        .vinyl-reflection-soft {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0%,
+                rgba(255,255,255,0.03) 15%,
+                transparent 30%,
+                transparent 50%,
+                rgba(255,255,255,0.02) 65%,
+                transparent 80%,
+                transparent 100%
+            );
+            mix-blend-mode: screen;
+            pointer-events: none;
+            transition: transform 0.5s ease-out;
+        }
+
+        @keyframes breathe {
+            0% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+            100% { opacity: 0.3; transform: scale(1); }
+        }
+
+        .breathing-glow {
+            animation: breathe 8s ease-in-out infinite;
+        }
+
+        @keyframes orbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-ring-container {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .progress-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.05);
+            mask-image: conic-gradient(from -90deg, #fff 40%, transparent 40%);
+            -webkit-mask-image: conic-gradient(from -90deg, #fff 40%, transparent 40%);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .progress-dot {
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px #fff;
+            transform-origin: 50% calc(50% + 450px); /* Adjust based on platter size */
+        }
+        
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinning-slow {
+            animation: spin-slow 8s linear infinite; /* Slower for meditative feel */
+        }
+
+        .tonearm-transition {
+            transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        .brushed-metal-dark {
+            background: linear-gradient(90deg, #333 0%, #555 20%, #222 50%, #555 80%, #333 100%);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.2), inset 0 -1px 2px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        /* Hover UI Reveal */
+        .hover-ui {
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        body:hover .hover-ui {
+            opacity: 1;
+        }
+
+        /* Particle System */
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: float-particle linear infinite;
+        }
+
+        @keyframes float-particle {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            20% { opacity: 0.3; }
+            80% { opacity: 0.3; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+
+        /* Parallax Layer */
+        .parallax-bg {
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen overflow-hidden relative font-body-md selection:bg-primary/20">
+<div class="film-grain"></div>
+<div class="vignette-heavy"></div>
+<!-- Ambient Parallax Background -->
+<div class="absolute inset-0 z-0 parallax-bg" id="parallax-container">
+<!-- Deep color orbs -->
+<div class="absolute top-[20%] left-[30%] w-[60vw] h-[60vw] rounded-full bg-blue-900/10 blur-[120px] breathing-glow" style="animation-delay: 0s;"></div>
+<div class="absolute bottom-[10%] right-[20%] w-[50vw] h-[50vw] rounded-full bg-purple-900/5 blur-[100px] breathing-glow" style="animation-delay: -4s;"></div>
+<div class="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] rounded-full bg-white/2 blur-[150px]"></div>
+</div>
+<!-- Particle Container -->
+<div class="absolute inset-0 z-10 pointer-events-none" id="particles"></div>
+<!-- Top Navigation (Hidden until hover) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop py-8 bg-gradient-to-b from-black/60 to-transparent hover-ui hidden md:flex">
+<div class="font-display-xl text-primary/70 tracking-tighter text-2xl font-light">VinylDeck</div>
+<nav class="flex gap-12 items-center">
+<a class="font-label-caps text-label-caps text-on-surface-variant/50 hover:text-primary/80 transition-colors duration-500 tracking-[0.3em]" href="#">Collection</a>
+<a class="font-label-caps text-label-caps text-primary/80 border-b border-primary/30 pb-2 tracking-[0.3em]" href="#">Discovery</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/50 hover:text-primary/80 transition-colors duration-500 tracking-[0.3em]" href="#">Studios</a>
+</nav>
+<div class="flex gap-8 items-center">
+<button class="text-on-surface-variant/50 hover:text-primary/80 transition-colors duration-500">
+<span class="material-symbols-outlined font-light">palette</span>
+</button>
+<button class="text-on-surface-variant/50 hover:text-primary/80 transition-colors duration-500">
+<span class="material-symbols-outlined font-light">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Meditative Canvas -->
+<main class="relative z-20 w-full h-screen flex items-center justify-center overflow-hidden">
+<!-- Giant Turntable Area -->
+<div class="relative flex items-center justify-center w-[120vh] h-[120vh] max-w-none">
+<!-- Progress Ring -->
+<div class="progress-ring-container">
+<div class="progress-ring"></div>
+<div class="progress-dot" style="transform-origin: 50% calc(50% + 60vh); transform: translateX(-50%) rotate(144deg);"></div> <!-- 40% of 360 = 144deg -->
+</div>
+<!-- The Platter (Record) - Dominates Screen -->
+<div class="absolute w-[95%] h-[95%] rounded-full bg-[#020202] flex items-center justify-center vinyl-grooves-meditative spinning-slow border border-white/[0.03]" id="record-platter">
+<div class="vinyl-reflection-soft" id="vinyl-reflection"></div>
+<div class="absolute inset-0 rounded-full bg-gradient-to-br from-white/[0.02] to-transparent mix-blend-overlay"></div>
+<!-- Inner Label (Minimal) -->
+<div class="w-[20%] h-[20%] rounded-full overflow-hidden flex items-center justify-center relative bg-[#0a0a0a] shadow-[0_0_30px_rgba(0,0,0,0.9)] z-10 border border-white/5">
+<div class="absolute inset-0 opacity-40 mix-blend-luminosity bg-[url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3-qkqzXGvGBDDACpNKNhfZKeTS3nKaOBPD6_olxSlw_5HRYMHaOssbyMjLR62Oz4lRfeinIstZ2NB6xlLrZVbiWTLGkcbDY6nWymrw4CctqHn-FWzeQpgCu_wG3jxedqzFwmsr_ufv3O-EwKBEbadSUVq_0U1AWK5wVNLpElhHE_cswJtLEyNzbdngv-NmFGDYvdiRC_GoN0Ba2hrolgE8PCgzGr_oRkJrR6Y_QlnR1DoEYI3AfIIoXCvQ_kqcW6BuPxQBaePVu1O')] bg-cover bg-center"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
+<div class="absolute w-4 h-4 bg-gradient-to-br from-[#111] to-[#000] rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.9),0_1px_1px_rgba(255,255,255,0.1)] border border-[#222]">
+<div class="absolute inset-[3px] bg-[#050505] rounded-full shadow-inner"></div>
+</div>
+</div>
+</div>
+<!-- Tonearm (Pushed to edge, minimal) -->
+<div class="absolute top-[15%] right-[2%] w-[40px] h-[50vh] origin-[20px_20px] transform rotate-[18deg] tonearm-transition z-30" id="tonearm-assembly">
+<!-- Base Pivot -->
+<div class="w-16 h-16 absolute -top-8 -left-6 flex items-center justify-center opacity-80">
+<div class="w-12 h-12 bg-[#0a0a0a] rounded-full absolute shadow-[0_5px_15px_rgba(0,0,0,0.9)] border border-white/5"></div>
+<div class="w-8 h-8 brushed-metal-dark rounded-full absolute z-10 flex items-center justify-center">
+<div class="w-2 h-2 bg-[#111] rounded-full shadow-inner"></div>
+</div>
+</div>
+<!-- Arm Wand (Thinner, longer) -->
+<div class="w-1.5 h-[45vh] brushed-metal-dark rounded-full absolute top-8 left-[19px] shadow-[5px_5px_15px_rgba(0,0,0,0.8)] opacity-90"></div>
+<!-- Headshell -->
+<div class="absolute bottom-[-5px] left-[-10px] w-8 h-[50px] bg-[#111] rounded-sm shadow-[10px_10px_20px_rgba(0,0,0,0.9)] border border-white/5 transform rotate-[25deg] z-10 flex flex-col justify-end p-0.5">
+<div class="w-full h-2 brushed-metal-dark rounded-[1px] mb-0.5"></div>
+<div class="w-full h-6 bg-[#050505] rounded-[1px] relative">
+<div class="absolute bottom-[-2px] left-1/2 -translate-x-1/2 w-0.5 h-2 bg-red-800/50 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom UI Controls (Hover Reveal & Minimal) -->
+<div class="fixed bottom-0 left-0 w-full px-16 py-12 flex items-end justify-between z-50 hover-ui bg-gradient-to-t from-black via-black/50 to-transparent pb-16">
+<!-- Track Info (Ultra Minimal) -->
+<div class="flex-1 flex flex-col gap-2">
+<h1 class="font-headline-lg text-2xl text-primary/90 tracking-[0.05em] font-extralight uppercase">Midnight Echoes</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant/40 tracking-[0.4em]">THE ANALOG ARCHITECTS</p>
+</div>
+<!-- Playback Controls (Ghosted) -->
+<div class="flex-1 flex flex-col items-center justify-end pb-2 gap-6">
+<div class="flex items-center gap-12">
+<button class="text-on-surface-variant/30 hover:text-primary/70 transition-all duration-500 hover:scale-105">
+<span class="material-symbols-outlined font-extralight" style="font-size: 28px;">skip_previous</span>
+</button>
+<button class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-all duration-500" id="play-pause-btn">
+<span class="material-symbols-outlined text-primary/70 font-light" style="font-size: 32px;">pause</span>
+</button>
+<button class="text-on-surface-variant/30 hover:text-primary/70 transition-all duration-500 hover:scale-105">
+<span class="material-symbols-outlined font-extralight" style="font-size: 28px;">skip_next</span>
+</button>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant/30 font-label-caps text-[10px] tracking-widest">
+<span>02:14</span>
+<span class="w-4 h-[1px] bg-white/20"></span>
+<span>05:30</span>
+</div>
+</div>
+<!-- Extra Controls -->
+<div class="flex-1 flex justify-end items-center gap-6 pb-4">
+<button class="text-on-surface-variant/30 hover:text-primary/70 transition-all duration-500">
+<span class="material-symbols-outlined font-extralight">graphic_eq</span>
+</button>
+<button class="text-on-surface-variant/30 hover:text-primary/70 transition-all duration-500">
+<span class="material-symbols-outlined font-extralight">volume_up</span>
+</button>
+</div>
+</div>
+<script>
+        const tonearm = document.getElementById('tonearm-assembly');
+        const playBtn = document.getElementById('play-pause-btn');
+        const recordPlatter = document.getElementById('record-platter');
+        const parallaxContainer = document.getElementById('parallax-container');
+        const vinylReflection = document.getElementById('vinyl-reflection');
+        let isPlaying = true;
+
+        // Play/Pause Logic
+        if(playBtn) {
+            playBtn.addEventListener('click', () => {
+                isPlaying = !isPlaying;
+                const icon = playBtn.querySelector('span');
+                
+                if(isPlaying) {
+                    icon.textContent = 'pause';
+                    tonearm.style.transform = 'rotate(18deg)';
+                    recordPlatter.style.animationPlayState = 'running';
+                } else {
+                    icon.textContent = 'play_arrow';
+                    tonearm.style.transform = 'rotate(0deg)';
+                    recordPlatter.style.animationPlayState = 'paused';
+                }
+            });
+        }
+
+        // Parallax Effect
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            
+            if(parallaxContainer) {
+                parallaxContainer.style.transform = `translate(${x}px, ${y}px)`;
+            }
+            if(vinylReflection) {
+                vinylReflection.style.transform = `translate(${x * -0.5}px, ${y * -0.5}px)`;
+            }
+        });
+
+        // Simple Particle System
+        const particleContainer = document.getElementById('particles');
+        const particleCount = 30;
+
+        for (let i = 0; i < particleCount; i++) {
+            createParticle();
+        }
+
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            
+            // Randomize properties
+            const size = Math.random() * 3 + 1;
+            const left = Math.random() * 100;
+            const duration = Math.random() * 10 + 10;
+            const delay = Math.random() * 10;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${left}vw`;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.animationDelay = `${delay}s`;
+            
+            particleContainer.appendChild(particle);
+
+            // Recreate particle when animation ends to keep it looping infinitely
+            particle.addEventListener('animationend', () => {
+                particle.remove();
+                createParticle();
+            });
+        }
+    </script>
+</body></html>

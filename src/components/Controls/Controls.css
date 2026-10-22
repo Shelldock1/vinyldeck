@@ -1,0 +1,328 @@
+/* ============================================================
+   Controls Component CSS
+   Playback transport: pill container + 3 buttons.
+   Phase 4: glassmorphism pill, hover/active/disabled states,
+            play→pause icon morph timing, theme-aware accent.
+   ============================================================ */
+
+/* ── Controls pill container ─────────────────────────────────── */
+/* Frosted glass pill — sits above everything else.              */
+.controls-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+
+  /* Glassmorphism — theme-driven vars */
+  background: var(--ui-bg, rgba(255, 255, 255, 0.07));
+  border: 1px solid var(--ui-border, rgba(255, 255, 255, 0.1));
+  border-radius: 9999px; /* Always a pill — regardless of theme radius */
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+
+  /* Subtle inner glow — depth effect */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+
+  /* Smooth theme transitions */
+  transition:
+    background var(--theme-transition, 600ms ease),
+    border-color var(--theme-transition, 600ms ease),
+    box-shadow 300ms ease;
+}
+
+/* Light-mode themes: darker pill border to show against light bg */
+[data-theme="paper"] .controls-pill,
+[data-theme="glass"] .controls-pill {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Secondary buttons: Prev / Next ──────────────────────────── */
+.controls-btn-secondary {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ui-text-secondary, rgba(255, 255, 255, 0.45));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Phase 4.2: Color + opacity + bg all transition */
+  transition:
+    color 200ms ease,
+    opacity 200ms ease,
+    background 200ms ease,
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Hover state — lift color to primary, add micro bg */
+.controls-btn-secondary:not(:disabled):hover {
+  color: var(--ui-text-primary, rgba(255, 255, 255, 0.92));
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.08));
+  opacity: 1;
+}
+
+/* Active/click state — press-in scale + bg darkens */
+.controls-btn-secondary:not(:disabled):active {
+  background: var(--ui-control-active, rgba(255, 255, 255, 0.14));
+  transform: scale(0.88);
+}
+
+/* Disabled */
+.controls-btn-secondary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Primary button: Play/Pause ──────────────────────────────── */
+.controls-btn-primary {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ui-accent, #ffffff);
+  /* Phase 4.3: Icon color contrasts against accent */
+  color: #000000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    box-shadow 350ms ease,
+    background 200ms ease,
+    transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Base shadow */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Paused state — subtle glow (pre-hover) */
+.controls-btn-primary.paused {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Playing state — accent-colored glow bloom */
+.controls-btn-primary.playing {
+  box-shadow:
+    0 0 0 2px var(--ui-accent, #fff),
+    0 0 20px var(--glow-color, rgba(255, 255, 255, 0.2)),
+    0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Hover */
+.controls-btn-primary:not(:disabled):hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 2px var(--ui-accent, #fff),
+    0 0 32px var(--ring-glow, rgba(255, 255, 255, 0.4)),
+    0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Active/click */
+.controls-btn-primary:not(:disabled):active {
+  transform: scale(0.88);
+}
+
+/* Disabled */
+.controls-btn-primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Paper theme: invert icon color since bg is cream ─────────── */
+/* In Paper light mode, --ui-accent is bronze (#715230) so icon   */
+/* on that bg needs to be cream/white for contrast.               */
+[data-theme="paper"] .controls-btn-primary {
+  color: #fef9eb; /* cream — readable on bronze */
+}
+
+/* Glass light mode: accent is blue, icon white */
+[data-theme="glass"] .controls-btn-primary {
+  color: #ffffff;
+}
+
+/* ── Icon morph — play → pause cross-fade ───────────────────── */
+/* Phase 4.4: Icons wrapped in spans that fade + scale between.  */
+.controls-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Prevent layout shift during morph */
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.controls-icon--entering {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.controls-icon--exiting {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+/* Theme overhaul material pass: velvet/noir + liquid/glass surfaces. */
+.controls-pill {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-bg);
+  border-color: var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+}
+
+.controls-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0 34%,
+      rgba(255, 255, 255, 0.34) 44%,
+      transparent 54% 100%
+    ),
+    radial-gradient(
+      circle at 50% 0%,
+      var(--surface-inner-highlight),
+      transparent 48%
+    );
+  opacity: var(--surface-specular-opacity, 0.22);
+  mix-blend-mode: screen;
+}
+
+[data-theme="noir"] .controls-pill {
+  border-radius: 9999px;
+}
+
+[data-theme="glass"] .controls-pill {
+  border-radius: 9999px;
+  box-shadow:
+    0 18px 48px rgba(35, 55, 78, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -18px 34px rgba(90, 130, 180, 0.08);
+}
+
+[data-theme="glass"] .controls-btn-primary {
+  color: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Liquid Glass material pass — optical wrapper, crisp controls
+   ═══════════════════════════════════════════════════════════════ */
+.controls-pill.liquid-glass {
+  display: block;
+  padding: 10px 18px;
+  border-radius: 9999px;
+}
+
+.controls-pill__content {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+[data-theme="glass"] .controls-pill.liquid-glass {
+  --glass-blur: 32px;
+  --glass-bend-opacity: 0.58;
+  --glass-face-opacity: 0.42;
+  --glass-edge-opacity: 0.92;
+  --glass-specular-opacity: 0.38;
+  box-shadow:
+    0 16px 48px rgba(46, 66, 88, 0.18),
+    0 2px 10px rgba(255, 255, 255, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -22px 40px rgba(94, 136, 178, 0.1);
+}
+
+[data-theme="glass"] .controls-pill .liquid-glass__bend {
+  inset: -18px;
+  opacity: 0.72;
+}
+
+[data-theme="glass"] .controls-pill .liquid-glass__face {
+  background:
+    radial-gradient(circle at 50% -18%, rgba(255, 255, 255, 0.88), transparent 52%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.14));
+}
+
+[data-theme="glass"] .controls-btn-secondary {
+  color: rgba(55, 68, 82, 0.55);
+}
+
+[data-theme="glass"] .controls-btn-secondary:not(:disabled):hover {
+  color: rgba(16, 25, 34, 0.82);
+  background: rgba(255, 255, 255, 0.24);
+}
+
+[data-theme="glass"] .controls-btn-primary {
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.72), transparent 30%),
+    linear-gradient(145deg, #0787ff, #005fc4 62%, #004995);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.62),
+    inset -2px -2px 4px rgba(0, 38, 88, 0.32),
+    0 9px 22px rgba(0, 105, 210, 0.28),
+    0 2px 9px rgba(48, 80, 112, 0.18);
+}
+
+[data-theme="glass"] .controls-btn-primary.playing {
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.62),
+    inset -2px -2px 4px rgba(0, 38, 88, 0.32),
+    0 0 0 2px rgba(0, 112, 217, 0.35),
+    0 0 28px rgba(0, 112, 217, 0.28),
+    0 9px 22px rgba(0, 105, 210, 0.26);
+}
+
+[data-theme="noir"] .controls-pill.liquid-glass {
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.065),
+    inset 0 -24px 52px rgba(0, 0, 0, 0.42);
+}
+
+/* THIRD PASS: Noir no longer uses watery glass; Glass is deliberately testable. */
+[data-theme="noir"] .controls-pill.liquid-glass {
+  background: linear-gradient(180deg, rgba(16,16,16,0.82), rgba(0,0,0,0.84));
+  border-color: rgba(255,255,255,0.07);
+  box-shadow:
+    0 20px 66px rgba(0,0,0,0.72),
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -22px 54px rgba(0,0,0,0.52);
+}
+
+[data-theme="glass"] .controls-pill.liquid-glass {
+  --glass-refract-opacity: 1.16;
+  --glass-bend-opacity: 0.96;
+  --glass-edge-opacity: 1;
+  --glass-specular-opacity: 0.78;
+  box-shadow:
+    0 24px 70px rgba(42, 90, 130, 0.20),
+    0 0 18px rgba(255,255,255,0.46),
+    inset 2px 2px 1px rgba(255,255,255,0.98),
+    inset -2px -2px 1px rgba(80,165,230,0.26),
+    inset 0 -22px 48px rgba(80,160,230,0.14);
+}

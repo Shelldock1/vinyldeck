@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck - Platter</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Geist:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e5e2e1",
+                        "tertiary": "#ffffff",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-fixed-variant": "#454747",
+                        "on-tertiary-container": "#646464",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary": "#c8c6c5",
+                        "on-secondary-container": "#b7b5b4",
+                        "inverse-on-surface": "#313030",
+                        "surface-dim": "#131313",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-primary-container": "#636565",
+                        "surface-variant": "#353534",
+                        "surface": "#131313",
+                        "inverse-primary": "#5d5f5f",
+                        "on-error": "#690005",
+                        "surface-container-highest": "#353534",
+                        "secondary-container": "#474746",
+                        "on-primary-fixed": "#1a1c1c",
+                        "on-secondary-fixed-variant": "#474746",
+                        "surface-container": "#201f1f",
+                        "primary-container": "#e2e2e2",
+                        "outline-variant": "#444748",
+                        "primary-fixed": "#e2e2e2",
+                        "on-tertiary": "#303030",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-bright": "#3a3939",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "on-primary": "#2f3131",
+                        "outline": "#8e9192",
+                        "on-secondary": "#313030",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "background": "#131313",
+                        "tertiary-container": "#e4e2e2",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "error-container": "#93000a",
+                        "on-background": "#e5e2e1",
+                        "primary": "#ffffff",
+                        "surface-tint": "#c6c6c7",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#c4c7c8",
+                        "tertiary-fixed-dim": "#c8c6c6",
+                        "on-surface": "#e5e2e1",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "tertiary-fixed": "#e4e2e2",
+                        "inverse-surface": "#e5e2e1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "max-width": "1440px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-sm": ["Geist"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Geist"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["JetBrains Mono"],
+                        "display": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "data-mono": ["13px", { "lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "500" }],
+                        "display": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            /* Noise texture overlay */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Vinyl Record Animations & Styles */
+        .vinyl-record {
+            background: conic-gradient(
+                from 0deg,
+                #111 0deg 10deg,
+                #222 10deg 20deg,
+                #111 20deg 40deg,
+                #2a2a2a 40deg 50deg,
+                #111 50deg 70deg,
+                #222 70deg 80deg,
+                #111 80deg 100deg,
+                #2a2a2a 100deg 110deg,
+                #111 110deg 130deg,
+                #222 130deg 140deg,
+                #111 140deg 160deg,
+                #2a2a2a 160deg 170deg,
+                #111 170deg 190deg,
+                #222 190deg 200deg,
+                #111 200deg 220deg,
+                #2a2a2a 220deg 230deg,
+                #111 230deg 250deg,
+                #222 250deg 260deg,
+                #111 260deg 280deg,
+                #2a2a2a 280deg 290deg,
+                #111 290deg 310deg,
+                #222 310deg 320deg,
+                #111 320deg 340deg,
+                #2a2a2a 340deg 350deg,
+                #111 350deg 360deg
+            );
+            border: 1px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 50px rgba(0,0,0,0.5);
+            animation: spin 4s linear infinite;
+        }
+
+        .vinyl-grooves {
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .vinyl-label {
+            background-color: theme('colors.surface-container-low');
+            border: 1px solid theme('colors.surface-variant');
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Ambient Glow Behind Record */
+        .ambient-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 w-full z-50 bg-transparent border-b border-white/5">
+<div class="font-display text-headline-lg-mobile tracking-tighter text-primary">VinylDeck</div>
+<nav class="hidden md:flex gap-8">
+<a class="font-label-caps text-label-caps text-on-secondary-container hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Collection</a>
+<a class="font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Discovery</a>
+<a class="font-label-caps text-label-caps text-on-secondary-container hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70" href="#">Studios</a>
+</nav>
+<div class="flex gap-4 items-center">
+<button class="text-primary hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-primary hover:text-primary transition-colors duration-300 cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas - The Platter -->
+<main class="flex-grow flex flex-col items-center justify-center relative mt-20 mb-32 z-10">
+<div class="relative w-[300px] h-[300px] md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px]">
+<div class="ambient-glow"></div>
+<!-- The Record -->
+<div class="vinyl-record w-full h-full rounded-full relative flex items-center justify-center">
+<!-- Grooves -->
+<div class="vinyl-grooves w-[95%] h-[95%]"></div>
+<div class="vinyl-grooves w-[85%] h-[85%]"></div>
+<div class="vinyl-grooves w-[75%] h-[75%]"></div>
+<div class="vinyl-grooves w-[65%] h-[65%]"></div>
+<div class="vinyl-grooves w-[55%] h-[55%]"></div>
+<div class="vinyl-grooves w-[45%] h-[45%]"></div>
+<!-- Center Label -->
+<div class="vinyl-label w-[30%] h-[30%] rounded-full flex flex-col items-center justify-center relative overflow-hidden z-10">
+<img alt="Album Cover Thumbnail" class="absolute inset-0 w-full h-full object-cover opacity-50 grayscale" data-alt="A dark, moody abstract texture with deep blacks and sharp silver highlights, resembling worn metal or dark stone. High contrast, minimalist aesthetic perfect for a high-end audio interface center label. Cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAJjRSX8au798ulyPWS-grtOJKVAywSWcw9aQBGjWNVT3gdr61ytftESt0zNmuoAr_x10Asvma1-_h_zvBbMJkvXnP1x57u1lX82Oh9Vdo2EaSTdgpI--nYUn-ZHOkcGDbPUBUEIplB4mtswHnWqhVqEd7x1TNtETJJCwIVZjotUX3e8hwxLhK4hKvWkRc7oytA1ETSGuz-vpSsNUIeRxHOH6tQC5DhwoM6ZMS6_g_jJ__LlGVzRLAUe7bXmTwwkiegAa-hH3_UJPJ"/>
+<div class="w-4 h-4 bg-background rounded-full border border-surface-variant z-20"></div>
+<div class="absolute bottom-4 font-label-caps text-label-caps text-primary tracking-widest z-20">A-SIDE</div>
+</div>
+</div>
+</div>
+<!-- Track Info -->
+<div class="mt-12 text-center z-20">
+<h1 class="font-display text-headline-lg md:text-display text-primary tracking-tighter mb-2">Midnight Echoes</h1>
+<p class="font-body-md text-body-md text-on-surface-variant uppercase tracking-widest">The Synthwave Collective</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-center items-center pb-8 px-margin-mobile bg-surface-container/80 backdrop-blur-xl border border-outline-variant/20 shadow-[0_0_20px_rgba(0,0,0,0.4)]">
+<!-- Progress Bar (Integrated into Nav area for Desktop, standard for Mobile) -->
+<div class="absolute top-0 left-0 w-full h-1 bg-surface-container-highest -mt-1 cursor-pointer group">
+<div class="h-full bg-primary w-1/3 relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+</div>
+<div class="flex justify-between items-center w-full max-w-[600px] mt-4">
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">skip_previous</span>
+<span class="font-data-mono text-label-caps mt-1 hidden md:block">PREV</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary scale-110 hover:text-primary transition-transform duration-200 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'FILL' 1;">pause_circle</span>
+<span class="font-data-mono text-label-caps mt-1 hidden md:block">PAUSE</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">skip_next</span>
+<span class="font-data-mono text-label-caps mt-1 hidden md:block">NEXT</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 transition-all hidden md:flex">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">queue_music</span>
+<span class="font-data-mono text-label-caps mt-1">QUEUE</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-transform duration-200 active:scale-95 transition-all hidden md:flex">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notes</span>
+<span class="font-data-mono text-label-caps mt-1">LYRICS</span>
+</button>
+</div>
+</nav>
+<!-- Ambient background layer for extra depth -->
+<div class="fixed inset-0 pointer-events-none z-[-2] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-surface-container-low via-background to-background opacity-80"></div>
+</body></html>

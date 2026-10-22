@@ -1,0 +1,36 @@
+# VinylDeck Project Scope Skills
+
+The following skills have been pulled from the global scope and authorized specifically for this project. They live in `c:\Coding\vinyldeck\.agents\skills\`.
+
+## 1. Visual Engine & Frontend Aesthetics
+- design-taste-frontend (Strict React UI/UX engineering)
+- high-end-visual-design (Cinematic, expensive feel rules)
+- minimalist-ui (Typography-focused layouts)
+- gpt-taste (Advanced GSAP / hardware acceleration enforcement)
+- react-components (Modular Vite/React components)
+
+## 2. Backend & System
+- rust-pro (Tauri v2 commands, SMTC polling, Rust performance)
+- typescript-pro (Advanced type safety for Zustand and React 19)
+- zustand-store-ts (Global state management)
+- react-component-performance (60fps enforcement, anti-re-render patterns)
+
+## 3. Stitch UI & Design System
+- extract-design-md (Extract DESIGN.md from UI files)
+- extract-static-html (Isolate UI views for review)
+- stitch-design-taste (Enforce premium anti-generic UI standards)
+- code-to-design (Upload and sync designs)
+
+## 4. Agent Efficiency & Workflow (Caveman Suite)
+- caveman (Ultra-compressed token efficiency)
+- caveman-help (Command reference)
+- caveman-commit (Compressed conventional commits)
+- caveman-compress (Memory document compressor)
+- caveman-review (Diff reviewing)
+- cavecrew (Delegation to caveman subagents)
+- subagent-driven-development / dispatching-parallel-agents (Parallelized task scoping)
+
+## 5. Debugging & Enforcement
+- systematic-debugging (Rust panic/React lifecycle bug fixing)
+- verification-before-completion (Mandatory auto-test rules)
+- full-output-enforcement (Prevent placeholder code)

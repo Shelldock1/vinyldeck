@@ -1,0 +1,240 @@
+/* ============================================================
+   Liquid Glass primitive — third pass
+   Glass = obvious optical lens over a moving shader world.
+   Noir = reverted to premium matte black lacquer / velvet.
+   ============================================================ */
+
+.liquid-glass-filter-defs {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.liquid-glass {
+  --liquid-radius: var(--surface-radius, 24px);
+  --liquid-refract-opacity: var(--glass-refract-opacity, 0.78);
+  --liquid-bend-opacity: var(--glass-bend-opacity, 0.48);
+  --liquid-face-opacity: var(--glass-face-opacity, 0.34);
+  --liquid-edge-opacity: var(--glass-edge-opacity, 0.82);
+  --liquid-specular-opacity: var(--glass-specular-opacity, 0.34);
+  --liquid-lens-scale: 1.06;
+  --liquid-lens-blur: var(--glass-lens-blur, 8px);
+
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--liquid-radius);
+  background: var(--surface-bg);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+  transform: translateZ(0);
+}
+
+.liquid-glass--pill,
+.liquid-glass--dock {
+  --liquid-radius: var(--radius-full);
+}
+
+.liquid-glass--icon {
+  --liquid-radius: 50%;
+}
+
+.liquid-glass--subtle {
+  --liquid-refract-opacity: calc(var(--glass-refract-opacity, 0.78) * 0.48);
+  --liquid-bend-opacity: calc(var(--glass-bend-opacity, 0.48) * 0.55);
+  --liquid-face-opacity: calc(var(--glass-face-opacity, 0.34) * 0.76);
+  --liquid-edge-opacity: calc(var(--glass-edge-opacity, 0.82) * 0.72);
+  --liquid-specular-opacity: calc(var(--glass-specular-opacity, 0.34) * 0.58);
+}
+
+.liquid-glass--strong {
+  --liquid-refract-opacity: calc(var(--glass-refract-opacity, 0.78) * 1.18);
+  --liquid-bend-opacity: calc(var(--glass-bend-opacity, 0.48) * 1.16);
+  --liquid-face-opacity: calc(var(--glass-face-opacity, 0.34) * 0.96);
+  --liquid-edge-opacity: calc(var(--glass-edge-opacity, 0.82) * 1.16);
+  --liquid-specular-opacity: calc(var(--glass-specular-opacity, 0.34) * 1.18);
+}
+
+.liquid-glass--debug {
+  --liquid-refract-opacity: 1.18;
+  --liquid-bend-opacity: 1;
+  --liquid-face-opacity: 0.18;
+  --liquid-edge-opacity: 1;
+  --liquid-specular-opacity: 0.88;
+  --liquid-lens-scale: 1.12;
+}
+
+.liquid-glass__refract,
+.liquid-glass__bend,
+.liquid-glass__face,
+.liquid-glass__edge,
+.liquid-glass__specular {
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* The important third-pass layer: a screen-space optical field clipped by the
+   glass shape. It makes the material testable even before the final bg shader
+   taste pass, while still matching the current room colors. */
+.liquid-glass__refract {
+  z-index: 0;
+  inset: -56px;
+  border-radius: calc(var(--liquid-radius) + 56px);
+  background: var(--glass-lens-field);
+  background-attachment: fixed;
+  background-size: 100vw 100vh;
+  background-position: center center;
+  filter: url("#vinyldeck-liquid-refract") blur(var(--liquid-lens-blur)) saturate(1.65) contrast(1.24);
+  opacity: var(--liquid-refract-opacity);
+  transform: scale(var(--liquid-lens-scale));
+  mix-blend-mode: var(--glass-refract-blend, normal);
+  animation: liquidLensDrift 18s ease-in-out infinite alternate;
+}
+
+.liquid-glass__bend {
+  z-index: 1;
+  inset: -26px;
+  border-radius: calc(var(--liquid-radius) + 26px);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 255, 255, 0.58), transparent 24%),
+    radial-gradient(circle at 84% 92%, color-mix(in srgb, var(--ui-accent) 28%, transparent), transparent 42%),
+    linear-gradient(116deg, transparent 0 36%, rgba(255,255,255,0.28) 47%, transparent 58% 100%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 26px)) saturate(1.9) contrast(1.18);
+  backdrop-filter: blur(var(--glass-blur, 26px)) saturate(1.9) contrast(1.18);
+  /* Chromium currently applies SVG url filters more reliably to this layer
+     than backdrop-filter:url(); keep both paths for Tauri WebView builds. */
+  filter: url("#vinyldeck-liquid-refract");
+  opacity: var(--liquid-bend-opacity);
+  mix-blend-mode: var(--glass-bend-blend, screen);
+}
+
+.liquid-glass__face {
+  z-index: 2;
+  inset: 0;
+  background:
+    linear-gradient(135deg,
+      rgba(255, 255, 255, calc(var(--liquid-face-opacity) * 1.16)) 0%,
+      rgba(255, 255, 255, calc(var(--liquid-face-opacity) * 0.34)) 38%,
+      color-mix(in srgb, var(--ui-accent) 10%, transparent) 100%),
+    radial-gradient(circle at 50% -18%, rgba(255,255,255,0.62), transparent 48%);
+  opacity: var(--glass-face-layer-opacity, 1);
+}
+
+.liquid-glass__edge {
+  z-index: 3;
+  inset: 0;
+  box-shadow:
+    inset 2px 2px 1px rgba(255, 255, 255, var(--liquid-edge-opacity)),
+    inset -2px -2px 1px rgba(115, 170, 230, calc(var(--liquid-edge-opacity) * 0.34)),
+    inset 0 0 0 1px rgba(255, 255, 255, calc(var(--liquid-edge-opacity) * 0.38)),
+    inset 0 -20px 42px color-mix(in srgb, var(--ui-accent) 13%, transparent),
+    inset 0 12px 30px rgba(255,255,255,0.22);
+  filter: url("#vinyldeck-liquid-edge");
+}
+
+.liquid-glass__specular {
+  z-index: 4;
+  inset: 0;
+  background:
+    linear-gradient(108deg, transparent 0 23%, rgba(255,255,255,0.92) 36%, rgba(255,255,255,0.18) 43%, transparent 58% 100%),
+    linear-gradient(20deg, transparent 0 56%, rgba(255,255,255,0.38) 62%, transparent 74% 100%),
+    radial-gradient(circle at 17% 10%, rgba(255,255,255,0.92), transparent 18%),
+    radial-gradient(circle at 86% 84%, color-mix(in srgb, var(--ui-accent) 26%, transparent), transparent 28%);
+  filter: url("#vinyldeck-liquid-specular");
+  opacity: var(--liquid-specular-opacity);
+  mix-blend-mode: screen;
+}
+
+.liquid-glass__content {
+  position: relative;
+  z-index: 5;
+}
+
+.liquid-glass--as-layout > .liquid-glass__content {
+  display: contents;
+}
+
+/* Noir: explicit revert. It should not look wet, cracked, or watery. */
+[data-theme="noir"] .liquid-glass {
+  --liquid-refract-opacity: 0;
+  --liquid-bend-opacity: 0;
+  --liquid-face-opacity: 0.07;
+  --liquid-edge-opacity: 0.15;
+  --liquid-specular-opacity: 0.08;
+  background: var(--surface-bg);
+  -webkit-backdrop-filter: blur(18px) saturate(1.06) contrast(1.04);
+  backdrop-filter: blur(18px) saturate(1.06) contrast(1.04);
+}
+
+[data-theme="noir"] .liquid-glass__refract,
+[data-theme="noir"] .liquid-glass__bend {
+  display: none;
+}
+
+[data-theme="noir"] .liquid-glass__face {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.055), transparent 46%),
+    linear-gradient(180deg, rgba(22,22,22,0.64), rgba(2,2,2,0.84));
+  opacity: 1;
+}
+
+[data-theme="noir"] .liquid-glass__edge {
+  filter: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.075),
+    inset 0 -18px 42px rgba(0,0,0,0.56),
+    0 0 0 1px rgba(255,255,255,0.035);
+}
+
+[data-theme="noir"] .liquid-glass__specular {
+  background:
+    linear-gradient(118deg, transparent 0 46%, rgba(255,255,255,0.18) 50%, transparent 56% 100%),
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12), transparent 36%);
+  filter: none;
+  opacity: 0.16;
+}
+
+/* Glass: wet acrylic, high visibility for validation. */
+[data-theme="glass"] .liquid-glass {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.055));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 30px)) saturate(2.05) contrast(1.2) brightness(1.03);
+  backdrop-filter: blur(var(--glass-blur, 30px)) saturate(2.05) contrast(1.2) brightness(1.03);
+}
+
+[data-theme="glass"] .liquid-glass:hover {
+  --liquid-specular-opacity: calc(var(--glass-specular-opacity, 0.58) * 1.16);
+  --liquid-refract-opacity: calc(var(--glass-refract-opacity, 0.9) * 1.08);
+}
+
+@keyframes liquidLensDrift {
+  0% {
+    transform: translate3d(-1.8%, -1.2%, 0) scale(var(--liquid-lens-scale)) rotate(-0.45deg);
+    background-position: 48% 48%;
+  }
+  100% {
+    transform: translate3d(1.8%, 1.2%, 0) scale(calc(var(--liquid-lens-scale) * 1.035)) rotate(0.55deg);
+    background-position: 52% 52%;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-glass__bend {
+    display: none;
+  }
+
+  .liquid-glass {
+    background: color-mix(in srgb, var(--surface-bg) 84%, rgba(255,255,255,0.18));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass__refract {
+    animation: none;
+  }
+}

@@ -1,0 +1,526 @@
+/* ============================================================
+   VinylDeck — Global CSS
+   Base reset · OLED black · Font stack · Utilities
+   ============================================================ */
+
+/* ── Google Fonts ────────────────────────────────────────── */
+/* All 5 themes + shared system. Load all weights upfront.   */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@200;300;400;600;700&family=Geist:wght@300;400;500;600&family=Anybody:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@400;500;600&family=Manrope:wght@400;600;700&display=swap");
+
+/* ── Box-sizing reset ────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Root — OLED black foundation ───────────────────────── */
+html {
+  background: #000000;
+  color-scheme: var(--color-scheme, dark);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body, "Inter"), system-ui, sans-serif;
+  background: var(--bg, #000000);
+  color: var(--ui-text-primary, rgba(255, 255, 255, 0.9));
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Typography base ─────────────────────────────────────── */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  letter-spacing: var(--mono-tracking, 0.1em);
+  text-transform: uppercase;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 0.875em;
+}
+
+/* ── Reset interactive elements ──────────────────────────── */
+button {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--ui-accent, #fff);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ── App root container ──────────────────────────────────── */
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Scrollbar — minimal dark ────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ui-border, rgba(255, 255, 255, 0.1));
+  border-radius: 2px;
+}
+
+/* ── GPU acceleration helpers ────────────────────────────── */
+.gpu {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ── Transitions: theme-aware color crossfades ───────────── */
+.theme-transition {
+  transition:
+    background var(--theme-transition, 600ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+    color var(--theme-transition, 600ms cubic-bezier(0.25, 0.1, 0.25, 1)),
+    border-color var(--theme-transition, 600ms cubic-bezier(0.25, 0.1, 0.25, 1));
+}
+
+/* ── Tauri drag region helper ────────────────────────────── */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+}
+
+[data-tauri-drag-region] * {
+  -webkit-app-region: no-drag;
+}
+
+/* ── Reduced motion support ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shared physical surface utilities for the two-shell theme model. */
+.liquid-glass-surface,
+.velvet-surface {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+}
+
+.liquid-glass-surface::before,
+.velvet-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0 34%,
+      rgba(255, 255, 255, 0.34) 44%,
+      transparent 54% 100%
+    ),
+    radial-gradient(
+      circle at 50% 0%,
+      var(--surface-inner-highlight),
+      transparent 52%
+    );
+  opacity: var(--surface-specular-opacity, 0.22);
+  mix-blend-mode: screen;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Liquid Glass material pass — shared chrome utilities
+   ═══════════════════════════════════════════════════════════════ */
+
+.theme-picker.liquid-glass {
+  --glass-blur: 26px;
+  --glass-bend-opacity: 0.38;
+  --glass-face-opacity: 0.32;
+  --glass-edge-opacity: 0.72;
+  --glass-specular-opacity: 0.24;
+  padding: 7px 9px;
+  border-radius: 9999px;
+}
+
+.theme-picker__content {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+[data-theme="glass"] .theme-picker.liquid-glass {
+  --glass-bend-opacity: 0.88;
+  --glass-face-opacity: 0.36;
+  --glass-edge-opacity: 1;
+  --glass-specular-opacity: 0.72;
+  --glass-refract-opacity: 1.08;
+  box-shadow:
+    0 18px 54px rgba(50, 96, 135, 0.18),
+    inset 2px 2px 1px rgba(255, 255, 255, 0.96),
+    inset -2px -2px 1px rgba(80, 160, 220, 0.22),
+    inset 0 -18px 38px rgba(70, 150, 225, 0.12);
+}
+
+[data-theme="noir"] .theme-picker.liquid-glass {
+  --glass-refract-opacity: 0;
+  --glass-bend-opacity: 0;
+  --glass-specular-opacity: 0.1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Settings trigger — hardened top-level interactive layer
+   Fixes click blocking from glass/ambient/visual layers.
+   ═══════════════════════════════════════════════════════════════ */
+
+.settings-trigger {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 90;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ui-text-primary);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+  cursor: pointer;
+  pointer-events: auto;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform 180ms var(--spring-curve),
+    background var(--theme-transition),
+    border-color var(--theme-transition),
+    box-shadow 240ms ease,
+    opacity 180ms ease;
+}
+
+.settings-trigger::before,
+.source-badge::before,
+.mini-view__return::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 32% 20%,
+    rgba(255, 255, 255, 0.62),
+    transparent 34%
+  );
+  -webkit-backdrop-filter: blur(18px) saturate(1.45);
+  backdrop-filter: blur(18px) saturate(1.45);
+  filter: url("#vinyldeck-liquid-bend");
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.settings-trigger::after,
+.source-badge::after,
+.mini-view__return::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.72),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.28);
+  opacity: var(--surface-specular-opacity, 0.22);
+}
+
+.settings-trigger > svg {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.settings-trigger:hover {
+  transform: translateY(-1px) scale(1.04);
+  border-color: color-mix(in srgb, var(--ui-accent) 42%, var(--surface-border));
+}
+
+.settings-trigger:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Source badge
+   ═══════════════════════════════════════════════════════════════ */
+
+.source-badge {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.source-badge__dot,
+.source-badge__label {
+  position: relative;
+  z-index: 2;
+}
+
+.source-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ui-accent);
+  opacity: 0.8;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ui-accent) 42%, transparent);
+}
+
+.source-badge__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ui-text-secondary);
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Noir / Glass chrome correction
+   Noir chrome = lacquer/velvet. Glass chrome = visible lens.
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="noir"] .settings-trigger::before,
+[data-theme="noir"] .source-badge::before,
+[data-theme="noir"] .mini-view__return::before {
+  opacity: 0 !important;
+  display: none;
+}
+
+[data-theme="noir"] .settings-trigger,
+[data-theme="noir"] .source-badge,
+[data-theme="noir"] .mini-view__return {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 18, 18, 0.82),
+    rgba(0, 0, 0, 0.78)
+  );
+  border-color: rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+  backdrop-filter: blur(16px) saturate(1.05);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -18px 42px rgba(0, 0, 0, 0.46);
+}
+
+[data-theme="glass"] .settings-trigger::before,
+[data-theme="glass"] .source-badge::before,
+[data-theme="glass"] .mini-view__return::before {
+  opacity: 0.88;
+  filter: url("#vinyldeck-liquid-refract");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Art Ambient reset: compact shell switcher + single toggle
+   ═══════════════════════════════════════════════════════════════ */
+
+.theme-picker__shells,
+.theme-picker__content {
+  display: flex;
+  align-items: center;
+}
+
+.theme-picker__shells {
+  gap: 10px;
+}
+
+.theme-picker__shell {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: var(--theme-shell-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    border-radius 240ms ease,
+    box-shadow 240ms ease,
+    background 240ms ease;
+}
+
+.theme-picker__shell--glass {
+  border-radius: 13px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(255, 255, 255, 0.24)
+  );
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  backdrop-filter: blur(14px) saturate(1.6);
+}
+
+.theme-picker__shell--active {
+  border-color: var(--theme-shell-accent);
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--theme-shell-accent) 36%, transparent),
+    inset 0 0 10px
+      color-mix(in srgb, var(--theme-shell-accent) 14%, transparent);
+}
+
+.theme-picker__shell-core {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--theme-shell-accent);
+  opacity: 0.44;
+  transition: opacity 200ms ease;
+}
+
+.theme-picker__shell--active .theme-picker__shell-core {
+  opacity: 1;
+}
+
+.theme-picker__divider {
+  width: 1px;
+  height: 18px;
+  background: color-mix(in srgb, var(--ui-border) 72%, transparent);
+  flex-shrink: 0;
+}
+
+.theme-picker__ambient {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 30px;
+  min-width: 116px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 86%, transparent);
+  background: color-mix(in srgb, var(--ui-bg) 54%, transparent);
+  color: var(--ui-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  transition:
+    color 200ms ease,
+    border-color 200ms ease,
+    background 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.theme-picker__ambient--active {
+  color: var(--ui-text-primary);
+  border-color: color-mix(
+    in srgb,
+    var(--ambient-primary) 72%,
+    var(--ui-border)
+  );
+  background: color-mix(in srgb, var(--ambient-primary) 12%, var(--ui-bg));
+  box-shadow: 0 0 16px
+    color-mix(in srgb, var(--ambient-primary) 28%, transparent);
+}
+
+.theme-picker__ambient-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ui-text-secondary);
+  opacity: 0.65;
+  transition:
+    background 200ms ease,
+    opacity 200ms ease,
+    box-shadow 240ms ease;
+}
+
+.theme-picker__ambient--active .theme-picker__ambient-dot {
+  background: var(--ambient-primary);
+  opacity: 1;
+  box-shadow: 0 0 12px
+    color-mix(in srgb, var(--ambient-primary) 60%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Mini Transparency — Mini-only Acrylic blur-through mode.
+   Scoped to `html.mini-transparent-active`, which MiniView.tsx only
+   ever sets on its own window's document (Main/Fullscreen are a
+   separate WebView/DOM and never receive this class).
+   ═══════════════════════════════════════════════════════════════ */
+
+html.mini-transparent-active,
+html.mini-transparent-active body,
+html.mini-transparent-active #root {
+  background: transparent !important;
+}

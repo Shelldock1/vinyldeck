@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VinylDeck Mini - Compact Square</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts for Design System -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;400;700;900&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#ffffff",
+                      "inverse-primary": "#5d5f5f",
+                      "on-secondary": "#313030",
+                      "primary-fixed": "#e2e2e2",
+                      "on-secondary-fixed-variant": "#474646",
+                      "surface-container": "#201f1f",
+                      "outline-variant": "#444748",
+                      "surface-dim": "#141313",
+                      "outline": "#8e9192",
+                      "surface-container-highest": "#353434",
+                      "surface-container-lowest": "#0e0e0e",
+                      "on-error": "#690005",
+                      "tertiary-container": "#e2e2e2",
+                      "on-tertiary": "#2f3131",
+                      "background": "#141313",
+                      "on-tertiary-fixed-variant": "#454747",
+                      "on-primary-container": "#636565",
+                      "error-container": "#93000a",
+                      "inverse-on-surface": "#313030",
+                      "tertiary-fixed-dim": "#c6c6c7",
+                      "primary-container": "#e2e2e2",
+                      "tertiary-fixed": "#e2e2e2",
+                      "on-tertiary-container": "#636565",
+                      "on-secondary-container": "#bab8b7",
+                      "secondary-container": "#4a4949",
+                      "primary": "#ffffff",
+                      "error": "#ffb4ab",
+                      "secondary-fixed-dim": "#c9c6c5",
+                      "on-surface": "#e5e2e1",
+                      "surface-tint": "#c6c6c7",
+                      "primary-fixed-dim": "#c6c6c7",
+                      "on-error-container": "#ffdad6",
+                      "surface-container-low": "#1c1b1b",
+                      "surface-bright": "#3a3939",
+                      "on-primary": "#2f3131",
+                      "secondary-fixed": "#e5e2e1",
+                      "surface-variant": "#353434",
+                      "surface-container-high": "#2a2a2a",
+                      "on-primary-fixed-variant": "#454747",
+                      "on-background": "#e5e2e1",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "on-surface-variant": "#c4c7c8",
+                      "on-primary-fixed": "#1a1c1c",
+                      "surface": "#141313",
+                      "on-tertiary-fixed": "#1a1c1c",
+                      "inverse-surface": "#e5e2e1",
+                      "secondary": "#c9c6c5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "max-width": "1440px",
+                      "margin-mobile": "24px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-xl": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-xl": [
+                              "72px",
+                              {
+                                      "lineHeight": "80px",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "200"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.15em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .spin-slow {
+            animation: spin 4s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom inner shadow for the physical hardware feel */
+        .hardware-recess {
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        /* Subtle glow for active elements */
+        .ambient-bloom {
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+        }
+      </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex items-center justify-center p-6 antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Ambient background environment for presentation -->
+<div class="fixed inset-0 z-0 pointer-events-none opacity-20" style="background-image: radial-gradient(circle at 50% 50%, var(--tw-colors-surface-container-high) 0%, var(--tw-colors-background) 70%);"></div>
+<!-- Mini Player Widget Container -->
+<!-- Suppressed global navs as this is a focused, floating widget context -->
+<div class="relative w-80 h-80 z-10 group">
+<!-- Ambient Luminous Depth (Glow behind the player) -->
+<div class="absolute -inset-2 bg-primary/5 blur-[32px] rounded-xl z-0 transition-opacity duration-700 opacity-50 group-hover:opacity-100"></div>
+<!-- Main Chassis -->
+<div class="relative w-full h-full bg-surface-container rounded-xl overflow-hidden flex flex-col border border-white/5 shadow-2xl backdrop-blur-2xl">
+<!-- Top Section: Platter Area -->
+<div class="flex-1 relative flex items-center justify-center pt-2">
+<!-- Recessed Well for Platter -->
+<div class="absolute w-56 h-56 rounded-full hardware-recess bg-surface-container-lowest flex items-center justify-center">
+<!-- Glowing Progress Ring -->
+<svg class="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none" viewbox="0 0 100 100">
+<circle class="stroke-surface-container-high" cx="50" cy="50" fill="none" r="47" stroke-width="1.5"></circle>
+<circle class="stroke-primary ambient-bloom" cx="50" cy="50" fill="none" r="47" stroke-dasharray="295" stroke-dashoffset="120" stroke-linecap="round" stroke-width="1.5"></circle>
+</svg>
+<!-- Spinning Vinyl Record -->
+<div class="w-52 h-52 rounded-full overflow-hidden border border-white/5 spin-slow relative shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
+<img alt="Vinyl Record" class="w-full h-full object-cover" data-alt="A macro, top-down photograph of a matte black vinyl record spinning in a dark studio. The surface features incredibly subtle, realistic micro-grooves that catch a cool, soft-toned light reflection. The center label is a minimalist deep grey, blending seamlessly with the dark mode aesthetic. The overall mood is premium, tactile, and highly detailed, perfect for an audiophile digital interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb6HY3F2pxA8khAAu9CDOXxXLjYE1QIqi1g6UrisptoVGfFAmZgG4TFpWR2KxWhI5T1yIUUvyb3GkHkykwllj8vky-0eb_7SyhDqIfZ3TcReh8tiR707YrsGyeVLsdBIrkEKC74ozefYbKPx6g3WhJ4IWHYk4L-_0w1oJDOVKKroJAidwH0Kil_RaIdK3OhGeb7PFqkuHxiWo1FdcbVKkeWlPKa0PbKuL10OI0r-9nv4UBQJZvOjO1cC_3QlnTXodO-ZhUMWxgaqto"/>
+<!-- Center Spindle Hole -->
+<div class="absolute inset-0 m-auto w-3 h-3 bg-surface-container-highest rounded-full shadow-inner border border-surface-container-lowest"></div>
+</div>
+</div>
+<!-- Tiny Stylized Tonearm -->
+<svg class="absolute top-4 right-6 w-12 h-28 pointer-events-none z-10 filter drop-shadow-md origin-top-right transform rotate-12 transition-transform duration-1000" viewbox="0 0 50 100">
+<!-- Base pivot -->
+<circle cx="40" cy="15" fill="var(--tw-colors-surface-container-highest)" r="8" stroke="var(--tw-colors-outline-variant)" stroke-width="1"></circle>
+<circle cx="40" cy="15" fill="var(--tw-colors-surface-dim)" r="4"></circle>
+<!-- Arm shaft -->
+<path d="M 38 22 C 30 40, 25 70, 15 85" fill="none" stroke="var(--tw-colors-on-surface-variant)" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Head shell -->
+<rect fill="var(--tw-colors-surface-variant)" height="8" rx="1" stroke="var(--tw-colors-outline-variant)" stroke-width="0.5" transform="rotate(25 15 85)" width="14" x="8" y="82"></rect>
+<!-- Stylus indicator light -->
+<circle class="ambient-bloom" cx="12" cy="86" fill="var(--tw-colors-primary)" r="1" transform="rotate(25 15 85)"></circle>
+</svg>
+</div>
+<!-- Bottom Section: Frosted Glass Control Bar -->
+<div class="absolute bottom-0 w-full h-[88px] bg-surface-dim/60 backdrop-blur-[40px] border-t border-white/10 flex flex-col justify-between px-5 py-3 z-20">
+<!-- Track Metadata -->
+<div class="flex flex-col items-center text-center">
+<span class="font-body-md text-body-md text-primary font-semibold truncate w-full">Midnight Echoes</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-0.5 truncate w-full">The Analog Architects</span>
+</div>
+<!-- Controls -->
+<div class="flex items-center justify-center gap-6 mt-1">
+<button aria-label="Previous Track" class="text-on-surface-variant hover:text-primary transition-colors duration-200 focus:outline-none">
+<span class="material-symbols-outlined text-[20px]" data-icon="skip_previous">skip_previous</span>
+</button>
+<!-- Play/Pause Button (Machined feel) -->
+<button aria-label="Play/Pause" class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/30 flex items-center justify-center text-primary shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),_0_2px_4px_rgba(0,0,0,0.4)] hover:bg-surface-bright active:scale-95 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-primary/50">
+<span class="material-symbols-outlined text-[24px] ambient-bloom" data-icon="pause" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button aria-label="Next Track" class="text-on-surface-variant hover:text-primary transition-colors duration-200 focus:outline-none">
+<span class="material-symbols-outlined text-[20px]" data-icon="skip_next">skip_next</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

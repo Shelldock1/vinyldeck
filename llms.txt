@@ -1,0 +1,43 @@
+# VinylDeck
+> Windows desktop app that renders the active system media session as a cinematic vinyl deck.
+
+## Primary Docs
+- `README.md`: public project overview, quick start, features, links
+- `docs/USER_GUIDE.md`: user controls, settings, window modes
+- `docs/ARCHITECTURE.md`: system design and state ownership
+- `docs/API.md`: Tauri command/event contracts
+- `docs/DEVELOPMENT.md`: contributor setup and verification
+- `docs/TROUBLESHOOTING.md`: common runtime issues
+- `docs/RELEASE_V1.md`: version notes and distribution checklist
+- `CHANGELOG.md`: notable changes
+
+## Core Concepts
+- Browser mode uses `MockSource`.
+- Tauri mode uses `TauriSource` over Rust SMTC commands and events.
+- React consumes `PlaybackState`; Rust owns Windows media integration.
+- Rust owns persisted settings and emits backend-approved settings snapshots.
+- Start With Windows is a Rust-owned persisted setting backed by Tauri autostart.
+- Mini Transparency is a Rust-owned persisted setting; it applies native Acrylic only to the Mini window.
+- Active visual shells are Noir and Glass.
+- CSS vinyl renderer is active.
+- Album art drives ambient color and vinyl material styling.
+
+## Important Paths
+- `src/App.tsx`: app boot and render-mode routing
+- `src/views/`: main and mini views
+- `src/components/`: visual and interaction components
+- `src/lib/playback/`: playback contracts, store, mock source, Tauri source
+- `src/lib/settings/`: frontend settings adapter/cache
+- `src-tauri/src/media/`: SMTC integration
+- `src-tauri/src/settings/`: settings authority
+- `src-tauri/src/window/`: window modes
+- `src-tauri/src/tray.rs`: tray lifecycle
+
+## Verification
+```powershell
+npm run build
+npm run test:frontend
+npm run fmt:rust
+npm run clippy:rust
+npm run test:rust
+```

@@ -1,0 +1,290 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Sora:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#fdfbf7", /* Warm cream paper */
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#eaddd7", /* Bronze-tinted light surface */
+                        "on-secondary-container": "#4a3c31",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#51443a",
+                        "primary-fixed-dim": "#c1c7cf",
+                        "on-surface-variant": "#7b6b61", /* Bronze text */
+                        "primary-fixed": "#dde3eb",
+                        "tertiary-container": "#f3dfd0",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "surface-container-high": "#e6ded6",
+                        "surface-container-highest": "#dcd1c6",
+                        "outline": "#b3a398", /* Bronze outline */
+                        "outline-variant": "#d3c4b9",
+                        "secondary-container": "#c9a68a", /* Bronze accent */
+                        "secondary-fixed": "#e2e2e2",
+                        "primary": "#3d2b1f", /* Deep bronze/brown */
+                        "on-tertiary-container": "#706256",
+                        "surface-container-low": "#f5f0e6",
+                        "surface": "#fdfbf7",
+                        "surface-container": "#eee6db",
+                        "tertiary-fixed": "#f3dfd0",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#c1c7cf",
+                        "tertiary": "#8a6d59",
+                        "on-secondary-fixed-variant": "#474747",
+                        "inverse-on-surface": "#f5f0e6",
+                        "on-primary-fixed": "#161c22",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dcd1c6",
+                        "on-primary-container": "#3d2b1f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#3d2b1f",
+                        "tertiary-fixed-dim": "#d6c3b5",
+                        "secondary": "#a88b75", /* Muted bronze */
+                        "on-primary-fixed-variant": "#41474e",
+                        "inverse-primary": "#c9a68a",
+                        "inverse-surface": "#3d2b1f",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "primary-container": "#c9a68a",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#241a11",
+                        "surface-bright": "#fdfbf7",
+                        "on-background": "#3d2b1f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding": "32px",
+                        "touch-target": "48px",
+                        "unit": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Sora"],
+                        "headline-lg": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "500" }]
+                    },
+                    "animation": {
+                        "spin-slow": "spin 8s linear infinite",
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Paper Texture Overlay */
+        body {
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        /* Cardstock Shadow */
+        .cardstock-shadow {
+            box-shadow: 0 4px 12px rgba(61, 43, 31, 0.08), 0 1px 3px rgba(61, 43, 31, 0.05);
+        }
+        
+        /* Inner Shadow for sunken elements */
+        .sunken-slot {
+            box-shadow: inset 0 2px 4px rgba(61, 43, 31, 0.1), inset 0 0 8px rgba(61, 43, 31, 0.05);
+        }
+        
+        /* Vinyl Grooves */
+        .vinyl-grooves {
+            background: repeating-radial-gradient(
+                #1a1512,
+                #1a1512 2px,
+                #2a221d 3px,
+                #1a1512 4px
+            );
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md selection:bg-secondary-container selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding pt-8 bg-transparent">
+<div class="font-display-lg text-display-lg tracking-tighter text-primary uppercase">VinylDeck</div>
+<div class="flex gap-4">
+<button aria-label="palette" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined font-headline-md text-headline-md" style="font-variation-settings: 'FILL' 0;">palette</span>
+</button>
+<button aria-label="queue_music" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined font-headline-md text-headline-md" style="font-variation-settings: 'FILL' 0;">queue_music</span>
+</button>
+<button aria-label="fullscreen" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined font-headline-md text-headline-md" style="font-variation-settings: 'FILL' 0;">fullscreen</span>
+</button>
+<button aria-label="settings" class="text-primary opacity-60 hover:opacity-100 hover:scale-110 transition-all active:scale-95 duration-200">
+<span class="material-symbols-outlined font-headline-md text-headline-md" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col md:flex-row items-center justify-center px-container-padding pt-24 pb-32 gap-12 max-w-[1600px] mx-auto w-full">
+<!-- Now Playing Info (Left on Desktop, Top on Mobile) -->
+<div class="flex flex-col gap-6 w-full md:w-1/3 z-10">
+<div class="bg-surface cardstock-shadow rounded-xl p-8 border border-outline-variant relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-20">
+<span class="material-symbols-outlined font-display-lg text-display-lg text-primary">album</span>
+</div>
+<h2 class="font-label-caps text-label-caps text-secondary tracking-widest mb-2">NOW PLAYING</h2>
+<h1 class="font-headline-lg text-headline-lg text-primary mb-1">Kind of Blue</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Miles Davis</p>
+<div class="mt-8 pt-6 border-t border-outline-variant flex gap-4 text-secondary">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">speed</span>
+<span class="font-label-caps text-label-caps">33 ⅓ RPM</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">high_quality</span>
+<span class="font-label-caps text-label-caps">ANALOG</span>
+</div>
+</div>
+</div>
+<!-- Volume/EQ Card -->
+<div class="bg-surface cardstock-shadow rounded-xl p-6 border border-outline-variant flex flex-col gap-4">
+<div class="flex justify-between items-center text-secondary mb-2">
+<span class="material-symbols-outlined">volume_mute</span>
+<div class="h-2 w-full mx-4 bg-surface-container sunken-slot rounded-full relative overflow-hidden">
+<div class="absolute top-0 left-0 h-full w-[70%] bg-secondary-container rounded-full"></div>
+</div>
+<span class="material-symbols-outlined">volume_up</span>
+</div>
+</div>
+</div>
+<!-- The Turntable Stage (Center) -->
+<div class="w-full md:w-1/2 flex justify-center items-center relative min-h-[400px] md:min-h-[600px]">
+<!-- Turntable Platter Base -->
+<div class="absolute w-[320px] h-[320px] md:w-[500px] md:h-[500px] bg-surface-container rounded-full cardstock-shadow border-[4px] border-surface-variant flex items-center justify-center">
+<!-- Spindle -->
+<div class="absolute w-4 h-4 bg-outline rounded-full z-30 border border-outline-variant shadow-sm"></div>
+<!-- Vinyl Record -->
+<div class="w-[300px] h-[300px] md:w-[480px] md:h-[480px] rounded-full vinyl-grooves animate-spin-slow flex items-center justify-center relative shadow-2xl border border-[#0a0807]">
+<!-- Center Label -->
+<div class="w-[100px] h-[100px] md:w-[160px] md:h-[160px] bg-surface rounded-full flex items-center justify-center border border-outline-variant relative overflow-hidden">
+<!-- Label Artwork Placeholder -->
+<div class="absolute inset-0 bg-secondary-container opacity-20"></div>
+<div class="text-center z-10 flex flex-col items-center">
+<span class="font-label-caps text-[8px] md:text-label-caps text-primary tracking-widest block mb-1">COLUMBIA</span>
+<span class="font-serif text-sm md:text-lg font-bold text-primary italic">Side A</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Tonearm (Static representation) -->
+<div class="absolute right-0 md:right-[-40px] top-1/4 w-[160px] h-[20px] md:w-[240px] md:h-[30px] origin-right transform rotate-[-15deg] z-20 pointer-events-none">
+<!-- Base -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 bg-surface-container rounded-full border border-outline cardstock-shadow flex items-center justify-center">
+<div class="w-6 h-6 md:w-8 md:h-8 bg-surface rounded-full border border-outline-variant sunken-slot"></div>
+</div>
+<!-- Arm -->
+<div class="absolute right-8 top-1/2 -translate-y-1/2 w-full h-[6px] md:h-[8px] bg-gradient-to-b from-outline-variant to-outline rounded-l-full cardstock-shadow"></div>
+<!-- Cartridge -->
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-12 md:w-12 md:h-16 bg-surface-container rounded-sm border border-outline shadow-md transform rotate-12 origin-right"></div>
+</div>
+</div>
+<!-- Transport Controls (Right on Desktop, Bottom on Mobile) -->
+<div class="w-full md:w-1/3 flex flex-col gap-6 z-10">
+<div class="bg-surface cardstock-shadow rounded-xl p-8 border border-outline-variant">
+<!-- Progress -->
+<div class="mb-8">
+<div class="flex justify-between text-label-caps font-label-caps text-secondary mb-3">
+<span>02:45</span>
+<span>09:22</span>
+</div>
+<div class="h-1 w-full bg-surface-container sunken-slot rounded-full relative">
+<!-- Playhead indicator -->
+<div class="absolute top-1/2 -translate-y-1/2 left-[30%] w-3 h-3 bg-primary rounded-full shadow-md"></div>
+<!-- Progress line -->
+<div class="absolute top-0 left-0 h-full w-[30%] bg-primary rounded-full opacity-40"></div>
+</div>
+</div>
+<!-- Buttons -->
+<div class="flex justify-center items-center gap-6">
+<button class="w-12 h-12 rounded-full bg-surface border border-outline-variant flex items-center justify-center text-secondary hover:text-primary hover:border-outline transition-colors shadow-sm active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button class="w-20 h-20 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:bg-opacity-90 transition-all active:scale-95 border-4 border-surface-container">
+<span class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-surface border border-outline-variant flex items-center justify-center text-secondary hover:text-primary hover:border-outline transition-colors shadow-sm active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+</div>
+</div>
+<!-- Up Next Minimal List -->
+<div class="bg-surface cardstock-shadow rounded-xl p-6 border border-outline-variant">
+<h3 class="font-label-caps text-label-caps text-secondary tracking-widest mb-4 border-b border-surface-container pb-2">UP NEXT</h3>
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="font-label-caps text-label-caps text-secondary w-6">02</div>
+<div class="flex-grow">
+<p class="font-body-md text-body-md text-primary group-hover:text-secondary-container transition-colors">Freddie Freeloader</p>
+<p class="font-body-md text-[12px] text-on-surface-variant">09:46</p>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="font-label-caps text-label-caps text-secondary w-6">03</div>
+<div class="flex-grow">
+<p class="font-body-md text-body-md text-primary group-hover:text-secondary-container transition-colors">Blue in Green</p>
+<p class="font-body-md text-[12px] text-on-surface-variant">05:37</p>
+</div>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">play_arrow</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-touch-target px-gutter pb-safe bg-surface/80 backdrop-blur-md border-t border-outline-variant shadow-[0_-4px_12px_rgba(61,43,31,0.05)] md:hidden">
+<button class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(201,166,138,0.4)] translate-y-[-2px] transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="font-label-caps text-[10px] mt-1">Player</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">library_music</span>
+<span class="font-label-caps text-[10px] mt-1">Collection</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">graphic_eq</span>
+<span class="font-label-caps text-[10px] mt-1">Mixes</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-50 hover:opacity-100 hover:text-primary transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">explore</span>
+<span class="font-label-caps text-[10px] mt-1">Discovery</span>
+</button>
+</nav>
+</body></html>

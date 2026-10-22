@@ -1,0 +1,303 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Ultra-Minimal Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;family=Sora:wght@600;700&amp;family=Inter:wght@400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#c1c7cf",
+                    "secondary-container": "#474747",
+                    "primary-fixed": "#dde3eb",
+                    "on-primary": "#2b3137",
+                    "secondary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed": "#1b1b1b",
+                    "outline": "#8e9195",
+                    "inverse-on-surface": "#313031",
+                    "surface-container-lowest": "#0e0e0f",
+                    "on-tertiary-fixed-variant": "#51443a",
+                    "surface-bright": "#393939",
+                    "secondary-fixed": "#e2e2e2",
+                    "primary-fixed-dim": "#c1c7cf",
+                    "on-error": "#690005",
+                    "surface-container": "#201f20",
+                    "on-tertiary-container": "#706256",
+                    "surface": "#131314",
+                    "on-background": "#e5e2e2",
+                    "surface-container-highest": "#353535",
+                    "on-surface": "#e5e2e2",
+                    "surface-container-low": "#1b1b1c",
+                    "error-container": "#93000a",
+                    "error": "#ffb4ab",
+                    "tertiary-container": "#f3dfd0",
+                    "on-primary-fixed-variant": "#41474e",
+                    "tertiary-fixed": "#f3dfd0",
+                    "on-secondary-container": "#b5b5b5",
+                    "on-surface-variant": "#c5c6cb",
+                    "secondary": "#c6c6c6",
+                    "primary": "#ffffff",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#e5e2e2",
+                    "tertiary": "#ffffff",
+                    "outline-variant": "#44474a",
+                    "on-secondary": "#303030",
+                    "on-primary-fixed": "#161c22",
+                    "primary-container": "#dde3eb",
+                    "inverse-primary": "#595f66",
+                    "background": "#131314",
+                    "on-tertiary-fixed": "#241a11",
+                    "surface-container-high": "#2a2a2a",
+                    "on-tertiary": "#3a2e24",
+                    "tertiary-fixed-dim": "#d6c3b5",
+                    "on-secondary-fixed-variant": "#474747",
+                    "surface-variant": "#353535",
+                    "surface-dim": "#131314",
+                    "on-primary-container": "#5f656c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target": "48px",
+                    "gutter": "24px",
+                    "unit": "8px",
+                    "container-padding": "32px"
+            },
+            "fontFamily": {
+                    "label-caps": ["JetBrains Mono"],
+                    "headline-lg": ["Sora"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Sora"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Sora"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.05em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: transparent;
+            /* In a real widget, this would be transparent over the desktop. Using a dark background here for visibility. */
+            background-color: #000; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .vinyl-record {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1a1a1a 0%, #050505 100%);
+            position: relative;
+            box-shadow: 
+                0 0 40px rgba(255, 255, 255, 0.05),
+                inset 0 0 10px rgba(0,0,0,0.8);
+            animation: spin 10s linear infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .vinyl-record:hover {
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 60px rgba(255, 255, 255, 0.1),
+                inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .grooves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            pointer-events: none;
+        }
+        .groove-1 { width: 180px; height: 180px; }
+        .groove-2 { width: 150px; height: 150px; border-color: rgba(255, 255, 255, 0.04); }
+        .groove-3 { width: 120px; height: 120px; }
+        .groove-4 { width: 90px; height: 90px; border-color: rgba(255, 255, 255, 0.03); }
+
+        .label {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #474747; /* secondary-container */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .label-art {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            mix-blend-mode: luminosity;
+        }
+
+        .spindle-hole {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #000;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .progress-ring {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            /* Simulated progress */
+            border-top-color: #ffffff;
+            border-right-color: #ffffff;
+            opacity: 0.3;
+            transform: rotate(45deg);
+            filter: blur(1px);
+        }
+
+        /* Hover Overlay */
+        .widget-container {
+            position: relative;
+        }
+
+        .hover-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* Let clicks pass through if needed, or handle inside */
+        }
+
+        .widget-container:hover .hover-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .hover-overlay .material-symbols-outlined {
+            color: #ffffff;
+            font-size: 32px;
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .hover-overlay .material-symbols-outlined:hover {
+            transform: scale(1.1);
+            color: #dde3eb; /* primary-container */
+        }
+
+        .track-info {
+            position: absolute;
+            bottom: -40px;
+            width: 200px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .widget-container:hover .track-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Volumetric pulse */
+        .pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            animation: pulse-glow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.95); }
+            100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+        }
+    </style>
+</head>
+<body class="text-primary font-body-md bg-background antialiased selection:bg-surface-tint selection:text-on-primary">
+<div class="widget-container">
+<div class="pulse"></div>
+<div class="vinyl-record">
+<div class="progress-ring"></div>
+<div class="grooves groove-1"></div>
+<div class="grooves groove-2"></div>
+<div class="grooves groove-3"></div>
+<div class="grooves groove-4"></div>
+<div class="label">
+<img class="label-art" data-alt="A macro shot of a sleek, abstract metallic surface with subtle ridges resembling a vinyl record. Deep cinematic shadows and a single, sharp specular highlight create a dark luxury aesthetic. The tones are strictly monochromatic, emphasizing pure blacks and metallic greys. High-end, atmospheric, and minimalist." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC18PBp5uXQDal6OD95XoEXzP3M103a_Z7-Y1amBSoBVx4ujIBeIhjAdI80r9C11fm-Lw6tPWuU4NPES3jX8FAxrahkdYQrbIUWssJdITnhne27nNskzXHkz9BIHJYzlejCFoQwDmhhHBjC1uR6_ioMSvfmwA2acWGoRGeiWeukfHl1m-LJR_fRau4RIl37TlygkvDnk60yaBCZ1Zf73TbcUcCPUcFb4auIgljlCIWExS9-X_idjywpQGv-qzrKYPk9IZqUkAOImdeY">
+<div class="spindle-hole"></div>
+</div>
+</div>
+<div class="hover-overlay rounded-full">
+<div class="flex gap-4 items-center">
+<span class="material-symbols-outlined text-[20px] opacity-70 hover:opacity-100" data-icon="skip_previous">skip_previous</span>
+<span class="material-symbols-outlined !text-[40px]" data-icon="pause_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">pause_circle</span>
+<span class="material-symbols-outlined text-[20px] opacity-70 hover:opacity-100" data-icon="skip_next">skip_next</span>
+</div>
+</div>
+<div class="track-info">
+<div class="font-headline-md text-headline-md text-primary truncate">Midnight City</div>
+<div class="font-body-md text-body-md text-on-surface-variant truncate">M83</div>
+</div>
+</div>
+<!-- Suppressed TopAppBar and BottomNavBar as this is an ultra-minimal desktop widget focused purely on the canvas/record -->
+</body></html>

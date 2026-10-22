@@ -1,0 +1,188 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Vaporwave Mini Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&amp;family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-tint": "#c1c7cf",
+                        "secondary-container": "#474747",
+                        "primary-fixed": "#dde3eb",
+                        "on-primary": "#2b3137",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "outline": "#8e9195",
+                        "inverse-on-surface": "#313031",
+                        "surface-container-lowest": "#0e0e0f",
+                        "on-tertiary-fixed-variant": "#51443a",
+                        "surface-bright": "#393939",
+                        "secondary-fixed": "#e2e2e2",
+                        "primary-fixed-dim": "#c1c7cf",
+                        "on-error": "#690005",
+                        "surface-container": "#201f20",
+                        "on-tertiary-container": "#706256",
+                        "surface": "#131314",
+                        "on-background": "#e5e2e2",
+                        "surface-container-highest": "#353535",
+                        "on-surface": "#e5e2e2",
+                        "surface-container-low": "#1b1b1c",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#f3dfd0",
+                        "on-primary-fixed-variant": "#41474e",
+                        "tertiary-fixed": "#f3dfd0",
+                        "on-secondary-container": "#b5b5b5",
+                        "on-surface-variant": "#c5c6cb",
+                        "secondary": "#c6c6c6",
+                        "primary": "#ffffff",
+                        "on-error-container": "#ffdad6",
+                        "inverse-surface": "#e5e2e2",
+                        "tertiary": "#ffffff",
+                        "outline-variant": "#44474a",
+                        "on-secondary": "#303030",
+                        "on-primary-fixed": "#161c22",
+                        "primary-container": "#dde3eb",
+                        "inverse-primary": "#595f66",
+                        "background": "#131314",
+                        "on-tertiary-fixed": "#241a11",
+                        "surface-container-high": "#2a2a2a",
+                        "on-tertiary": "#3a2e24",
+                        "tertiary-fixed-dim": "#d6c3b5",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-variant": "#353535",
+                        "surface-dim": "#131314",
+                        "on-primary-container": "#5f656c",
+                        "synth-magenta": "#ff00ff",
+                        "synth-purple": "#8a2be2",
+                        "synth-cyan": "#00ffff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "touch-target": "48px",
+                        "gutter": "24px",
+                        "unit": "8px",
+                        "container-padding": "32px"
+                    },
+                    fontFamily: {
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["Sora"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Sora"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Sora"]
+                    },
+                    fontSize: {
+                        "label-caps": ["12px", { lineHeight: "1.0", letterSpacing: "0.2em", fontWeight: "500" }],
+                        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "body-lg": ["18px", { lineHeight: "1.6", letterSpacing: "0.01em", fontWeight: "400" }],
+                        "display-lg": ["48px", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "body-md": ["16px", { lineHeight: "1.6", letterSpacing: "0.01em", fontWeight: "400" }],
+                        "headline-md": ["24px", { lineHeight: "1.3", letterSpacing: "0.05em", fontWeight: "600" }]
+                    },
+                    animation: {
+                        'spin-slow': 'spin 8s linear infinite',
+                        'drift': 'drift 10s ease-in-out infinite alternate',
+                        'grid-move': 'gridMove 20s linear infinite'
+                    },
+                    keyframes: {
+                        drift: {
+                            '0%': { transform: 'translate(0, 0)' },
+                            '100%': { transform: 'translate(20px, -20px)' }
+                        },
+                        gridMove: {
+                            '0%': { backgroundPosition: '0 0' },
+                            '100%': { backgroundPosition: '0 40px' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glow-magenta { text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff; }
+        .glow-cyan { box-shadow: 0 0 15px #00ffff, inset 0 0 10px #00ffff; }
+        .grid-bg {
+            background-image: 
+                linear-gradient(to right, rgba(255, 0, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 0, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: bottom;
+        }
+        .vinyl-grooves {
+            background: repeating-radial-gradient(
+                #1a1a1a,
+                #1a1a1a 2px,
+                #2a1b38 3px,
+                #2a1b38 4px
+            );
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen flex items-center justify-center overflow-hidden relative">
+<!-- Background Atmospherics -->
+<div class="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] to-[#1a0a2a] z-0"></div>
+<div class="absolute inset-0 grid-bg animate-grid-move z-0 opacity-50"></div>
+<!-- Drifting Orbs -->
+<div class="absolute w-64 h-64 bg-synth-cyan rounded-full blur-[100px] opacity-20 top-20 left-20 animate-drift z-0"></div>
+<div class="absolute w-80 h-80 bg-synth-magenta rounded-full blur-[120px] opacity-20 bottom-20 right-20 animate-drift z-0" style="animation-delay: -5s;"></div>
+<!-- Mini Player Card -->
+<div class="relative z-10 w-full max-w-sm mx-auto bg-surface-container/40 backdrop-blur-2xl rounded-2xl border-[0.5px] border-white/10 p-6 shadow-[0_0_50px_rgba(138,43,226,0.3)]">
+<!-- Header -->
+<div class="flex justify-between items-center mb-6">
+<span class="material-symbols-outlined text-synth-cyan opacity-80 cursor-pointer hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+<span class="font-label-caps text-label-caps text-synth-magenta tracking-[0.3em] glow-magenta">NOW PLAYING</span>
+<span class="material-symbols-outlined text-synth-cyan opacity-80 cursor-pointer hover:opacity-100 transition-opacity">more_horiz</span>
+</div>
+<!-- Vinyl Record Container -->
+<div class="relative w-48 h-48 mx-auto mb-8 flex items-center justify-center">
+<!-- Glow Ring -->
+<div class="absolute inset-0 rounded-full glow-cyan border border-synth-cyan opacity-50"></div>
+<!-- Vinyl -->
+<div class="relative w-44 h-44 rounded-full vinyl-grooves animate-spin-slow flex items-center justify-center shadow-[0_10px_20px_rgba(0,0,0,0.8)] border-2 border-[#111]">
+<!-- Label Art -->
+<div class="w-16 h-16 rounded-full overflow-hidden border border-synth-magenta relative">
+<img alt="Album Art" class="w-full h-full object-cover" data-alt="A stylized retro-futuristic sun setting over a glowing synthwave grid, rendered in vibrant magenta, orange, and deep purple hues. The scene captures an 80s vaporwave aesthetic with neon geometric lines and a high-contrast cinematic digital glow." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs9AEoqOu8wCrrWiLX_5RgWRNnhQORaU6RhzSPKpkFJ73R4EdpnN0hh3EBm4162WfYRvyf4TqlbD28WHyNpbLwKXkRUQcHmEjMAPgMZHgPSz5ZXnbdBhADJmGMmFVl-0FeBDsw_wKBn4NugtbIZK83KhbL7AlRIbwbKdCn9dpdywCz8BwmllxnzUv9ygam8hYGAjmaj-tKei3H5ZFskYZyWqhyFTA5yrtbjYn57K4AmHSY1cZoWohgMwhofi-110fuVInihqV3VuIl">
+<div class="absolute inset-0 rounded-full border border-white/20"></div>
+</div>
+<!-- Center Hole -->
+<div class="absolute w-3 h-3 bg-background rounded-full"></div>
+</div>
+</div>
+<!-- Track Info -->
+<div class="text-center mb-8">
+<h2 class="font-headline-md text-headline-md text-primary mb-1 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">Neon Horizon</h2>
+<p class="font-body-md text-body-md text-synth-cyan opacity-80">Synthwave Syndicate</p>
+</div>
+<!-- Progress -->
+<div class="mb-6 px-2">
+<div class="h-1 w-full bg-surface-variant rounded-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full w-1/3 bg-synth-magenta shadow-[0_0_10px_#ff00ff]"></div>
+</div>
+<div class="flex justify-between mt-2 font-label-caps text-label-caps text-on-surface-variant opacity-60">
+<span>1:42</span>
+<span>4:20</span>
+</div>
+</div>
+<!-- Controls -->
+<div class="flex justify-center items-center gap-6">
+<button class="material-symbols-outlined text-3xl text-on-surface-variant hover:text-synth-cyan transition-colors" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_previous</button>
+<button class="w-16 h-16 rounded-full bg-gradient-to-br from-surface-tint to-surface flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.4)] hover:shadow-[0_0_25px_rgba(255,0,255,0.6)] transition-all transform hover:scale-105 border border-synth-magenta/30">
+<span class="material-symbols-outlined text-4xl text-synth-magenta" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="material-symbols-outlined text-3xl text-on-surface-variant hover:text-synth-cyan transition-colors" data-weight="fill" style="font-variation-settings: 'FILL' 1;">skip_next</button>
+</div>
+</div>
+</body></html>

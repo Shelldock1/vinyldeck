@@ -1,0 +1,258 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Theme Selector</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#0e0e0f",
+                      "outline": "#8e9195",
+                      "error-container": "#93000a",
+                      "on-tertiary": "#3a2e24",
+                      "on-background": "#e5e2e2",
+                      "on-secondary-fixed": "#1b1b1b",
+                      "primary": "#ffffff",
+                      "inverse-surface": "#e5e2e2",
+                      "tertiary-fixed": "#f3dfd0",
+                      "tertiary-container": "#f3dfd0",
+                      "on-surface": "#e5e2e2",
+                      "surface-container-low": "#1b1b1c",
+                      "outline-variant": "#44474a",
+                      "surface-container-highest": "#353535",
+                      "surface-container-high": "#2a2a2a",
+                      "surface-tint": "#c1c7cf",
+                      "on-tertiary-fixed-variant": "#51443a",
+                      "surface-variant": "#353535",
+                      "secondary-fixed-dim": "#c6c6c6",
+                      "on-primary-fixed-variant": "#41474e",
+                      "surface-dim": "#131314",
+                      "on-secondary": "#303030",
+                      "background": "#131314",
+                      "tertiary-fixed-dim": "#d6c3b5",
+                      "tertiary": "#ffffff",
+                      "surface-container": "#201f20",
+                      "surface": "#131314",
+                      "on-error-container": "#ffdad6",
+                      "secondary": "#c6c6c6",
+                      "on-tertiary-container": "#706256",
+                      "error": "#ffb4ab",
+                      "primary-container": "#dde3eb",
+                      "on-primary-container": "#5f656c",
+                      "inverse-on-surface": "#313031",
+                      "on-secondary-fixed-variant": "#474747",
+                      "primary-fixed": "#dde3eb",
+                      "primary-fixed-dim": "#c1c7cf",
+                      "on-error": "#690005",
+                      "secondary-fixed": "#e2e2e2",
+                      "inverse-primary": "#595f66",
+                      "on-primary-fixed": "#161c22",
+                      "on-secondary-container": "#b5b5b5",
+                      "on-primary": "#2b3137",
+                      "surface-bright": "#393939",
+                      "on-tertiary-fixed": "#241a11",
+                      "on-surface-variant": "#c5c6cb",
+                      "secondary-container": "#474747"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "touch-target": "48px",
+                      "unit": "8px",
+                      "container-padding": "32px"
+              },
+              "fontFamily": {
+                      "label-caps": ["JetBrains Mono"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Sora"],
+                      "display-lg": ["Sora"],
+                      "headline-lg": ["Sora"]
+              },
+              "fontSize": {
+                      "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(19, 19, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+        }
+        .vinyl-spin {
+            animation: spin 4s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        .theme-glow-noir { box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+        .theme-glow-aurora { box-shadow: 0 0 20px rgba(138, 43, 226, 0.4); }
+        .theme-glow-vapor { box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #ffffff;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex items-center justify-center p-gutter relative overflow-hidden">
+<!-- Atmospheric Background (Simulating main player behind) -->
+<div class="absolute inset-0 z-0 opacity-30" style="background: radial-gradient(circle at center, rgba(32,31,32,0.8) 0%, #000000 100%);"></div>
+<!-- Theme Selector Popup Container -->
+<div class="glass-panel w-full max-w-[340px] rounded-2xl flex flex-col relative z-10 shadow-2xl overflow-hidden">
+<!-- Subtle noise texture overlay -->
+<div class="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+<!-- Header -->
+<div class="p-container-padding pb-4 flex justify-between items-center border-b border-white/5 relative z-10">
+<h2 class="font-headline-md text-headline-md text-primary">Aesthetics</h2>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+</div>
+<!-- Content Area -->
+<div class="p-container-padding flex flex-col gap-8 relative z-10">
+<!-- Quick Theme Switcher -->
+<div class="flex flex-col gap-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant">THEMES</span>
+<div class="flex justify-between items-center px-2">
+<!-- Noir Theme -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center p-1 border border-white/10 group-hover:theme-glow-noir transition-all duration-300">
+<div class="w-full h-full rounded-full bg-surface-container-lowest flex items-center justify-center relative overflow-hidden vinyl-spin" style="background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);">
+<!-- Vinyl Grooves -->
+<div class="absolute inset-1 rounded-full border border-white/5"></div>
+<div class="absolute inset-2 rounded-full border border-white/5"></div>
+<div class="absolute inset-3 rounded-full border border-white/5"></div>
+<!-- Center Label -->
+<div class="w-4 h-4 rounded-full bg-surface-variant z-10 shadow-sm"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-primary">Noir</span>
+</div>
+<!-- Aurora Theme -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center p-1 border border-white/10 group-hover:theme-glow-aurora transition-all duration-300">
+<div class="w-full h-full rounded-full bg-surface-container-lowest flex items-center justify-center relative overflow-hidden vinyl-spin" style="background: conic-gradient(from 180deg at 50% 50%, #4c1d95 0deg, #1e3a8a 120deg, #0f172a 240deg, #4c1d95 360deg);">
+<!-- Center Label -->
+<div class="w-4 h-4 rounded-full bg-purple-200 z-10 shadow-sm"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-on-surface-variant group-hover:text-primary transition-colors">Aurora</span>
+</div>
+<!-- Vapor Theme -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center p-1 border border-white/10 group-hover:theme-glow-vapor transition-all duration-300">
+<div class="w-full h-full rounded-full bg-surface-container-lowest flex items-center justify-center relative overflow-hidden vinyl-spin" style="background: linear-gradient(135deg, #06b6d4 0%, #db2777 100%);">
+<!-- Center Label -->
+<div class="w-4 h-4 rounded-full bg-cyan-100 z-10 shadow-sm"></div>
+</div>
+</div>
+<span class="font-body-md text-[12px] text-on-surface-variant group-hover:text-primary transition-colors">Vapor</span>
+</div>
+</div>
+</div>
+<!-- Visualizer Effects -->
+<div class="flex flex-col gap-6">
+<span class="font-label-caps text-label-caps text-on-surface-variant">EFFECTS</span>
+<!-- Bloom Intensity -->
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-[14px] text-on-surface">Bloom Intensity</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">75%</span>
+</div>
+<div class="relative w-full flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] mr-3" style="font-variation-settings: 'FILL' 0;">blur_circular</span>
+<input class="flex-grow" max="100" min="0" type="range" value="75">
+</div>
+</div>
+<!-- Particle Density -->
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-[14px] text-on-surface">Particle Density</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">30%</span>
+</div>
+<div class="relative w-full flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] mr-3" style="font-variation-settings: 'FILL' 0;">grain</span>
+<input class="flex-grow" max="100" min="0" type="range" value="30">
+</div>
+</div>
+</div>
+<!-- Quick Toggles -->
+<div class="flex flex-col gap-4 pt-4 border-t border-white/5">
+<!-- OLED Mode Toggle -->
+<div class="flex justify-between items-center group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" style="font-variation-settings: 'FILL' 0;">contrast</span>
+<span class="font-body-md text-[14px] text-on-surface group-hover:text-primary transition-colors">Pure OLED Black</span>
+</div>
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-surface border-2 border-primary appearance-none cursor-pointer z-10 top-[2px] left-[2px] transition-all duration-300" id="toggle-oled" name="toggle" style="transform: translateX(16px);" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-primary/20 cursor-pointer" for="toggle-oled"></label>
+</div>
+</div>
+<!-- Mini-Player Toggle -->
+<div class="flex justify-between items-center group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" style="font-variation-settings: 'FILL' 0;">picture_in_picture_alt</span>
+<span class="font-body-md text-[14px] text-on-surface group-hover:text-primary transition-colors">Mini-Player Overlay</span>
+</div>
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-outline border-2 border-outline-variant appearance-none cursor-pointer z-10 top-[2px] left-[2px] transition-all duration-300" id="toggle-mini" name="toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-container-high cursor-pointer border border-white/5" for="toggle-mini"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

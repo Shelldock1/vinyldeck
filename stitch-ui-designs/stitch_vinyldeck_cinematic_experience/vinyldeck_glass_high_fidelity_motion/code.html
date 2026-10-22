@@ -1,0 +1,212 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Premium Glass Theme</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Sora:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#131314",
+                    "surface": "#131314",
+                    "primary": "#ffffff",
+                    "on-primary": "#2b3137",
+                    "surface-variant": "#353535",
+                    "on-surface": "#e5e2e2",
+                    "on-surface-variant": "#c5c6cb"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "headline-md": ["Sora"],
+                    "headline-lg": ["Sora"],
+                    "display-lg": ["Sora"],
+                    "body-lg": ["Inter"],
+                    "label-caps": ["JetBrains Mono"]
+            },
+            "spacing": {
+                    "container-padding": "32px",
+                    "touch-target": "48px",
+                    "gutter": "24px"
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Premium Glassmorphism utilities */
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 32, 0.4) 0%, rgba(19, 19, 20, 0.2) 100%);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .spin-slow {
+            animation: spin 12s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Fluid Motion Background Orbs */
+        .ambient-orb-1 {
+            background: radial-gradient(circle, rgba(236,72,153,0.4) 0%, rgba(0,0,0,0) 60%);
+            animation: fluidMotion1 25s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+        }
+        
+        .ambient-orb-2 {
+            background: radial-gradient(circle, rgba(59,130,246,0.4) 0%, rgba(0,0,0,0) 60%);
+            animation: fluidMotion2 30s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate-reverse;
+        }
+
+        @keyframes fluidMotion1 {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            33% { transform: translate(10vw, -15vh) scale(1.2) rotate(45deg); }
+            66% { transform: translate(-5vw, 10vh) scale(0.8) rotate(-20deg); }
+            100% { transform: translate(15vw, 5vh) scale(1.1) rotate(15deg); }
+        }
+
+        @keyframes fluidMotion2 {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            33% { transform: translate(-10vw, 15vh) scale(1.1) rotate(-30deg); }
+            66% { transform: translate(15vw, -5vh) scale(1.3) rotate(20deg); }
+            100% { transform: translate(-5vw, -10vh) scale(0.9) rotate(-10deg); }
+        }
+
+        /* Cinematic Grain Overlay */
+        .grain-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            mix-blend-mode: overlay;
+        }
+
+        /* Shimmering Vinyl Reflection */
+        .vinyl-reflection {
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.05) 45deg, transparent 90deg, rgba(255,255,255,0.05) 135deg, transparent 180deg, rgba(255,255,255,0.05) 225deg, transparent 270deg, rgba(255,255,255,0.05) 315deg, transparent 360deg);
+            animation: shimmer 10s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Volumetric Pulse */
+        .volumetric-pulse {
+            animation: pulseGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 20px rgba(255,255,255,0.05); }
+            100% { box-shadow: 0 0 40px rgba(255,255,255,0.15); }
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #000;
+        }
+        
+        /* Tactile Button Transition */
+        .tactile-btn {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .tactile-btn:active {
+            transform: scale(0.92);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="text-on-background bg-background font-body-md min-h-screen relative overflow-hidden flex flex-col items-center justify-center">
+<!-- Cinematic Grain -->
+<div class="grain-overlay"></div>
+<!-- Fluid Motion Background Layer -->
+<div class="fixed inset-0 z-0 pointer-events-none opacity-90 mix-blend-screen">
+<div class="absolute top-[-20%] left-[-10%] w-[80vw] h-[80vw] rounded-full ambient-orb-1 blur-[100px]"></div>
+<div class="absolute bottom-[-20%] right-[-10%] w-[90vw] h-[90vw] rounded-full ambient-orb-2 blur-[120px]"></div>
+</div>
+<!-- Main App Container -->
+<main class="relative z-10 w-full max-w-7xl aspect-[16/9] md:h-auto h-screen max-h-screen flex flex-col justify-between glass-panel md:rounded-[2.5rem] overflow-hidden shadow-2xl border-white/10 volumetric-pulse">
+<!-- TopAppBar -->
+<header class="fixed md:absolute top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding pt-8 pb-4 bg-transparent">
+<div class="font-display-lg text-display-lg tracking-tighter text-primary uppercase drop-shadow-lg">
+                VinylDeck
+            </div>
+<nav class="flex gap-6 items-center">
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all active:scale-95 duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">palette</span>
+</button>
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all active:scale-95 duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">queue_music</span>
+</button>
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all active:scale-95 duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">fullscreen</span>
+</button>
+<button class="text-primary opacity-60 hover:opacity-100 hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all active:scale-95 duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</nav>
+</header>
+<!-- Canvas / Stage (Central Vinyl Record) -->
+<section class="flex-grow flex items-center justify-center relative mt-20 mb-24 z-20">
+<!-- Vinyl Record Element -->
+<div class="relative w-[614px] h-[614px] max-w-[500px] max-h-[500px] rounded-full spin-slow group cursor-pointer shadow-[0_30px_60px_rgba(0,0,0,0.8)]">
+<!-- Record Grooves Base -->
+<div class="absolute inset-0 rounded-full bg-[#050505] border border-[#333] overflow-hidden shadow-inner">
+<!-- Subtle vinyl groove texture via CSS -->
+<div class="absolute inset-0 rounded-full" style="background: repeating-radial-gradient(#111 0px, #111 2px, #080808 3px, #080808 4px);"></div>
+<!-- Shimmering Reflection -->
+<div class="absolute inset-0 rounded-full vinyl-reflection mix-blend-screen"></div>
+<!-- Volumetric Highlight -->
+<div class="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent mix-blend-overlay"></div>
+</div>
+<!-- Center Label (Frosted Glass) -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/3 h-1/3 rounded-full glass-panel flex items-center justify-center shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),_0_10px_20px_rgba(0,0,0,0.5)]">
+<div class="w-4 h-4 rounded-full bg-[#111] border border-white/30 shadow-inner"></div>
+</div>
+</div>
+<!-- Floating Controls Overlay -->
+<div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 glass-panel px-10 py-5 rounded-full flex items-center gap-10 shadow-[0_15px_35px_rgba(0,0,0,0.5)] border border-white/20 volumetric-pulse">
+<button class="text-on-surface opacity-70 hover:opacity-100 hover:text-white transition-all tactile-btn">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button class="w-20 h-20 rounded-full bg-primary text-on-primary flex items-center justify-center hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] tactile-btn relative overflow-hidden group">
+<div class="absolute inset-0 bg-white/20 transform scale-0 group-hover:scale-100 transition-transform duration-300 rounded-full"></div>
+<span class="material-symbols-outlined text-[42px] relative z-10" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="text-on-surface opacity-70 hover:opacity-100 hover:text-white transition-all tactile-btn">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+</div>
+</section>
+<!-- BottomNavBar -->
+<footer class="fixed md:absolute bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-gutter pb-safe bg-surface/20 backdrop-blur-3xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-b-[2.5rem] md:rounded-none">
+<button class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_12px_rgba(255,255,255,0.9)] translate-y-[-4px] transition-transform w-24">
+<span class="material-symbols-outlined mb-1 text-[28px]" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest text-[11px]">Player</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-opacity w-24 group tactile-btn">
+<span class="material-symbols-outlined mb-1 text-[28px]" style="font-variation-settings: 'FILL' 0;">library_music</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest text-[11px]">Collection</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-opacity w-24 group tactile-btn">
+<span class="material-symbols-outlined mb-1 text-[28px]" style="font-variation-settings: 'FILL' 0;">graphic_eq</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest text-[11px]">Mixes</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-opacity w-24 group tactile-btn">
+<span class="material-symbols-outlined mb-1 text-[28px]" style="font-variation-settings: 'FILL' 0;">explore</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest text-[11px]">Discovery</span>
+</button>
+</footer>
+</main>
+</body></html>

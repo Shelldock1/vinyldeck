@@ -1,0 +1,275 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>VinylDeck - Aurora Neon</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#353535",
+                        "on-error-container": "#ffdad6",
+                        "on-error": "#690005",
+                        "inverse-surface": "#e5e2e2",
+                        "on-background": "#e5e2e2",
+                        "on-primary-fixed": "#161c22",
+                        "primary-fixed": "#dde3eb",
+                        "primary-fixed-dim": "#c1c7cf",
+                        "outline-variant": "#44474a",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-primary": "#2b3137",
+                        "surface-container-low": "#1b1b1c",
+                        "surface-dim": "#131314",
+                        "on-primary-container": "#5f656c",
+                        "surface-bright": "#393939",
+                        "tertiary-container": "#f3dfd0",
+                        "inverse-primary": "#595f66",
+                        "on-tertiary-fixed-variant": "#51443a",
+                        "surface-container-highest": "#353535",
+                        "tertiary-fixed-dim": "#d6c3b5",
+                        "on-secondary": "#303030",
+                        "on-surface": "#e5e2e2",
+                        "on-tertiary-container": "#706256",
+                        "on-primary-fixed-variant": "#41474e",
+                        "surface-container-high": "#2a2a2a",
+                        "primary": "#ffffff",
+                        "on-tertiary": "#3a2e24",
+                        "tertiary": "#ffffff",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "surface": "#131314",
+                        "on-surface-variant": "#c5c6cb",
+                        "surface-container-lowest": "#0e0e0f",
+                        "inverse-on-surface": "#313031",
+                        "secondary-container": "#474747",
+                        "secondary": "#c6c6c6",
+                        "secondary-fixed": "#e2e2e2",
+                        "outline": "#8e9195",
+                        "background": "#131314",
+                        "surface-container": "#201f20",
+                        "primary-container": "#dde3eb",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "on-secondary-container": "#b5b5b5",
+                        "on-tertiary-fixed": "#241a11",
+                        "surface-tint": "#c1c7cf",
+                        "tertiary-fixed": "#f3dfd0",
+                        "aurora-cyan": "#00f0ff",
+                        "aurora-teal": "#0080ff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "touch-target": "48px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "container-padding": "32px"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["Sora"],
+                        "headline-md": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "body-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.2em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    },
+                    animation: {
+                        'spin-slow': 'spin 10s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow-pulse': 'glow 3s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%': { opacity: '0.6', filter: 'blur(20px)' },
+                            '100%': { opacity: '1', filter: 'blur(30px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #050b14; /* Deep midnight cyan base */
+            overflow: hidden;
+        }
+        
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 240, 255, 0.4);
+            filter: blur(2px);
+            pointer-events: none;
+        }
+
+        /* Vinyl Grooves */
+        .vinyl-grooves {
+            background: repeating-radial-gradient(
+                #111 0px,
+                #222 2px,
+                #111 4px
+            );
+            mask-image: radial-gradient(circle, transparent 30%, black 100%);
+            -webkit-mask-image: radial-gradient(circle, transparent 30%, black 100%);
+        }
+
+        /* Neon Ring Progress */
+        .neon-ring {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+
+        /* Hidden UI Hover area */
+        .ui-reveal-area {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .ui-reveal-area:hover, .ui-reveal-area:focus-within {
+            opacity: 1;
+        }
+
+        /* Tonearm metallic finish */
+        .tonearm {
+            background: linear-gradient(90deg, #333 0%, #888 50%, #333 100%);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.8), inset 2px 0 5px rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md h-screen w-screen relative flex items-center justify-center">
+<!-- Atmospheric Background -->
+<div class="absolute inset-0 z-0 overflow-hidden">
+<!-- Oversized blurred album art base -->
+<img alt="Atmospheric Background" class="absolute inset-0 w-full h-full object-cover opacity-30 filter blur-3xl scale-110" data-alt="Abstract fluid art in deep midnight cyan and electric blue hues, creating a cosmic, ethereal atmosphere. The textures are smooth and glowing, blending seamlessly to form a dark luxury backdrop suitable for high-end digital audio interfaces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT4yWdddYsbo3N3NbLsPgI9rkRen1oPAjqu22uU420eQpiVPBTlBv-1P8m_Z-K-YGMS1yxySXXVjEYF6q3BSg7lkvKsGAV87o6T2S9Vme9kftzztQi8FG4bUbr8Y79F67pcT8-W_OsvAWlgWQDeVRP42mHGsh9pYIknBNT3X26bfu6sP0X6lnarnu9UTY5-5-686AAY6d7L4bTHlFI7awvs4VfOXduK5f68Pk9cYZ7zdt8C4loWEItte30NZ4O0bWJmUt1Qxc0bUaO">
+<!-- Glowing Orbs -->
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-aurora-cyan rounded-full mix-blend-screen opacity-40 blur-[100px] animate-float"></div>
+<div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-aurora-teal rounded-full mix-blend-screen opacity-30 blur-[120px] animate-float" style="animation-delay: 2s;"></div>
+<!-- Drifting Particles (Generated via JS) -->
+<div class="absolute inset-0" id="particles-container"></div>
+</div>
+<!-- Main Stage: Centerpiece Vinyl -->
+<div class="relative z-10 w-[600px] h-[600px] flex items-center justify-center group">
+<!-- Neon Progress Ring -->
+<div class="absolute inset-0 rounded-full border border-aurora-cyan/30 neon-ring scale-105 pointer-events-none">
+<!-- Active progress arc (simulated with conic gradient) -->
+<div class="absolute inset-0 rounded-full" style="background: conic-gradient(from 0deg, #00f0ff 0%, #00f0ff 65%, transparent 65%, transparent 100%); mask-image: radial-gradient(transparent 98%, black 100%); -webkit-mask-image: radial-gradient(transparent 98%, black 100%);"></div>
+</div>
+<!-- The Vinyl Record -->
+<div class="w-full h-full rounded-full bg-black shadow-[0_0_100px_rgba(0,0,0,0.9)] relative flex items-center justify-center animate-spin-slow overflow-hidden border-[0.5px] border-white/5">
+<!-- Grooves -->
+<div class="absolute inset-0 vinyl-grooves opacity-60"></div>
+<!-- Vinyl highlights (light reflection) -->
+<div class="absolute inset-0 rounded-full" style="background: conic-gradient(from 45deg, transparent 0%, rgba(255,255,255,0.05) 10%, transparent 20%, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);"></div>
+<!-- Record Label (Album Art) -->
+<div class="w-[200px] h-[200px] rounded-full border border-surface-variant/30 overflow-hidden relative shadow-inner z-20">
+<img alt="Album Art Label" class="w-full h-full object-cover" data-alt="A striking minimalist album cover featuring a dark, metallic geometric shape illuminated by a single beam of cyan neon light. The design is sleek, modern, and embodies dark luxury audio aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCy42SjeTgCm68bMgSkiUUIgQxFHfhjX60RPDqgIQ5HM0b6qea9krpYkDmQSHweQOdI7USAB8e-ChXzJhXGivT-ISZ4C3Edg8ZevFsksXZd0pcLpOndllnFZqdGM3K0Y2J16hjavHPj341Lyw8tSzG3eMkedGJuvyUU1qve4tSZ2X8Dq-4tIKJPJabDYmi12nqCd-zKaftKPt5geUy7Wsdirzz7aJESPHuCDeE9C_V-1TPUXzftWcRAapf3EfmO-P_WnIuNBGBp9H09">
+<!-- Spindle hole -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#1a1a1a] rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] border border-[#333]"></div>
+</div>
+</div>
+<!-- Physical Tonearm (Skeuomorphic) -->
+<div class="absolute -right-32 top-1/4 w-[280px] h-12 origin-right rotate-[25deg] z-30 transition-transform duration-1000 ease-in-out">
+<!-- Counterweight -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-14 bg-surface-variant rounded-l-full tonearm border border-white/10"></div>
+<!-- Arm tube -->
+<div class="absolute right-12 top-1/2 -translate-y-1/2 w-[220px] h-3 tonearm rounded-full shadow-lg"></div>
+<!-- Headshell -->
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-8 bg-[#111] rounded shadow-xl border border-white/5 transform -rotate-12">
+<!-- Stylus light indicator -->
+<div class="absolute bottom-1 right-2 w-1 h-1 bg-aurora-cyan rounded-full shadow-[0_0_5px_#00f0ff]"></div>
+</div>
+</div>
+</div>
+<!-- Minimalist Track Info (Bottom Center) -->
+<div class="absolute bottom-24 text-center z-20 flex flex-col items-center drop-shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-wide mb-2 mix-blend-screen text-shadow-lg">MIDNIGHT SYNTHESIS</h1>
+<p class="font-label-caps text-label-caps text-aurora-cyan/80 tracking-[0.3em]">AURORA NEON • EP 04</p>
+</div>
+<!-- Hidden UI Controls (Revealed on hover near bottom) -->
+<div class="ui-reveal-area absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-black via-black/80 to-transparent z-40 flex items-end justify-center pb-8 px-container-padding">
+<div class="flex items-center gap-12 bg-surface/10 backdrop-blur-xl border-t border-white/10 px-12 py-4 rounded-full shadow-2xl">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-icon="shuffle">shuffle</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[36px]" data-icon="skip_previous">skip_previous</span>
+</button>
+<!-- Play/Pause Button - Glassmorphism -->
+<button class="w-16 h-16 rounded-full bg-white/5 border border-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/10 hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] transition-all transform hover:scale-105 group">
+<span class="material-symbols-outlined text-[40px] text-primary group-hover:text-aurora-cyan transition-colors" data-icon="pause" data-weight="fill">pause</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[36px]" data-icon="skip_next">skip_next</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]" data-icon="repeat">repeat</span>
+</button>
+</div>
+</div>
+<!-- Top Navigation Anchor (Hidden/Minimalist) -->
+<div class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding pt-8 no-border bg-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
+<div class="font-display-lg text-display-lg-mobile tracking-tighter text-primary uppercase drop-shadow-md">VinylDeck</div>
+<div class="flex gap-6">
+<button class="text-primary hover:text-aurora-cyan transition-colors"><span class="material-symbols-outlined" data-icon="queue_music">queue_music</span></button>
+<button class="text-primary hover:text-aurora-cyan transition-colors"><span class="material-symbols-outlined" data-icon="fullscreen_exit">fullscreen_exit</span></button>
+</div>
+</div>
+<!-- JS for Particles -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particles-container');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random properties
+                const size = Math.random() * 4 + 1; // 1px to 5px
+                const xPos = Math.random() * 100; // 0 to 100vw
+                const yPos = Math.random() * 100; // 0 to 100vh
+                const opacity = Math.random() * 0.5 + 0.1;
+                const animDuration = Math.random() * 20 + 10; // 10s to 30s
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${xPos}vw`;
+                particle.style.top = `${yPos}vh`;
+                particle.style.opacity = opacity;
+                
+                // Simple drifting animation
+                particle.animate([
+                    { transform: `translate(0, 0)` },
+                    { transform: `translate(${Math.random() * 100 - 50}px, -${Math.random() * 200 + 100}px)` }
+                ], {
+                    duration: animDuration * 1000,
+                    iterations: Infinity,
+                    direction: 'alternate',
+                    easing: 'ease-in-out'
+                });
+
+                container.appendChild(particle);
+            }
+        });
+    </script>
+</body></html>
