@@ -141,6 +141,10 @@ Shortcuts can be turned off in Settings. Escape stays available and closes the t
 
 VinylDeck is actively developed for Windows. The current version is `0.1.1`. Ready-to-use installers are available on the GitHub Releases page.
 
+## Credits
+
+VinylDeck is based on the original [VinylDeck](https://github.com/ItsRudraksh/vinyldeck) by [ItsRudraksh](https://github.com/ItsRudraksh), who built the Tauri foundation, the vinyl engine and the Noir/Glass shells. This repository is maintained by [Shelldock1](https://github.com/Shelldock1) and continues that work with the audit fixes, playback and crate features, Linux support and the Light/Dark/Halloween themes.
+
 ## License
 
 VinylDeck is released under the [MIT License](./LICENSE).
