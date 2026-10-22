@@ -5,11 +5,13 @@ import App from "./App";
 // ── Global styles (order matters) ────────────────────────────
 import "./styles/global.css";
 import "./styles/themes.css";
+import "./styles/schemes.css";
 import "./styles/animations.css";
 import "./styles/soft-render.css";
 
 // ── Apply default theme before first paint ───────────────────
 document.documentElement.setAttribute("data-theme", "noir");
+document.documentElement.setAttribute("data-scheme", "dark");
 
 // ── Paint profile before first paint ─────────────────────────
 // Linux WebViews (WebKitGTK) may composite on the CPU with no GPU

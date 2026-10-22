@@ -52,7 +52,7 @@ function App() {
     function applySettings(settings: Awaited<ReturnType<typeof loadSettings>>) {
       const safeSettings = sanitizeSettingsForTheme(settings);
       useVinylDeckStore.getState().hydrateSettings(safeSettings);
-      applyVisualMode(safeSettings.theme, safeSettings.ambientMode);
+      applyVisualMode(safeSettings.theme, safeSettings.ambientMode, safeSettings.scheme);
       if (safeSettings.ambientMode === "off") resetAmbientColors();
       return safeSettings;
     }

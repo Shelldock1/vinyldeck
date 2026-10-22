@@ -448,3 +448,10 @@
     transition-duration: 250ms;
   }
 }
+
+/* Hidden or minimised window: freeze decoration (data-suspended from useWindowActivity). */
+:root[data-suspended] .ambient-layer *,
+:root[data-suspended] .ambient-layer *::before,
+:root[data-suspended] .ambient-layer *::after {
+  animation-play-state: paused;
+}

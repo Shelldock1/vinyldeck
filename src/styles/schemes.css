@@ -1,0 +1,339 @@
+/* ============================================================
+   VinylDeck Schemes — Light / Dark / Halloween
+   A second axis over the shells: <html data-theme="noir|glass"
+   data-scheme="light|dark|halloween">.
+   - dark = no block: Noir and Glass keep every token they own.
+   - :root[data-scheme] is (0,2,0), so it beats [data-theme] blocks;
+     this file is imported after themes.css to also win the (0,2,0)
+     ties with [data-theme][data-ambient-mode].
+   - Vinyl tokens are never touched: the record looks the same in
+     every scheme.
+   ============================================================ */
+
+/* Registered colour tokens interpolate; gradients built from them follow. */
+@property --bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #000000;
+}
+@property --room-center-light {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+@property --room-floor-light {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+@property --ui-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+@property --surface-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+@property --ui-text-primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f5f3f0;
+}
+@property --ui-text-secondary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #8a8a8a;
+}
+@property --ui-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f4f1eb;
+}
+@property --ring-fill {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f4f1eb;
+}
+@property --glow-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+/* Transitions exist only for the 300ms of a switch (see applyScheme). */
+:root.is-scheme-switching {
+  transition-property:
+    --bg,
+    --room-center-light,
+    --room-floor-light,
+    --ui-border,
+    --surface-border,
+    --ui-text-primary,
+    --ui-text-secondary,
+    --ui-accent,
+    --ring-fill,
+    --glow-color;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* ── Light ─────────────────────────────────────────────────── */
+
+:root[data-scheme="light"] {
+  --bg: #ffffff;
+  --color-scheme: light;
+
+  --art-orb-blend: multiply;
+
+  --ui-bg: rgba(255, 255, 255, 0.74);
+  --ui-border: rgba(10, 10, 12, 0.1);
+  --ui-text-primary: #0b0b0c;
+  --ui-text-secondary: #55565c;
+  --ui-accent: #0b0b0c;
+  --ui-control-hover: rgba(10, 10, 12, 0.06);
+  --ui-control-active: rgba(10, 10, 12, 0.1);
+
+  --ring-track: rgba(10, 10, 12, 0.1);
+  --ring-fill: #0b0b0c;
+  --ring-glow: rgba(10, 10, 12, 0.16);
+
+  --glow-color: rgba(10, 10, 12, 0.08);
+
+  --surface-bg: rgba(255, 255, 255, 0.74);
+  --surface-border: rgba(10, 10, 12, 0.1);
+  --surface-shadow:
+    0 10px 30px rgba(10, 10, 12, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --surface-inner-highlight: rgba(255, 255, 255, 0.9);
+  --surface-backdrop: blur(24px) saturate(1.5);
+  --surface-specular-opacity: 0.3;
+
+  --room-center-light: #f1f1ef;
+  --room-floor-light: rgba(10, 10, 12, 0.035);
+  --room-vignette: radial-gradient(
+    ellipse at 50% 42%,
+    transparent 40%,
+    rgba(10, 10, 12, 0.04) 78%,
+    rgba(10, 10, 12, 0.08) 100%
+  );
+  --room-grain-opacity: 0.02;
+  --room-grain-blend: multiply;
+  --room-velvet-opacity: 0;
+}
+
+/* ── Halloween ─────────────────────────────────────────────── */
+
+:root[data-scheme="halloween"] {
+  --bg: #141214;
+  --color-scheme: dark;
+
+  --ui-bg: rgba(24, 20, 19, 0.78);
+  --ui-border: rgba(255, 169, 77, 0.14);
+  --ui-text-primary: #f3ece4;
+  --ui-text-secondary: #b3a797;
+  --ui-accent: #ffa94d;
+  --ui-control-hover: rgba(255, 169, 77, 0.08);
+  --ui-control-active: rgba(255, 169, 77, 0.14);
+
+  --ring-track: rgba(255, 236, 214, 0.1);
+  --ring-fill: #ffa94d;
+  --ring-glow: rgba(255, 122, 0, 0.3);
+
+  --glow-color: rgba(255, 122, 0, 0.16);
+
+  --surface-bg: linear-gradient(180deg, rgba(30, 24, 22, 0.82), rgba(12, 10, 10, 0.86));
+  --surface-border: rgba(255, 169, 77, 0.16);
+  --surface-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 236, 214, 0.07);
+  --surface-inner-highlight: rgba(255, 236, 214, 0.07);
+  --surface-backdrop: blur(24px) saturate(1.5);
+  --surface-specular-opacity: 0.12;
+
+  --room-center-light: rgba(255, 190, 140, 0.06);
+  --room-floor-light: rgba(255, 122, 0, 0.05);
+  --room-vignette: radial-gradient(
+    ellipse at 50% 42%,
+    transparent 30%,
+    rgba(8, 6, 6, 0.5) 72%,
+    rgba(8, 6, 6, 0.9) 100%
+  );
+  --room-grain-opacity: 0.035;
+  --room-grain-blend: overlay;
+  --room-velvet-opacity: 0.1;
+
+  /* Glass faces read as smoked glass on charcoal. */
+  --glass-face-opacity: 0.12;
+  --glass-edge-opacity: 0.3;
+  --glass-specular-opacity: 0.12;
+  --glass-refract-opacity: 0.08;
+  --glass-bend-opacity: 0.1;
+
+  --seasonal-display: block;
+}
+
+/* ── Shell hard-codes that tokens can't reach ──────────────── */
+
+/* Noir paints the room black directly when Art Ambient is off. */
+:root[data-scheme="light"] .ambient-layer--off .ambient-layer__base,
+:root[data-scheme="halloween"] .ambient-layer--off .ambient-layer__base {
+  background:
+    radial-gradient(ellipse at 50% 39%, var(--room-center-light), transparent 46%),
+    radial-gradient(ellipse at 50% 108%, var(--room-floor-light), transparent 58%),
+    var(--bg);
+}
+
+:root[data-scheme="light"] .ambient-layer__velvet {
+  display: none;
+}
+
+/* Floating chrome: Noir hard-codes black lacquer, Glass white lenses. */
+:root[data-scheme="light"] .settings-trigger,
+:root[data-scheme="light"] .source-badge,
+:root[data-scheme="light"] .mini-view__return,
+:root[data-scheme="halloween"] .settings-trigger,
+:root[data-scheme="halloween"] .source-badge,
+:root[data-scheme="halloween"] .mini-view__return {
+  background: var(--surface-bg);
+  border-color: var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-backdrop);
+  backdrop-filter: var(--surface-backdrop);
+  box-shadow: var(--surface-shadow);
+}
+
+:root[data-scheme="light"] .liquid-glass,
+:root[data-scheme="light"] .controls-pill.liquid-glass,
+:root[data-scheme="halloween"] .liquid-glass,
+:root[data-scheme="halloween"] .controls-pill.liquid-glass {
+  background: var(--surface-bg);
+  border-color: var(--surface-border);
+  box-shadow: var(--surface-shadow);
+}
+
+/* Glass shell: its lens layers are tuned for a bright room and read as
+   chrome on charcoal; smoke them down. */
+:root[data-scheme="halloween"] .liquid-glass,
+:root[data-scheme="halloween"] .controls-pill.liquid-glass,
+:root[data-scheme="halloween"] .theme-picker.liquid-glass {
+  --glass-face-opacity: 0.12;
+  --glass-edge-opacity: 0.3;
+  --glass-specular-opacity: 0.12;
+  --glass-refract-opacity: 0.08;
+  --glass-bend-opacity: 0.1;
+}
+
+:root[data-scheme="halloween"] .settings-trigger::before,
+:root[data-scheme="halloween"] .source-badge::before,
+:root[data-scheme="halloween"] .mini-view__return::before {
+  opacity: 0.12;
+}
+
+:root[data-scheme="light"] .liquid-glass__face,
+:root[data-scheme="light"] .controls-pill .liquid-glass__face {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(246, 246, 244, 0.6));
+}
+
+:root[data-scheme="halloween"] .liquid-glass__face,
+:root[data-scheme="halloween"] .controls-pill .liquid-glass__face {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 236, 214, 0.05), transparent 46%),
+    linear-gradient(180deg, rgba(30, 24, 22, 0.64), rgba(10, 8, 8, 0.84));
+}
+
+:root[data-scheme="light"] .liquid-glass__edge {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(10, 10, 12, 0.04);
+}
+
+:root[data-scheme="light"] .controls-btn-secondary,
+:root[data-scheme="halloween"] .controls-btn-secondary {
+  color: var(--ui-text-secondary);
+}
+
+:root[data-scheme="light"] .controls-btn-secondary:not(:disabled):hover,
+:root[data-scheme="halloween"] .controls-btn-secondary:not(:disabled):hover {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover);
+}
+
+:root[data-scheme="light"] .controls-btn-primary {
+  background: #0b0b0c;
+  color: #ffffff;
+}
+
+/* Amber is for state (ring, selection); the play disc stays ivory. */
+:root[data-scheme="halloween"] .controls-btn-primary {
+  background: #f3ece4;
+  color: #141214;
+  box-shadow:
+    0 0 0 1px rgba(255, 169, 77, 0.25),
+    0 0 28px rgba(255, 122, 0, 0.18);
+}
+
+:root[data-scheme="halloween"] .track-info__title {
+  text-shadow: none;
+}
+
+/* ── Overlays keep their shell surfaces ────────────────────────
+   Settings, Crate, Shortcut sheet, context menu and tooltips paint
+   their own shell surfaces. Where a scheme would flip text contrast
+   against them, restore that shell's tokens inside the overlay. */
+
+:root[data-scheme="light"][data-theme="noir"] :is(
+    .settings-overlay,
+    .crate-overlay,
+    .shortcut-sheet,
+    .app-context-menu,
+    .tooltip-content
+  ) {
+  --bg: #000000;
+  --ui-bg: rgba(7, 7, 7, 0.78);
+  --ui-border: rgba(255, 255, 255, 0.075);
+  --ui-text-primary: rgba(241, 239, 235, 0.94);
+  --ui-text-secondary: rgba(226, 226, 226, 0.42);
+  --ui-accent: #f1efea;
+  --ui-control-hover: rgba(255, 255, 255, 0.08);
+  --ui-control-active: rgba(255, 255, 255, 0.14);
+  --ring-track: rgba(255, 255, 255, 0.09);
+  --ring-fill: #f1efea;
+  --glow-color: rgba(210, 210, 210, 0.13);
+  --surface-bg: linear-gradient(180deg, rgba(16, 16, 16, 0.82), rgba(0, 0, 0, 0.86));
+  --surface-border: rgba(255, 255, 255, 0.07);
+  --surface-shadow:
+    0 22px 68px rgba(0, 0, 0, 0.78),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -24px 56px rgba(0, 0, 0, 0.52);
+}
+
+:root[data-scheme="halloween"][data-theme="glass"] :is(
+    .settings-overlay,
+    .crate-overlay,
+    .shortcut-sheet,
+    .app-context-menu,
+    .tooltip-content
+  ) {
+  --bg: #f7f5ee;
+  --ui-bg: rgba(255, 255, 255, 0.42);
+  --ui-border: rgba(255, 255, 255, 0.68);
+  --ui-text-primary: rgba(22, 27, 34, 0.88);
+  --ui-text-secondary: rgba(48, 58, 69, 0.58);
+  --ui-accent: #006fd6;
+  --ui-control-hover: rgba(0, 98, 190, 0.085);
+  --ui-control-active: rgba(0, 98, 190, 0.16);
+  --ring-track: rgba(0, 88, 188, 0.14);
+  --ring-fill: #0070d9;
+  --glow-color: rgba(0, 98, 190, 0.11);
+  --surface-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.12));
+  --surface-border: rgba(255, 255, 255, 0.78);
+  --surface-shadow: 0 24px 74px rgba(45, 62, 82, 0.16);
+  --glass-face-opacity: 0.28;
+  --glass-edge-opacity: 0.78;
+  --glass-specular-opacity: 0.38;
+  --glass-refract-opacity: 0.28;
+  --glass-bend-opacity: 0.32;
+}

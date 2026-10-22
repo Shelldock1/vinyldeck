@@ -13,6 +13,12 @@ export type LegacyThemeId = ThemeId | "aurora" | "vapor" | "paper";
  */
 export type AmbientModeId = "off" | "beam";
 
+/**
+ * Colour scheme layered over the shell via data-scheme on <html>.
+ * "dark" adds no overrides: Noir/Glass keep every token they own.
+ */
+export type SchemeId = "light" | "dark" | "halloween";
+
 export const ART_AMBIENT_MODE: AmbientModeId = "beam";
 export const THEME_IDS: ThemeId[] = ["noir", "glass"];
 
@@ -20,6 +26,17 @@ export const THEME_LABELS: Record<ThemeId, string> = {
   noir: "Noir",
   glass: "Glass",
 };
+
+export const SCHEME_IDS: SchemeId[] = ["light", "dark", "halloween"];
+
+export const SCHEME_LABELS: Record<SchemeId, string> = {
+  light: "Light",
+  dark: "Dark",
+  halloween: "Halloween",
+};
+
+/** Matches the 300ms token interpolation in schemes.css, plus a frame of slack. */
+const SCHEME_SWITCH_MS = 320;
 
 export const AMBIENT_MODE_IDS: AmbientModeId[] = ["off", "beam"];
 
@@ -85,6 +102,10 @@ export function isThemeId(value: unknown): value is ThemeId {
   return typeof value === "string" && THEME_IDS.includes(value as ThemeId);
 }
 
+export function isSchemeId(value: unknown): value is SchemeId {
+  return typeof value === "string" && SCHEME_IDS.includes(value as SchemeId);
+}
+
 export function isLegacyThemeId(value: unknown): value is LegacyThemeId {
   return (
     typeof value === "string" && LEGACY_THEME_IDS.includes(value as LegacyThemeId)
@@ -126,9 +147,36 @@ export function applyAmbientMode(mode: AmbientModeId): void {
   if (mode === "off") resetAmbientColors();
 }
 
-export function applyVisualMode(themeId: ThemeId, ambientMode: AmbientModeId): void {
+let schemeSwitchTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Sets data-scheme. Token transitions only exist while .is-scheme-switching
+ * is on <html>, so album-art tint updates keep their own timing.
+ */
+export function applyScheme(scheme: SchemeId): void {
+  const root = document.documentElement;
+  const previous = root.getAttribute("data-scheme");
+  if (previous === scheme) return;
+
+  if (previous !== null) {
+    root.classList.add("is-scheme-switching");
+    if (schemeSwitchTimer) clearTimeout(schemeSwitchTimer);
+    schemeSwitchTimer = setTimeout(() => {
+      root.classList.remove("is-scheme-switching");
+      schemeSwitchTimer = null;
+    }, SCHEME_SWITCH_MS);
+  }
+  root.setAttribute("data-scheme", scheme);
+}
+
+export function applyVisualMode(
+  themeId: ThemeId,
+  ambientMode: AmbientModeId,
+  scheme?: SchemeId,
+): void {
   applyTheme(themeId);
   applyAmbientMode(ambientMode);
+  if (scheme) applyScheme(scheme);
 }
 
 export function applyAmbientColors(

@@ -138,7 +138,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
 
   function applyCommittedSettings(nextSettings: typeof settings) {
     hydrateSettings(nextSettings);
-    applyVisualMode(nextSettings.theme, nextSettings.ambientMode);
+    applyVisualMode(nextSettings.theme, nextSettings.ambientMode, nextSettings.scheme);
     if (nextSettings.ambientMode === "off") resetAmbientColors();
   }
 

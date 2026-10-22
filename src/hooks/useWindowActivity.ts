@@ -3,6 +3,8 @@
 // (backgrounded/minimized) or the native window reports minimized.
 // Losing focus to another app while still visible is NOT a suspension.
 // Callers use this to stop continuous rAF loops; state is left untouched.
+// It also mirrors the state to data-suspended on <html> so CSS keyframe
+// decoration (SeasonalLayer) can pause via animation-play-state.
 
 import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
@@ -73,5 +75,13 @@ export function useWindowActivity(): { isSuspended: boolean } {
     };
   }, []);
 
-  return { isSuspended: isWindowSuspended(hidden, minimized) };
+  const isSuspended = isWindowSuspended(hidden, minimized);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.toggleAttribute("data-suspended", isSuspended);
+    return () => root.removeAttribute("data-suspended");
+  }, [isSuspended]);
+
+  return { isSuspended };
 }

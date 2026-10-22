@@ -1,0 +1,135 @@
+/* ── Theme menu: fourth in the top-left trigger row, right of Crate ── */
+
+.settings-trigger.theme-menu__trigger {
+  left: 186px;
+}
+
+.settings-trigger.theme-menu__trigger[data-open] {
+  border-color: var(--ui-accent);
+  box-shadow:
+    var(--surface-shadow),
+    0 0 0 4px color-mix(in srgb, var(--ui-accent) 16%, transparent);
+}
+
+.settings-trigger.theme-menu__trigger:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
+}
+
+.theme-menu__list {
+  position: fixed;
+  top: 76px;
+  left: 186px;
+  z-index: 95;
+  box-sizing: border-box;
+  width: 220px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    color-mix(in srgb, var(--ui-bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transform-origin: top left;
+  animation: themeMenuIn 180ms var(--spring-curve) both;
+}
+
+.theme-menu__item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ui-text-secondary);
+  font-family: var(--font-body, Inter, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease-out,
+    color 120ms ease-out,
+    transform 120ms var(--spring-curve);
+}
+
+.theme-menu__item:hover {
+  background: var(--ui-control-hover);
+  color: var(--ui-text-primary);
+}
+
+.theme-menu__item:active {
+  transform: scale(0.98);
+}
+
+.theme-menu__item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ui-accent);
+}
+
+.theme-menu__item[aria-checked="true"] {
+  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
+  color: var(--ui-text-primary);
+}
+
+.theme-menu__label {
+  flex-grow: 1;
+}
+
+.theme-menu__check {
+  color: var(--ui-accent);
+}
+
+.theme-menu__swatch {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.4);
+}
+
+.theme-menu__swatch--light {
+  background: #ffffff;
+}
+
+.theme-menu__swatch--dark {
+  background: #000000;
+}
+
+.theme-menu__swatch--halloween {
+  background: radial-gradient(circle at 40% 40%, #ffa94d, #ff7a00 60%, #3a1a08);
+}
+
+/* Noir paints menus as black lacquer; keep that when no scheme overrides it. */
+[data-theme="noir"] .theme-menu__list {
+  background: linear-gradient(180deg, rgba(18, 18, 18, 0.9), rgba(0, 0, 0, 0.88));
+}
+
+:root[data-scheme="light"] .theme-menu__list {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 20px 50px rgba(10, 10, 12, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+:root[data-scheme="halloween"] .theme-menu__list {
+  background: rgba(24, 20, 19, 0.9);
+}
+
+@keyframes themeMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}

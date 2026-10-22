@@ -37,6 +37,7 @@ import {
 } from "../lib/media/controls";
 
 import { AmbientLayer } from "../components/AmbientLayer";
+import { SeasonalLayer } from "../components/SeasonalLayer";
 import { VaporGrid } from "../components/VaporGrid";
 import { VinylRecord } from "../components/VinylRecord";
 import { NeedleArm } from "../components/NeedleArm";
@@ -44,6 +45,7 @@ import { ProgressRing } from "../components/ProgressRing";
 import { TrackInfo } from "../components/TrackInfo";
 import { Controls } from "../components/Controls";
 import { ThemePicker } from "../components/ThemePicker";
+import { ThemeMenu } from "../components/ThemeMenu";
 import { SourceBadge } from "../components/SourceBadge";
 import { Settings } from "../components/Settings";
 import type { SettingsTab } from "../components/Settings";
@@ -277,7 +279,7 @@ export function MainView() {
 
   function applyCommittedSettings(nextSettings: typeof settings) {
     useVinylDeckStore.getState().hydrateSettings(nextSettings);
-    applyVisualMode(nextSettings.theme, nextSettings.ambientMode);
+    applyVisualMode(nextSettings.theme, nextSettings.ambientMode, nextSettings.scheme);
     if (nextSettings.ambientMode === "off") resetAmbientColors();
   }
 
@@ -453,6 +455,9 @@ export function MainView() {
         mode={settings.ambientMode}
         theme={theme}
       />
+
+      {/* z:0 — Halloween decoration, shown only by data-scheme CSS */}
+      <SeasonalLayer />
 
       {/* z:0 — Vapor grid floor */}
       <VaporGrid />
@@ -774,6 +779,9 @@ export function MainView() {
           Settings <Kbd>S</Kbd>
         </TooltipContent>
       </Tooltip>
+
+      {/* z:90 — Theme (scheme) menu */}
+      <ThemeMenu />
 
       {/* z:80 — The Crate overlay */}
       <Crate

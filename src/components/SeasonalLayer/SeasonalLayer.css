@@ -1,0 +1,191 @@
+/* ============================================================
+   SeasonalLayer — Halloween decoration
+   Sits between AmbientLayer (z 0) and the deck (z 1), never takes
+   pointer events, and is display:none unless data-scheme="halloween".
+   Budget: only transform/opacity animate (ghost drift + sway, glow
+   breathing); cobwebs and pumpkins are static; the ghost's blur sits
+   on the inner node so it is rasterised once, not per frame.
+   ============================================================ */
+
+.seasonal {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: var(--seasonal-display, none);
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+}
+
+.seasonal__defs {
+  position: absolute;
+}
+
+.seasonal__web {
+  position: absolute;
+  top: 0;
+  width: clamp(160px, 22vw, 300px);
+  height: clamp(160px, 22vw, 300px);
+  stroke: #e8dccb;
+  stroke-width: 0.6;
+  opacity: 0.14;
+}
+
+.seasonal__web--left {
+  left: 0;
+}
+
+.seasonal__web--right {
+  right: 0;
+  width: clamp(110px, 15vw, 210px);
+  height: clamp(110px, 15vw, 210px);
+  transform: scaleX(-1);
+}
+
+.seasonal__pumpkin {
+  position: absolute;
+  bottom: 28px;
+}
+
+.seasonal__stem {
+  fill: none;
+  stroke: #6b5a3a;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.seasonal__pumpkin-core {
+  stroke: #ffa94d;
+  stroke-opacity: 0.35;
+  stroke-width: 0.6;
+}
+
+.seasonal__pumpkin--left {
+  left: 48px;
+  width: 120px;
+  height: 104px;
+}
+
+.seasonal__pumpkin--left-small {
+  left: 172px;
+  width: 66px;
+  height: 57px;
+}
+
+.seasonal__pumpkin--right {
+  right: 56px;
+  width: 92px;
+  height: 80px;
+}
+
+.seasonal__glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 122, 0, 0.5) 0%,
+    rgba(255, 169, 77, 0.16) 40%,
+    transparent 70%
+  );
+  will-change: opacity, transform;
+  animation: seasonalGlow 4.8s ease-in-out infinite alternate;
+}
+
+.seasonal__glow--left {
+  left: -30px;
+  bottom: -60px;
+  width: 280px;
+  height: 280px;
+}
+
+.seasonal__glow--left-small {
+  left: 150px;
+  bottom: -40px;
+  width: 160px;
+  height: 160px;
+  animation-delay: -1.6s;
+}
+
+.seasonal__glow--right {
+  right: -20px;
+  bottom: -50px;
+  width: 220px;
+  height: 220px;
+  animation-delay: -3.1s;
+}
+
+/* Outer node drifts left → right; inner node sways and carries the blur. */
+.seasonal__track {
+  position: absolute;
+  top: 28vh;
+  left: 0;
+  will-change: transform;
+  animation: seasonalDrift 45s linear infinite;
+}
+
+.seasonal__ghost {
+  display: block;
+  width: 64px;
+  height: 84px;
+  opacity: 0.32;
+  filter: blur(2px);
+  will-change: transform;
+  animation: seasonalSway 6s ease-in-out infinite alternate;
+}
+
+/* Hidden or minimised window: freeze in place, resume where it stopped. */
+:root[data-suspended] .seasonal * {
+  animation-play-state: paused;
+}
+
+/* Linux CPU compositing: glows hold still; the small ghost keeps moving. */
+html[data-soft-render="1"] .seasonal__glow {
+  animation: none;
+  opacity: 0.75;
+  will-change: auto;
+}
+
+html[data-soft-render="1"] .seasonal__ghost {
+  filter: none;
+  opacity: 0.22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seasonal__track {
+    display: none;
+  }
+
+  .seasonal__glow {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+@keyframes seasonalGlow {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes seasonalDrift {
+  from {
+    transform: translate3d(-120px, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(100vw + 40px), 0, 0);
+  }
+}
+
+@keyframes seasonalSway {
+  from {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+  to {
+    transform: translateY(10px) rotate(3deg);
+  }
+}

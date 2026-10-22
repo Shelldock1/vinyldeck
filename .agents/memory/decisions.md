@@ -80,6 +80,17 @@
 - Settings UI shows a `SOURCE` tab between DISPLAY and OTHER; it refreshes on open and every 5 s, keeps a missing saved source visible, and commits only through the Rust settings authority. The main context menu links to the same tab.
 - No frontend persistence path and no new dependencies. Window/macOS compile and live MPRIS/SMTC selection remain CI/manual verification.
 
+## DECISION: Colour Schemes as a Second Axis — LOCKED (2026-10-22)
+
+- `data-theme` stays the shell (Noir/Glass). Schemes ride on `data-scheme="light|dark|halloween"` on `<html>`, set by `applyScheme()` in `lib/themes/applier.ts`; every shell × scheme pair is valid.
+- Rust settings v3 owns `scheme` (allow-list `SCHEMES`, default `"dark"`). `applyVisualMode(theme, ambient, scheme?)` takes it as an optional third arg at every call site.
+- `src/styles/schemes.css` (imported after `themes.css`): `:root[data-scheme]` blocks override shell tokens; `dark` has no block. Vinyl tokens are never touched.
+- Colour tokens are registered with `@property` and transition 300ms ease-in-out only while `.is-scheme-switching` is on `<html>` (320ms window).
+- Overlays (Settings, Crate, Shortcut sheet, context menu, tooltips) keep their shell surfaces: where a scheme would flip contrast (Light+Noir, Halloween+Glass), schemes.css restores that shell's tokens inside them.
+- Halloween art is `SeasonalLayer` (static SVG, memoised, mounted once beside AmbientLayer; `compact` in Mini = cobwebs only), shown by `--seasonal-display` CSS only. Only transform/opacity animate; soft-render keeps glows static and drops ghost blur; reduced motion hides the ghost.
+- `useWindowActivity` mirrors suspension to `data-suspended` on `<html>`; seasonal and ambient CSS animations pause on it.
+- `ThemeMenu` is the fourth `.settings-trigger` in the top-left row (left 186px), menu z 95, `menuitemradio` items.
+
 ## Architectural Principles
 
 1. The Visual Engine must remain independent of platform-specific APIs.

@@ -16,6 +16,7 @@ const VERSION: u8 = 3;
 const MAX_SOURCE_TEXT_CHARS: usize = 256;
 
 const SHELL_THEMES: &[&str] = &["noir", "glass"];
+const SCHEMES: &[&str] = &["light", "dark", "halloween"];
 const LEGACY_THEMES: &[&str] = &["noir", "glass", "aurora", "vapor", "paper"];
 const WINDOW_MODES: &[&str] = &["main", "fullscreen", "mini"];
 
@@ -24,6 +25,9 @@ const WINDOW_MODES: &[&str] = &["main", "fullscreen", "mini"];
 pub struct PersistedSettings {
     pub version: u8,
     pub theme: String,
+    /// Colour scheme layered over the shell: light | dark | halloween.
+    /// "dark" leaves the shell tokens untouched.
+    pub scheme: String,
     pub ambient_mode: String,
     /// Legacy compatibility. Derived from ambient_mode but kept in payloads so
     /// older frontend callers/tests do not fail abruptly during migration.
@@ -53,6 +57,7 @@ impl Default for PersistedSettings {
         Self {
             version: VERSION,
             theme: "noir".to_string(),
+            scheme: "dark".to_string(),
             ambient_mode: "off".to_string(),
             art_ambient: false,
             vinyl_wobble: true,
@@ -76,6 +81,7 @@ impl Default for PersistedSettings {
 #[serde(rename_all = "camelCase")]
 pub struct SettingsPatch {
     pub theme: Option<String>,
+    pub scheme: Option<String>,
     pub ambient_mode: Option<String>,
     pub art_ambient: Option<bool>,
     pub vinyl_wobble: Option<bool>,
@@ -229,6 +235,8 @@ fn validate_settings(value: Option<Value>) -> PersistedSettings {
     PersistedSettings {
         version: VERSION,
         theme,
+        scheme: read_string_choice(raw.get("scheme"), SCHEMES)
+            .unwrap_or_else(|| defaults.scheme.clone()),
         art_ambient: ambient_mode != "off",
         ambient_mode,
         vinyl_wobble: read_bool(raw.get("vinylWobble"), defaults.vinyl_wobble),
@@ -261,6 +269,12 @@ fn apply_patch(current: &PersistedSettings, patch: SettingsPatch) -> PersistedSe
         .filter(|value| SHELL_THEMES.contains(&value.as_str()))
     {
         next.theme = theme;
+    }
+    if let Some(scheme) = patch
+        .scheme
+        .filter(|value| SCHEMES.contains(&value.as_str()))
+    {
+        next.scheme = scheme;
     }
     if let Some(mode) = patch
         .ambient_mode
@@ -412,6 +426,7 @@ mod tests {
         })));
 
         assert_eq!(settings.theme, "noir");
+        assert_eq!(settings.scheme, "dark");
         assert_eq!(settings.ambient_mode, "off");
         assert!(!settings.art_ambient);
         assert!(settings.vinyl_wobble);
@@ -522,6 +537,33 @@ mod tests {
         assert_eq!(fullscreen.window_mode, "fullscreen");
         assert_eq!(mini_attempt.window_mode, "fullscreen");
         assert_eq!(main.window_mode, "main");
+    }
+
+    #[test]
+    fn patch_scheme_accepts_only_known_values() {
+        let current = PersistedSettings::default();
+        let halloween = apply_patch(
+            &current,
+            SettingsPatch {
+                scheme: Some("halloween".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+        let bogus = apply_patch(
+            &halloween,
+            SettingsPatch {
+                scheme: Some("neon".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+
+        assert_eq!(halloween.scheme, "halloween");
+        assert_eq!(halloween.theme, "noir");
+        assert_eq!(bogus.scheme, "halloween");
+        assert_eq!(
+            validate_settings(Some(json!({ "scheme": "light" }))).scheme,
+            "light"
+        );
     }
 
     #[test]

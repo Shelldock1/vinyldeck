@@ -299,7 +299,9 @@ Current task track:
 - `lib/playback/store.ts` — Zustand v5 cache, source lifecycle, settings cache, position extrapolation
 - `lib/settings/` — frontend proxy/cache for backend-owned settings authority
 - `lib/window/` — frontend window-mode adapter
-- `lib/themes/applier.ts` — applyTheme(), applyAmbientColors(), resetAmbientColors()
+- `lib/themes/applier.ts` — applyTheme(), applyScheme() (Light/Dark/Halloween via data-scheme), applyAmbientColors(), resetAmbientColors()
+- `styles/schemes.css` — scheme token overrides + @property colour interpolation
+- `components/SeasonalLayer/` — Halloween cobwebs/pumpkins/ghost, CSS-gated; `components/ThemeMenu/` — scheme switcher trigger + menu
 
 ### Views
 - `views/MainView.tsx` — Final z-stack (AmbientLayer/vinyl-area/TrackInfo/Controls/ThemePicker/SourceBadge) plus the Settings trigger and, since 2026-10-21, a Mini Player trigger in the same corner row

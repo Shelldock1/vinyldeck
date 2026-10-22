@@ -331,7 +331,7 @@ async function cycleTheme() {
   const settings = await commitSettings({ theme: nextTheme });
 
   useVinylDeckStore.getState().hydrateSettings(settings);
-  applyVisualMode(settings.theme, settings.ambientMode);
+  applyVisualMode(settings.theme, settings.ambientMode, settings.scheme);
   if (settings.ambientMode === "off") resetAmbientColors();
 }
 
@@ -344,7 +344,7 @@ async function toggleArtAmbient() {
   });
 
   useVinylDeckStore.getState().hydrateSettings(settings);
-  applyVisualMode(settings.theme, settings.ambientMode);
+  applyVisualMode(settings.theme, settings.ambientMode, settings.scheme);
   if (settings.ambientMode === "off") resetAmbientColors();
 }
 

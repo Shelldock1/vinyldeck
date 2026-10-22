@@ -5,6 +5,7 @@ import {
   ART_AMBIENT_MODE,
   applyVisualMode,
   isLegacyThemeId,
+  isSchemeId,
   isThemeId,
   legacyThemeToAmbientMode,
   legacyThemeToShell,
@@ -45,6 +46,7 @@ export function validateSettings(value: unknown): PersistedSettings {
   return {
     version: 3,
     theme,
+    scheme: isSchemeId(raw.scheme) ? raw.scheme : DEFAULT_SETTINGS.scheme,
     ambientMode,
     artAmbient: ambientMode !== "off",
     vinylWobble: readBoolean(raw.vinylWobble, DEFAULT_SETTINGS.vinylWobble),
@@ -95,7 +97,7 @@ export async function commitSettings(
     const current = useVinylDeckStore.getState().settings;
     const settings = validateSettings({ ...current, ...normalizedPatch });
     useVinylDeckStore.getState().hydrateSettings(settings);
-    applyVisualMode(settings.theme, settings.ambientMode);
+    applyVisualMode(settings.theme, settings.ambientMode, settings.scheme);
     return settings;
   }
 
@@ -109,7 +111,11 @@ export async function commitSettings(
 export async function resetSettings(): Promise<PersistedSettings> {
   if (!isTauri()) {
     useVinylDeckStore.getState().hydrateSettings(DEFAULT_SETTINGS);
-    applyVisualMode(DEFAULT_SETTINGS.theme, DEFAULT_SETTINGS.ambientMode);
+    applyVisualMode(
+      DEFAULT_SETTINGS.theme,
+      DEFAULT_SETTINGS.ambientMode,
+      DEFAULT_SETTINGS.scheme,
+    );
     return DEFAULT_SETTINGS;
   }
 

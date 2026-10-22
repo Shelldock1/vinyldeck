@@ -7,6 +7,7 @@ import {
 } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { AmbientLayer } from "../components/AmbientLayer";
+import { SeasonalLayer } from "../components/SeasonalLayer";
 import { Controls } from "../components/Controls";
 import { TrackInfo } from "../components/TrackInfo";
 import { VinylRecord } from "../components/VinylRecord";
@@ -184,6 +185,7 @@ export function MiniView() {
         mode={settings.ambientMode}
         theme={theme}
       />
+      <SeasonalLayer compact />
       <VaporGrid />
 
       <section className="mini-view__centerpiece" aria-label="Mini player">

@@ -1,4 +1,4 @@
-import type { AmbientModeId, ThemeId } from "../themes/applier";
+import type { AmbientModeId, SchemeId, ThemeId } from "../themes/applier";
 import { WINDOW_MODES } from "../window/types";
 import type { WindowMode } from "../window/types";
 
@@ -8,6 +8,8 @@ export type { WindowMode };
 export interface PersistedSettings {
   version: 3;
   theme: ThemeId;
+  /** Colour scheme over the shell. "dark" = shell tokens untouched. */
+  scheme: SchemeId;
   /** v2 field kept, but only off/on values are exposed now: off | beam. */
   ambientMode: AmbientModeId;
   /** Legacy compatibility flag. Derived from ambientMode and kept for old callers/tests. */
@@ -37,6 +39,7 @@ export interface PersistedSettings {
 export const DEFAULT_SETTINGS: PersistedSettings = {
   version: 3,
   theme: "noir",
+  scheme: "dark",
   ambientMode: "off",
   artAmbient: false,
   vinylWobble: true,

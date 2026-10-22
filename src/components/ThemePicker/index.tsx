@@ -37,7 +37,7 @@ export function ThemePicker() {
     settings: Awaited<ReturnType<typeof commitSettings>>,
   ) {
     hydrateSettings(settings);
-    applyVisualMode(settings.theme, settings.ambientMode);
+    applyVisualMode(settings.theme, settings.ambientMode, settings.scheme);
     if (settings.ambientMode === "off") resetAmbientColors();
   }
 
