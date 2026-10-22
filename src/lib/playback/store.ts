@@ -95,6 +95,10 @@ export const EMPTY_PLAYBACK: PlaybackState = {
   canSeek: false,
   canSkip: false,
   canControl: false,
+  canRepeat: false,
+  canShuffle: false,
+  repeatMode: "off",
+  shuffle: false,
 };
 
 function isPositionOnlyChange(previous: PlaybackState, next: PlaybackState): boolean {
@@ -109,7 +113,11 @@ function isPositionOnlyChange(previous: PlaybackState, next: PlaybackState): boo
     previous.sourceId === next.sourceId &&
     previous.canSeek === next.canSeek &&
     previous.canSkip === next.canSkip &&
-    previous.canControl === next.canControl
+    previous.canControl === next.canControl &&
+    previous.canRepeat === next.canRepeat &&
+    previous.canShuffle === next.canShuffle &&
+    previous.repeatMode === next.repeatMode &&
+    previous.shuffle === next.shuffle
   );
 }
 

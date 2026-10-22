@@ -9,7 +9,7 @@
 // lighting — they should react to the music. This matches Apple Music,
 // Plexamp, Doppler — all premium music apps converge on this pattern.
 
-import type { PlaybackSource, PlaybackState } from "./types";
+import type { PlaybackSource, PlaybackState, RepeatMode } from "./types";
 
 // ── Canvas artwork generator (fallback for tracks without real art) ──
 
@@ -92,6 +92,8 @@ export function createMockSource(): PlaybackSource {
   let currentIndex = 0;
   let isPlaying = true;
   let position = 0;
+  let repeatMode: RepeatMode = "off";
+  let shuffle = false;
   let lastTickTime = Date.now();
   let intervalId: ReturnType<typeof setInterval> | null = null;
   const subscribers: Set<(state: PlaybackState) => void> = new Set();
@@ -133,6 +135,10 @@ export function createMockSource(): PlaybackSource {
       canSeek: true,
       canSkip: true,
       canControl: true,
+      canRepeat: true,
+      canShuffle: true,
+      repeatMode,
+      shuffle,
     };
   }
 
@@ -149,8 +155,18 @@ export function createMockSource(): PlaybackSource {
     const track = getTrack();
     position = Math.min(position + delta, track.duration);
     if (position >= track.duration) {
-      currentIndex = (currentIndex + 1) % MOCK_TRACKS.length;
-      position = 0;
+      if (repeatMode === "one") {
+        position = 0;
+      } else {
+        const nextIndex = shuffle
+          ? Math.floor(Math.random() * MOCK_TRACKS.length)
+          : (currentIndex + 1) % MOCK_TRACKS.length;
+        currentIndex =
+          shuffle && nextIndex === currentIndex && MOCK_TRACKS.length > 1
+            ? (currentIndex + 1) % MOCK_TRACKS.length
+            : nextIndex;
+        position = 0;
+      }
       emit();
     }
   }
@@ -195,6 +211,16 @@ export function createMockSource(): PlaybackSource {
     seekTo(seconds: number) {
       const track = getTrack();
       position = Math.min(Math.max(seconds, 0), track.duration);
+      emit();
+    },
+
+    setRepeatMode(mode: RepeatMode) {
+      repeatMode = mode;
+      emit();
+    },
+
+    setShuffle(enabled: boolean) {
+      shuffle = enabled;
       emit();
     },
 

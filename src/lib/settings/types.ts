@@ -6,7 +6,7 @@ export { WINDOW_MODES };
 export type { WindowMode };
 
 export interface PersistedSettings {
-  version: 2;
+  version: 3;
   theme: ThemeId;
   /** v2 field kept, but only off/on values are exposed now: off | beam. */
   ambientMode: AmbientModeId;
@@ -28,10 +28,14 @@ export interface PersistedSettings {
    * shows through behind the vinyl/controls. Has no effect on Main/Fullscreen.
    */
   miniTransparentMode: boolean;
+  /** Stable media-session id to follow; empty string means Auto. */
+  playerSourceId: string;
+  /** Display fallback for the chosen session, even while it is not running. */
+  playerSourceName: string;
 }
 
 export const DEFAULT_SETTINGS: PersistedSettings = {
-  version: 2,
+  version: 3,
   theme: "noir",
   ambientMode: "off",
   artAmbient: false,
@@ -46,4 +50,6 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   startWithWindows: false,
   windowMode: "main",
   miniTransparentMode: false,
+  playerSourceId: "",
+  playerSourceName: "",
 };

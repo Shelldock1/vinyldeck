@@ -31,6 +31,8 @@ const ENABLE_WEBGL_VINYL = false;
 
 interface VinylRecordProps {
   isPlaying: boolean;
+  /** Window hidden/minimized: stop the rotation RAF until visible again. */
+  suspended?: boolean;
   vinylWobble?: boolean;
   artworkDataUrl: string | null;
   trackTitle: string;
@@ -47,6 +49,7 @@ const MIN_VISIBLE_WEAR = 0.02;
 
 export function VinylRecord({
   isPlaying,
+  suspended = false,
   vinylWobble = true,
   artworkDataUrl,
   trackTitle,
@@ -65,6 +68,7 @@ export function VinylRecord({
   // Single RAF loop drives CSS rotation and feeds WebGL uniforms.
   useVinylRotation({
     isPlaying,
+    suspended,
     skipDirection: trackChangeDirection,
     skipNonce: trackChangeNonce,
     onFrame: ({ rotation, velocity }) => {

@@ -71,6 +71,15 @@
 - The mock `media::MediaState`, `mock.rs`, and the `cmd_media_*` commands were removed once the tray moved to the authority (2026-10-22).
 - Commands that control playback go to `platform::*` (`cmd_smtc_*`).
 
+## DECISION: Backend-owned Player Source Selection — LOCKED (2026-10-22)
+
+- Persisted selection lives in Rust settings v3 as `player_source_id` / `player_source_name`; empty id means **Auto**. Values are trimmed and capped at 256 chars.
+- `PlaybackAuthority` mirrors the persisted selection via `set_selection`; settings initialize/update/reset are the only sync points. The poller reads the authority, not settings, every 500 ms.
+- Platform bridges (`media/linux.rs`, `media/smtc.rs`) own session enumeration and resolution. Explicit id wins while the session lives. Auto order is playing, poller's last playing source, then paused; Windows additionally tries `GetCurrentSession()` before first paused.
+- `cmd_media_players` returns `MediaPlayer { id, name, isPlaying }` (camelCase). Transport commands pass the explicit selection, else the current snapshot source, so Auto is never pinned.
+- Settings UI shows a `SOURCE` tab between DISPLAY and OTHER; it refreshes on open and every 5 s, keeps a missing saved source visible, and commits only through the Rust settings authority. The main context menu links to the same tab.
+- No frontend persistence path and no new dependencies. Window/macOS compile and live MPRIS/SMTC selection remain CI/manual verification.
+
 ## Architectural Principles
 
 1. The Visual Engine must remain independent of platform-specific APIs.

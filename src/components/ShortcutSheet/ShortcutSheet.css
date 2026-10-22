@@ -1,0 +1,255 @@
+/* ============================================================
+   Keyboard cheat sheet — small glass overlay rendered from
+   src/lib/shortcuts.ts. Same shell tokens as Crate/Settings.
+   ============================================================ */
+
+.shortcut-sheet {
+  position: fixed;
+  inset: 0;
+  /* above The Crate (92), below the title bar buttons (95) */
+  z-index: 93;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* clear the Linux title bar */
+  padding: 52px 20px 24px;
+  pointer-events: auto;
+}
+
+.shortcut-sheet__scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  cursor: default;
+  background: rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: shortcutSheetFade 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.shortcut-sheet__panel {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 76px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ui-text-primary);
+  background:
+    radial-gradient(
+      circle at 12% 0%,
+      color-mix(in srgb, var(--ui-accent) 9%, transparent) 0%,
+      transparent 42%
+    ),
+    var(--surface-bg, var(--ui-bg)),
+    color-mix(in srgb, var(--bg, #050505) 88%, transparent);
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+  border-radius: var(--radius-lg, 20px);
+  -webkit-backdrop-filter: var(--surface-backdrop, blur(24px) saturate(1.5));
+  backdrop-filter: var(--surface-backdrop, blur(24px) saturate(1.5));
+  box-shadow: var(--surface-shadow, 0 40px 80px -20px rgba(0, 0, 0, 0.75));
+}
+
+/* A hairline of light along the top edge; the resting chrome stays quiet. */
+.shortcut-sheet__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 14% auto;
+  height: 0.5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.22),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.shortcut-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px 22px 14px;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--surface-border, var(--ui-border)) 76%, transparent);
+}
+
+.shortcut-sheet__heading {
+  min-width: 0;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shortcut-sheet__eyebrow,
+.shortcut-sheet__group-label,
+.shortcut-sheet__hint {
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  letter-spacing: var(--mono-tracking, 0.2em);
+  text-transform: uppercase;
+}
+
+.shortcut-sheet__eyebrow {
+  font-size: 9.5px;
+  color: var(--ui-accent);
+}
+
+.shortcut-sheet__title {
+  margin: 0;
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.shortcut-sheet__close {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.shortcut-sheet__close:hover,
+.shortcut-sheet__close:focus-visible {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.06));
+}
+
+.shortcut-sheet__close:active {
+  transform: scale(0.92);
+}
+
+/* Two columns keep all 14 rows inside a 700x560 window. */
+.shortcut-sheet__columns {
+  columns: 2;
+  column-gap: 26px;
+  min-height: 0;
+  padding: 16px 22px 18px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.shortcut-sheet__group {
+  break-inside: avoid;
+  margin: 0 0 18px;
+}
+
+.shortcut-sheet__group:last-child {
+  margin-bottom: 0;
+}
+
+.shortcut-sheet__group-label {
+  margin: 0 0 6px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ui-text-secondary);
+  opacity: 0.72;
+}
+
+.shortcut-sheet__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shortcut-sheet__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 26px;
+  padding: 4px 0;
+  border-bottom: 0.5px solid
+    color-mix(in srgb, var(--surface-border, var(--ui-border)) 38%, transparent);
+}
+
+.shortcut-sheet__list li:last-child {
+  border-bottom: 0;
+}
+
+.shortcut-sheet__action {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ui-text-primary);
+  opacity: 0.82;
+}
+
+.shortcut-sheet__keys {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Slightly larger keycaps than the inline tooltip hints. */
+.shortcut-sheet__panel .shortcut-sheet__keycap {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.shortcut-sheet__footer {
+  display: flex;
+  justify-content: center;
+  padding: 10px 22px 14px;
+  border-top: 0.5px solid
+    color-mix(in srgb, var(--surface-border, var(--ui-border)) 76%, transparent);
+}
+
+.shortcut-sheet__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ui-text-secondary);
+  opacity: 0.78;
+}
+
+@keyframes shortcutSheetFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .shortcut-sheet__columns {
+    columns: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shortcut-sheet__scrim {
+    animation: none;
+  }
+
+  .shortcut-sheet__close {
+    transition: none;
+  }
+}

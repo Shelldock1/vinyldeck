@@ -60,6 +60,165 @@ export function formatPressingNumber(value: number): string {
   return `No. ${String(Math.max(0, Math.floor(value))).padStart(3, "0")}`;
 }
 
+// ── Shelf view helpers (search, sort, stats) ──────────────────
+// Pure functions so the Crate UI stays declarative and the rules are
+// testable without a browser. Nothing here mutates the collection.
+
+export type CrateSort = "recent" | "plays" | "rarity" | "number" | "alpha";
+
+export interface CrateStats {
+  totalRecords: number;
+  totalPlays: number;
+  /** Most played; ties go to the most recently played pressing. */
+  topAlbum: CollectedRecord | null;
+  /** Consecutive calendar days with at least one counted play. */
+  streak: number;
+}
+
+/** Last time this pressing was touched; first press when never played. */
+function lastTouchedAt(record: CollectedRecord): number {
+  return record.lastPlayedAt ?? record.firstPressedAt;
+}
+
+function compareText(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
+}
+
+/**
+ * Case-insensitive search across artist, album, and pressing name.
+ * A blank query returns the shelf untouched.
+ */
+export function filterRecords(
+  records: readonly CollectedRecord[],
+  query: string,
+): CollectedRecord[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return [...records];
+
+  return records.filter((record) => {
+    if (record.artist.toLowerCase().includes(needle)) return true;
+    if (record.album.toLowerCase().includes(needle)) return true;
+    return Boolean(record.pressingName?.toLowerCase().includes(needle));
+  });
+}
+
+export function sortRecords(
+  records: readonly CollectedRecord[],
+  sort: CrateSort,
+): CollectedRecord[] {
+  const sorted = [...records];
+  switch (sort) {
+    case "recent":
+      return sorted.sort(
+        (a, b) =>
+          lastTouchedAt(b) - lastTouchedAt(a) ||
+          a.pressingNumber - b.pressingNumber,
+      );
+    case "plays":
+      return sorted.sort(
+        (a, b) =>
+          b.playCount - a.playCount ||
+          lastTouchedAt(b) - lastTouchedAt(a) ||
+          a.pressingNumber - b.pressingNumber,
+      );
+    case "rarity":
+      return sorted.sort(
+        (a, b) =>
+          rarityRank(b.recipe) - rarityRank(a.recipe) ||
+          b.playCount - a.playCount ||
+          lastTouchedAt(b) - lastTouchedAt(a) ||
+          a.pressingNumber - b.pressingNumber,
+      );
+    case "number":
+      return sorted.sort((a, b) => a.pressingNumber - b.pressingNumber);
+    case "alpha":
+      return sorted.sort(
+        (a, b) =>
+          compareText(
+            a.artist.trim() || "Unknown artist",
+            b.artist.trim() || "Unknown artist",
+          ) ||
+          compareText(a.album, b.album) ||
+          a.pressingNumber - b.pressingNumber,
+      );
+  }
+}
+
+const DAY_MS = 86_400_000;
+
+/** Stable local-calendar day index (DST-safe: built from Y/M/D, not hours). */
+function localDayIndex(timestamp: number): number {
+  const date = new Date(timestamp);
+  return Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS,
+  );
+}
+
+/**
+ * Consecutive days with a play, anchored to today when today already has a
+ * play, otherwise to yesterday so an evening streak survives the morning.
+ * Missing the last two days breaks the streak.
+ */
+export function collectionStreak(
+  records: readonly CollectedRecord[],
+  now: number = Date.now(),
+): number {
+  const days = new Set<number>();
+  for (const record of records) {
+    if (typeof record.lastPlayedAt === "number" && Number.isFinite(record.lastPlayedAt)) {
+      days.add(localDayIndex(record.lastPlayedAt));
+    }
+  }
+
+  const today = localDayIndex(now);
+  let cursor = days.has(today) ? today : days.has(today - 1) ? today - 1 : null;
+  if (cursor === null) return 0;
+
+  let streak = 0;
+  while (days.has(cursor)) {
+    streak += 1;
+    cursor -= 1;
+  }
+  return streak;
+}
+
+export function collectionStats(
+  records: readonly CollectedRecord[],
+  now: number = Date.now(),
+): CrateStats {
+  let totalPlays = 0;
+  let topAlbum: CollectedRecord | null = null;
+
+  for (const record of records) {
+    totalPlays += record.playCount;
+    if (record.playCount <= 0) continue;
+
+    if (!topAlbum) {
+      topAlbum = record;
+      continue;
+    }
+
+    const morePlays = record.playCount - topAlbum.playCount;
+    const moreRecent = lastTouchedAt(record) - lastTouchedAt(topAlbum);
+    if (
+      morePlays > 0 ||
+      (morePlays === 0 &&
+        (moreRecent > 0 ||
+          (moreRecent === 0 &&
+            record.pressingNumber < topAlbum.pressingNumber)))
+    ) {
+      topAlbum = record;
+    }
+  }
+
+  return {
+    totalRecords: records.length,
+    totalPlays,
+    topAlbum,
+    streak: collectionStreak(records, now),
+  };
+}
+
 function nextPressingNumber(records: CollectedRecord[]): number {
   return records.reduce((max, record) => Math.max(max, record.pressingNumber), 0) + 1;
 }

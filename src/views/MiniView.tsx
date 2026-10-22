@@ -14,6 +14,7 @@ import { VaporGrid } from "../components/VaporGrid";
 import { useColorExtraction } from "../hooks/useColorExtraction";
 import { useCurrentRecord } from "../hooks/useCrate";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { useWindowActivity } from "../hooks/useWindowActivity";
 import { setNativeWindowMode } from "../lib/window";
 import {
   EMPTY_PLAYBACK,
@@ -62,6 +63,7 @@ export function MiniView() {
   const isTransparent = settings.miniTransparentMode;
 
   useKeyboardShortcuts({ renderMode: "mini" });
+  const { isSuspended } = useWindowActivity();
 
   const effectivePlayback = devForceEmpty ? EMPTY_PLAYBACK : playback;
   const isPlaying = devForceEmpty ? false : rawIsPlaying;
@@ -187,6 +189,7 @@ export function MiniView() {
       <section className="mini-view__centerpiece" aria-label="Mini player">
         <VinylRecord
           isPlaying={isPlaying}
+          suspended={isSuspended}
           vinylWobble={settings.vinylWobble}
           artworkDataUrl={artworkDataUrl}
           trackTitle={effectivePlayback.track}
@@ -220,6 +223,7 @@ export function MiniView() {
           onNext={handleNext}
           onPrevious={handlePrevious}
           showTooltips={false}
+          showModes={false}
         />
       </div>
 

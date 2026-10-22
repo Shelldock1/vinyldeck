@@ -91,6 +91,8 @@ interface NeedleArmProps {
   onPause?: () => void;
   /** Live drop target while dragging; null when off-record or not dragging. */
   onScrubPreview?: (positionSeconds: number | null) => void;
+  /** Increment to lift and return the arm to its rest after a sleep timer. */
+  parkRequest?: number;
 }
 
 export function NeedleArm({
@@ -104,6 +106,7 @@ export function NeedleArm({
   onPlay,
   onPause,
   onScrubPreview,
+  parkRequest = 0,
 }: NeedleArmProps) {
   const rotate = useMotionValue(NEEDLE_ANGLE_LIFTED);
   // Keeps the drop-time label upright while the arm swings.
@@ -111,6 +114,7 @@ export function NeedleArm({
   const reduceMotion = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
   const prevTrackKey = useRef(trackKey);
+  const prevParkRequest = useRef(parkRequest);
   const bumpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lowerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdUntilRef = useRef(0); // suppress progress tracking during cue moves
@@ -182,6 +186,20 @@ export function NeedleArm({
     return () => clearTimeout(recueTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trackKey]);
+
+  // Sleep timer: the backend already paused playback. Lift and park the arm
+  // on its rest with the same cue-return motion as a manual lift-off. Pivot
+  // and groove geometry stay untouched.
+  useEffect(() => {
+    if (parkRequest === prevParkRequest.current) return;
+    prevParkRequest.current = parkRequest;
+
+    setIsParked(true);
+    setIsLifted(true);
+    holdFor(900);
+    animate(rotate, PARKED_DEG, LIFT_SPRING);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parkRequest]);
 
   // Play/pause: cue lever lifts or lowers the arm in place.
   useEffect(() => {

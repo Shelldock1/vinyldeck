@@ -98,9 +98,11 @@ npm run dev
 | Settings | `S` |
 | Art Ambient | `A` |
 | The Crate (your collection) | `C` |
+| Show keyboard shortcuts | `?` |
+| Close the topmost surface | `Escape` |
 | Quit | `Ctrl+Q` |
 
-Shortcuts can be turned off in Settings. Escape stays available and closes the topmost surface: context menu, then The Crate, then Settings, then fullscreen. Mini player accepts only `Space` and `Ctrl+Q`.
+Shortcuts can be turned off in Settings. Escape stays available and closes the topmost surface: keyboard shortcuts, then the context menu, then The Crate, then Settings, then fullscreen. Press `?` to open the same list as a glass cheat sheet; it is not available in Mini. Mini player accepts only `Space` and `Ctrl+Q`.
 
 ## Documentation
 

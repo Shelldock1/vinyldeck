@@ -43,7 +43,7 @@ export function validateSettings(value: unknown): PersistedSettings {
     : DEFAULT_SETTINGS.windowMode;
 
   return {
-    version: 2,
+    version: 3,
     theme,
     ambientMode,
     artAmbient: ambientMode !== "off",
@@ -67,6 +67,8 @@ export function validateSettings(value: unknown): PersistedSettings {
       raw.miniTransparentMode,
       DEFAULT_SETTINGS.miniTransparentMode,
     ),
+    playerSourceId: readSourceText(raw.playerSourceId),
+    playerSourceName: readSourceText(raw.playerSourceName),
   };
 }
 
@@ -164,6 +166,13 @@ function readIdleTimeout(value: unknown): number {
     return DEFAULT_SETTINGS.idleTimeoutSeconds;
   }
   return Math.min(5, Math.max(1, Math.round(value)));
+}
+
+const MAX_SOURCE_TEXT_LENGTH = 256;
+
+function readSourceText(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, MAX_SOURCE_TEXT_LENGTH);
 }
 
 export function sanitizeSettingsForTheme(

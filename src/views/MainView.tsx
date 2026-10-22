@@ -30,6 +30,11 @@ import {
   canUseSkipControls,
   canUseTransportControls,
 } from "../lib/playback/capabilities";
+import {
+  nextRepeatMode,
+  setRepeatMode,
+  setShuffle,
+} from "../lib/media/controls";
 
 import { AmbientLayer } from "../components/AmbientLayer";
 import { VaporGrid } from "../components/VaporGrid";
@@ -41,16 +46,19 @@ import { Controls } from "../components/Controls";
 import { ThemePicker } from "../components/ThemePicker";
 import { SourceBadge } from "../components/SourceBadge";
 import { Settings } from "../components/Settings";
+import type { SettingsTab } from "../components/Settings";
 import { AppContextMenu } from "../components/AppContextMenu";
 import type { AppContextMenuHandle } from "../components/AppContextMenu";
 import { Crate } from "../components/Crate";
 import { CrateStamp } from "../components/Crate/CrateStamp";
+import { ShortcutSheet } from "../components/ShortcutSheet";
 import { useCratePressing, useCurrentRecord } from "../hooks/useCrate";
 import { Kbd } from "../components/Kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../components/Tooltip";
 import { useColorExtraction } from "../hooks/useColorExtraction";
 import { useIdleMode } from "../hooks/useIdleMode";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { useWindowActivity } from "../hooks/useWindowActivity";
 import { quitApplication } from "../lib/appLifecycle";
 import { commitSettings } from "../lib/settings";
 import {
@@ -59,6 +67,17 @@ import {
   resetAmbientColors,
 } from "../lib/themes/applier";
 import { setNativeWindowMode } from "../lib/window";
+import {
+  cancelSleepTimer,
+  getSleepTimer,
+  startSleepTimer,
+  subscribeToSleepTimer,
+  subscribeToSleepTimerFired,
+} from "../lib/sleep";
+import type {
+  SleepTimerMode,
+  SleepTimerSnapshot,
+} from "../lib/sleep";
 
 const VINYL_SIZE = 420;
 const RING_SIZE = VINYL_SIZE + 28;
@@ -134,9 +153,14 @@ export function MainView() {
   );
   const devForceEmpty = useVinylDeckStore((s) => s.devForceEmpty);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("LOOK");
   const [needlePreview, setNeedlePreview] = useState<number | null>(null);
   const [isCrateOpen, setIsCrateOpen] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [sleepTimer, setSleepTimer] = useState<SleepTimerSnapshot | null>(null);
+  const [parkRequest, setParkRequest] = useState(0);
+  const { isSuspended } = useWindowActivity();
   const contextMenuRef = useRef<AppContextMenuHandle>(null);
   const effectivePlayback = devForceEmpty ? EMPTY_PLAYBACK : playback;
   const isPlaying = devForceEmpty ? false : rawIsPlaying;
@@ -146,13 +170,62 @@ export function MainView() {
     renderMode: "main",
     isSettingsOpen,
     onCloseSettings: () => setIsSettingsOpen(false),
-    onOpenSettings: () => setIsSettingsOpen(true),
+    onOpenSettings: () => {
+      setSettingsTab("LOOK");
+      setIsSettingsOpen(true);
+    },
     isCrateOpen,
     onCloseCrate: () => setIsCrateOpen(false),
     onToggleCrate: () => setIsCrateOpen((open) => !open),
     isContextMenuOpen,
     onCloseContextMenu: () => contextMenuRef.current?.close(),
+    isShortcutsOpen,
+    onOpenShortcuts: () => setIsShortcutsOpen(true),
+    onCloseShortcuts: () => setIsShortcutsOpen(false),
+    onToggleShortcuts: () => setIsShortcutsOpen((open) => !open),
   });
+
+  // Sleep timer: read the backend's ephemeral state, then follow its events.
+  // The fired event only parks the tonearm; Rust already sent the pause.
+  useEffect(() => {
+    let alive = true;
+    let unlistenChanged: (() => void) | undefined;
+    let unlistenFired: (() => void) | undefined;
+
+    void subscribeToSleepTimer((snapshot) => {
+      if (alive) setSleepTimer(snapshot);
+    })
+      .then((unlisten) => {
+        if (!alive) {
+          unlisten();
+          return;
+        }
+        unlistenChanged = unlisten;
+        // Snapshot after subscribing so no change can slip between the two.
+        void getSleepTimer().then((snapshot) => {
+          if (alive) setSleepTimer(snapshot);
+        });
+      })
+      .catch((error) => {
+        console.warn("[SleepTimer] Subscribe failed:", error);
+      });
+    void subscribeToSleepTimerFired(() => {
+      if (alive) setParkRequest((request) => request + 1);
+    })
+      .then((unlisten) => {
+        if (alive) unlistenFired = unlisten;
+        else unlisten();
+      })
+      .catch((error) => {
+        console.warn("[SleepTimer] Fired subscribe failed:", error);
+      });
+
+    return () => {
+      alive = false;
+      unlistenChanged?.();
+      unlistenFired?.();
+    };
+  }, []);
 
   // The Crate: press this album into the collection; wear follows play count.
   useCratePressing(effectivePlayback);
@@ -186,6 +259,14 @@ export function MainView() {
   function handlePrevious() {
     markTrackChangeIntent("previous");
     source?.previous();
+  }
+  function handleToggleShuffle() {
+    if (!effectivePlayback.canShuffle) return;
+    void setShuffle(!effectivePlayback.shuffle);
+  }
+  function handleToggleRepeat() {
+    if (!effectivePlayback.canRepeat) return;
+    void setRepeatMode(nextRepeatMode(effectivePlayback.repeatMode));
   }
 
   // Phase 8: Seek handler — delegates to source
@@ -221,6 +302,22 @@ export function MainView() {
       .then(applyCommittedSettings)
       .catch((error) => {
         console.warn("[ContextMenu] Art Ambient failed:", error);
+      });
+  }
+
+  function handleSleepStart(mode: SleepTimerMode, minutes?: number) {
+    void startSleepTimer(mode, minutes)
+      .then((snapshot) => setSleepTimer(snapshot))
+      .catch((error) => {
+        console.warn("[ContextMenu] Sleep timer failed:", error);
+      });
+  }
+
+  function handleSleepCancel() {
+    void cancelSleepTimer()
+      .then(() => setSleepTimer(null))
+      .catch((error) => {
+        console.warn("[ContextMenu] Sleep timer cancel failed:", error);
       });
   }
 
@@ -279,8 +376,38 @@ export function MainView() {
       {
         id: "settings",
         label: "Settings",
-        onSelect: () => setIsSettingsOpen(true),
+        onSelect: () => {
+          setSettingsTab("LOOK");
+          setIsSettingsOpen(true);
+        },
       },
+      {
+        id: "player-source",
+        label: "Player source\u2026",
+        onSelect: () => {
+          setSettingsTab("SOURCE");
+          setIsSettingsOpen(true);
+        },
+      },
+      {
+        id: "sleep-30",
+        label: "Sleep 30 min",
+        onSelect: () => handleSleepStart("minutes", 30),
+      },
+      {
+        id: "sleep-track",
+        label: "Sleep after track",
+        onSelect: () => handleSleepStart("endOfTrack"),
+      },
+      ...(sleepTimer
+        ? [
+            {
+              id: "sleep-cancel",
+              label: "Cancel sleep timer",
+              onSelect: handleSleepCancel,
+            },
+          ]
+        : []),
       {
         id: "quit",
         label: "Quit",
@@ -293,7 +420,13 @@ export function MainView() {
         },
       },
     ],
-    [effectivePlayback, isPlaying, settings.ambientMode, settings.windowMode],
+    [
+      effectivePlayback,
+      isPlaying,
+      settings.ambientMode,
+      settings.windowMode,
+      sleepTimer,
+    ],
   );
 
   // Idle UI style — shared across Controls / TrackInfo / ThemePicker
@@ -371,6 +504,7 @@ export function MainView() {
               <div style={{ position: "relative", zIndex: 2 }}>
                 <VinylRecord
                   isPlaying={isPlaying}
+                  suspended={isSuspended}
                   vinylWobble={settings.vinylWobble}
                   artworkDataUrl={artworkDataUrl}
                   trackTitle={effectivePlayback.track}
@@ -395,6 +529,7 @@ export function MainView() {
                 onPlay={handlePlay}
                 onPause={handlePause}
                 onScrubPreview={setNeedlePreview}
+                parkRequest={parkRequest}
               />
             </div>
           </TooltipTrigger>
@@ -421,6 +556,12 @@ export function MainView() {
             onPause={handlePause}
             onNext={handleNext}
             onPrevious={handlePrevious}
+            canRepeat={effectivePlayback.canRepeat}
+            canShuffle={effectivePlayback.canShuffle}
+            repeatMode={effectivePlayback.repeatMode}
+            shuffle={effectivePlayback.shuffle}
+            onToggleRepeat={handleToggleRepeat}
+            onToggleShuffle={handleToggleShuffle}
           />
         </div>
 
@@ -558,6 +699,7 @@ export function MainView() {
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
+              setSettingsTab("LOOK");
               setIsSettingsOpen(true);
             }}
           >
@@ -640,9 +782,16 @@ export function MainView() {
         focusKey={currentRecord.record?.key ?? null}
       />
 
+      {/* z:93 — Keyboard shortcuts cheat sheet (above Crate, below title bar) */}
+      <ShortcutSheet
+        open={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+      />
+
       {/* z:40 — Settings overlay */}
       <Settings
         open={isSettingsOpen}
+        initialTab={settingsTab}
         onClose={() => setIsSettingsOpen(false)}
       />
     </>

@@ -249,6 +249,41 @@ describe("playback store position-only resync", () => {
     expect(useVinylDeckStore.getState().playback.isPlaying).toBe(false);
   });
 
+  it("replaces playback when hardware repeat or shuffle mode changes", () => {
+    const fake = createFakeSource();
+    const snapshot = makeSnapshot("Seven");
+
+    useVinylDeckStore.getState().setSource(fake.source);
+    fake.emit(snapshot);
+    const before = useVinylDeckStore.getState().playback;
+
+    fake.emit({ ...snapshot, repeatMode: "all" });
+    expect(useVinylDeckStore.getState().playback).not.toBe(before);
+
+    const afterRepeat = useVinylDeckStore.getState().playback;
+    fake.emit({ ...snapshot, repeatMode: "all", shuffle: true });
+    expect(useVinylDeckStore.getState().playback).not.toBe(afterRepeat);
+  });
+
+  it("treats hardware mode changes as non-position resyncs", () => {
+    const fake = createFakeSource();
+    const snapshot = makeSnapshot("Eight");
+
+    useVinylDeckStore.getState().setSource(fake.source);
+    fake.emit(snapshot);
+    const before = useVinylDeckStore.getState().playback;
+
+    fake.emit({
+      ...snapshot,
+      position: 40,
+      canRepeat: true,
+      canShuffle: true,
+    });
+
+    expect(useVinylDeckStore.getState().playback).not.toBe(before);
+    expect(useVinylDeckStore.getState().lastKnownPosition).toBe(40);
+  });
+
   it("settles a pending seek from a position-only resync", () => {
     const fake = createFakeSource();
     const snapshot = makeSnapshot("Six");

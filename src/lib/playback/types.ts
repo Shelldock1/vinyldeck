@@ -2,6 +2,8 @@
 // Core abstraction interfaces. Visual Engine only knows PlaybackState.
 // From PRD-01 §6.1 — locked interface, do not modify.
 
+export type RepeatMode = "off" | "all" | "one";
+
 export interface PlaybackState {
   // Track metadata
   track: string;
@@ -20,6 +22,12 @@ export interface PlaybackState {
   canSeek: boolean;
   canSkip: boolean;
   canControl: boolean;
+  canRepeat: boolean;
+  canShuffle: boolean;
+
+  // Playback modes (backend-owned; never optimistically diverged)
+  repeatMode: RepeatMode;
+  shuffle: boolean;
 }
 
 export interface PlaybackSource {
@@ -33,6 +41,9 @@ export interface PlaybackSource {
   next(): void;
   previous(): void;
   seekTo(seconds: number): void;
+  // Hardware modes are optional: browser mocks can update local state.
+  setRepeatMode?(mode: RepeatMode): void;
+  setShuffle?(enabled: boolean): void;
 
   // Event subscriptions
   onStateChange(callback: (state: PlaybackState) => void): () => void; // returns unsubscribe fn

@@ -326,3 +326,280 @@
     inset -2px -2px 1px rgba(80,165,230,0.26),
     inset 0 -22px 48px rgba(80,160,230,0.14);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Hardware mode toggles — shuffle / repeat
+   Two brushed-metal lever switches flanking the transport pill.
+   Material is static gradient + hairline only: soft-render.css
+   removes every box-shadow, blur and blend, and this must still
+   read as a physical switch on Linux's CPU paint path.
+   ═══════════════════════════════════════════════════════════════ */
+.controls-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reserve both flanks whenever at least one lever exists, so the
+   transport pill stays optically centred if a source supports only
+   one mode. With neither capable, no slot is rendered at all. */
+.controls-cluster--modes {
+  display: grid;
+  grid-template-columns: 36px auto 36px;
+  align-items: center;
+  gap: 14px;
+}
+
+/* The wrapper exists so short windows can fold the levers into one
+   compact row under the pill; at normal heights it disappears and its
+   children become the grid's outer columns. */
+.controls-modes {
+  display: contents;
+}
+
+.controls-cluster--modes > .controls-modes > :first-child {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.controls-cluster--modes > .controls-pill {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.controls-cluster--modes > .controls-modes > :last-child {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Narrow (short) windows: the flanks would sit on the Crate stamp and
+   the window edge, so stack both levers as a centered row under the
+   transport pill instead. */
+@media (max-height: 660px) {
+  .controls-cluster--modes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .controls-cluster--modes > .controls-pill {
+    order: 1;
+  }
+
+  .controls-modes {
+    display: flex;
+    order: 2;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+  }
+
+  .controls-modes .controls-cluster__slot {
+    display: none;
+  }
+}
+
+/* 700x560 is the supported minimum. The main column already overflows
+   that height, so the two-row cluster would otherwise push its lever
+   row past the bottom edge; lift the whole cluster just enough to keep
+   the row fully visible. */
+@media (max-height: 600px) {
+  .controls-cluster--modes {
+    transform: translateY(-26px);
+  }
+}
+
+.controls-cluster__slot {
+  width: 36px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.hardware-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 92%, rgba(255, 255, 255, 0.18));
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 42%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.055) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(180deg, #343434, #161616 52%, #242424);
+  color: var(--ui-text-secondary);
+  opacity: 0.5;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    opacity 200ms ease,
+    border-color 220ms ease,
+    background 220ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.hardware-toggle:hover {
+  opacity: 0.82;
+}
+
+.hardware-toggle:active {
+  transform: scale(0.94);
+}
+
+.hardware-toggle:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 4px;
+  opacity: 1;
+}
+
+.hardware-toggle--on {
+  opacity: 0.96;
+  border-color: color-mix(in srgb, var(--ui-accent) 44%, var(--ui-border));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 42%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.065) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ui-accent) 20%, #343434),
+      color-mix(in srgb, var(--ui-accent) 10%, #111111) 52%,
+      color-mix(in srgb, var(--ui-accent) 14%, #242424)
+    );
+}
+
+/* Recessed rail the lever travels in. */
+.hardware-toggle__track {
+  position: absolute;
+  inset: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.46));
+  border: 1px solid rgba(0, 0, 0, 0.62);
+  pointer-events: none;
+}
+
+/* Machined lever cap. Travel is transform-only. */
+.hardware-toggle__lever {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  background: linear-gradient(180deg, #fafaf7, #cfcfca 44%, #8f8f8a 100%);
+  transform: translateX(0);
+  transition: transform 340ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+  pointer-events: none;
+}
+
+.hardware-toggle__lever::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 3px;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.hardware-toggle--on .hardware-toggle__lever {
+  transform: translateX(14px);
+}
+
+.hardware-toggle__glyph {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: rgba(18, 18, 18, 0.58);
+}
+
+.hardware-toggle__glyph svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Repeat-one badge: a tiny stamped numeral above the lever. */
+.hardware-toggle__badge {
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  min-width: 11px;
+  height: 11px;
+  padding: 0 2px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 7px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--ui-accent);
+  background: var(--bg, #000);
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 52%, transparent);
+  border-radius: 999px;
+  opacity: 0;
+  transform: scale(0.7);
+  transform-origin: 70% 70%;
+  transition:
+    opacity 160ms ease,
+    transform 260ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+  pointer-events: none;
+}
+
+.hardware-toggle--badged .hardware-toggle__badge {
+  opacity: 0.95;
+  transform: scale(1);
+}
+
+[data-theme="glass"] .hardware-toggle {
+  border-color: rgba(255, 255, 255, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 44%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.16) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(180deg, #8b9aaa, #4a5664 54%, #66727f);
+}
+
+[data-theme="glass"] .hardware-toggle--on {
+  border-color: color-mix(in srgb, var(--ui-accent) 55%, rgba(255, 255, 255, 0.7));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 44%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.18) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ui-accent) 34%, #9aa8b6),
+      color-mix(in srgb, var(--ui-accent) 30%, #45515e) 54%,
+      color-mix(in srgb, var(--ui-accent) 34%, #66727f)
+    );
+}
+
+[data-theme="glass"] .hardware-toggle__glyph {
+  color: rgba(12, 22, 32, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hardware-toggle,
+  .hardware-toggle__lever,
+  .hardware-toggle__badge {
+    transition-duration: 1ms;
+  }
+}

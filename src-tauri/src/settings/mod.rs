@@ -5,13 +5,15 @@ use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 
+use crate::media::authority::PlaybackAuthority;
 use crate::window::{self, MINI_LABEL};
 
 pub const SETTINGS_CHANGED_EVENT: &str = "settings-changed";
 
 const STORE_FILE: &str = "settings.json";
 const STORE_KEY: &str = "settings";
-const VERSION: u8 = 2;
+const VERSION: u8 = 3;
+const MAX_SOURCE_TEXT_CHARS: usize = 256;
 
 const SHELL_THEMES: &[&str] = &["noir", "glass"];
 const LEGACY_THEMES: &[&str] = &["noir", "glass", "aurora", "vapor", "paper"];
@@ -39,6 +41,11 @@ pub struct PersistedSettings {
     /// Mini-only: applies a native Windows Acrylic blur-through effect on the
     /// Mini window and lets its own background go fully transparent.
     pub mini_transparent_mode: bool,
+    /// Stable media-session id the deck follows. Empty means Auto.
+    pub player_source_id: String,
+    /// Display fallback for the selected session (kept even when it is not
+    /// currently running).
+    pub player_source_name: String,
 }
 
 impl Default for PersistedSettings {
@@ -59,6 +66,8 @@ impl Default for PersistedSettings {
             start_with_windows: false,
             window_mode: "main".to_string(),
             mini_transparent_mode: false,
+            player_source_id: String::new(),
+            player_source_name: String::new(),
         }
     }
 }
@@ -80,6 +89,8 @@ pub struct SettingsPatch {
     pub start_with_windows: Option<bool>,
     pub window_mode: Option<String>,
     pub mini_transparent_mode: Option<bool>,
+    pub player_source_id: Option<String>,
+    pub player_source_name: Option<String>,
 }
 
 pub struct SettingsState {
@@ -108,6 +119,7 @@ pub async fn initialize_settings(app: AppHandle) -> Result<(), String> {
         eprintln!("[VinylDeck settings] Failed to restore autostart: {error}");
     }
     app.state::<SettingsState>().replace(settings.clone()).await;
+    sync_authority_selection(&app, &settings);
     save_settings(&app, &settings)?;
     Ok(())
 }
@@ -131,6 +143,7 @@ pub async fn cmd_settings_update(
         sync_start_with_windows(&app, settings.start_with_windows)?;
     }
     state.replace(settings.clone()).await;
+    sync_authority_selection(&app, &settings);
     save_settings(&app, &settings)?;
     sync_mini_transparency(&app, &settings, &current);
     emit_settings_changed(&app, &settings);
@@ -146,6 +159,7 @@ pub async fn cmd_settings_reset(
     let settings = PersistedSettings::default();
     sync_start_with_windows(&app, settings.start_with_windows)?;
     state.replace(settings.clone()).await;
+    sync_authority_selection(&app, &settings);
     save_settings(&app, &settings)?;
     sync_mini_transparency(&app, &settings, &current);
     emit_settings_changed(&app, &settings);
@@ -166,6 +180,14 @@ fn save_settings(app: &AppHandle, settings: &PersistedSettings) -> Result<(), St
 
 fn emit_settings_changed(app: &AppHandle, settings: &PersistedSettings) {
     let _ = app.emit(SETTINGS_CHANGED_EVENT, settings);
+}
+
+/// Mirrors the persisted player choice into the playback authority so the
+/// poller and transport commands never read settings directly.
+fn sync_authority_selection(app: &AppHandle, settings: &PersistedSettings) {
+    if let Some(authority) = app.try_state::<PlaybackAuthority>() {
+        authority.set_selection(Some(settings.player_source_id.clone()));
+    }
 }
 
 /// Keeps the live Mini window's Acrylic effect in sync with the persisted
@@ -226,6 +248,8 @@ fn validate_settings(value: Option<Value>) -> PersistedSettings {
             raw.get("miniTransparentMode"),
             defaults.mini_transparent_mode,
         ),
+        player_source_id: read_source_text(raw.get("playerSourceId")),
+        player_source_name: read_source_text(raw.get("playerSourceName")),
     }
 }
 
@@ -283,6 +307,12 @@ fn apply_patch(current: &PersistedSettings, patch: SettingsPatch) -> PersistedSe
     }
     if let Some(value) = patch.mini_transparent_mode {
         next.mini_transparent_mode = value;
+    }
+    if let Some(value) = patch.player_source_id {
+        next.player_source_id = normalize_source_text(&value);
+    }
+    if let Some(value) = patch.player_source_name {
+        next.player_source_name = normalize_source_text(&value);
     }
 
     next.art_ambient = next.ambient_mode != "off";
@@ -344,6 +374,17 @@ fn read_idle_timeout(value: Option<&Value>) -> u8 {
         .unwrap_or(PersistedSettings::default().idle_timeout_seconds)
 }
 
+fn read_source_text(value: Option<&Value>) -> String {
+    value
+        .and_then(Value::as_str)
+        .map(normalize_source_text)
+        .unwrap_or_default()
+}
+
+fn normalize_source_text(value: &str) -> String {
+    value.trim().chars().take(MAX_SOURCE_TEXT_CHARS).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -381,7 +422,9 @@ mod tests {
         assert!(!settings.start_with_windows);
         assert_eq!(settings.window_mode, "main");
         assert!(!settings.mini_transparent_mode);
-        assert_eq!(settings.version, 2);
+        assert_eq!(settings.player_source_id, "");
+        assert_eq!(settings.player_source_name, "");
+        assert_eq!(settings.version, 3);
     }
 
     #[test]
@@ -513,5 +556,54 @@ mod tests {
         );
 
         assert!(settings.mini_transparent_mode);
+    }
+
+    #[test]
+    fn validates_and_trims_player_source_fields() {
+        let settings = validate_settings(Some(json!({
+            "playerSourceId": "  org.mpris.MediaPlayer2.spotify  ",
+            "playerSourceName": "  Spotify  ",
+            "version": 2
+        })));
+
+        assert_eq!(settings.player_source_id, "org.mpris.MediaPlayer2.spotify");
+        assert_eq!(settings.player_source_name, "Spotify");
+        assert_eq!(settings.version, 3);
+
+        let long = "x".repeat(400);
+        let clamped = validate_settings(Some(json!({
+            "playerSourceId": long,
+            "playerSourceName": "  ",
+        })));
+        assert_eq!(clamped.player_source_id.chars().count(), 256);
+        assert_eq!(clamped.player_source_name, "");
+    }
+
+    #[test]
+    fn patch_player_source_and_auto_reset() {
+        let current = PersistedSettings::default();
+        let selected = apply_patch(
+            &current,
+            SettingsPatch {
+                player_source_id: Some("  Spotify.exe  ".to_string()),
+                player_source_name: Some("  Spotify  ".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+
+        assert_eq!(selected.player_source_id, "Spotify.exe");
+        assert_eq!(selected.player_source_name, "Spotify");
+
+        let auto = apply_patch(
+            &selected,
+            SettingsPatch {
+                player_source_id: Some("".to_string()),
+                player_source_name: Some("".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+
+        assert_eq!(auto.player_source_id, "");
+        assert_eq!(auto.player_source_name, "");
     }
 }

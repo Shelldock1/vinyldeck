@@ -20,12 +20,57 @@ const VALID_SNAPSHOT: BackendMediaSnapshot = {
   canSeek: true,
   canSkip: true,
   canControl: true,
+  canRepeat: true,
+  canShuffle: true,
+  repeatMode: "one",
+  shuffle: true,
 };
 
 describe("TauriSource backend snapshot adapter", () => {
   it("accepts the Rust MediaSnapshot camelCase contract", () => {
     expect(isBackendMediaSnapshot(VALID_SNAPSHOT)).toBe(true);
     expect(mapBackendMediaSnapshot(VALID_SNAPSHOT)).toEqual(VALID_SNAPSHOT);
+  });
+
+  it("defaults hardware mode fields absent from older payloads", () => {
+    const legacySnapshot = {
+      track: "Legacy",
+      artist: "Old Backend",
+      album: "Version",
+      artworkDataUrl: null,
+      duration: 0,
+      position: 0,
+      isPlaying: false,
+      sourceName: "Spotify",
+      sourceId: "Spotify.exe",
+      canSeek: false,
+      canSkip: false,
+      canControl: false,
+    };
+
+    expect(isBackendMediaSnapshot(legacySnapshot)).toBe(true);
+    expect(mapBackendMediaSnapshot(legacySnapshot)).toMatchObject({
+      canRepeat: false,
+      canShuffle: false,
+      repeatMode: "off",
+      shuffle: false,
+    });
+  });
+
+  it("normalizes unknown repeat modes to off", () => {
+    expect(
+      mapBackendMediaSnapshot({
+        ...VALID_SNAPSHOT,
+        repeatMode: "sometimes",
+      }).repeatMode,
+    ).toBe("off");
+  });
+
+  it("rejects malformed hardware mode fields", () => {
+    expect(isBackendMediaSnapshot({ ...VALID_SNAPSHOT, canRepeat: "yes" })).toBe(false);
+    expect(isBackendMediaSnapshot({ ...VALID_SNAPSHOT, canShuffle: 1 })).toBe(false);
+    expect(isBackendMediaSnapshot({ ...VALID_SNAPSHOT, shuffle: "on" })).toBe(false);
+    expect(isBackendMediaSnapshot({ ...VALID_SNAPSHOT, repeatMode: 2 })).toBe(false);
   });
 
   it("maps null snapshots to empty playback", () => {

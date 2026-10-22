@@ -7,7 +7,7 @@ import {
 } from "./useKeyboardShortcuts";
 
 const key = (code: string, ctrlKey = false) => ({ code, ctrlKey });
-const README_KEYS = ["ArrowLeft", "ArrowRight", "KeyF", "KeyM", "KeyT", "KeyS", "KeyA", "KeyC", "Escape"];
+const README_KEYS = ["ArrowLeft", "ArrowRight", "KeyF", "KeyM", "KeyT", "KeyS", "KeyA", "KeyC", "Slash", "Escape"];
 
 describe("isShortcutAllowedInMode", () => {
   it("allows only Space and Ctrl+Q in mini", () => {
@@ -42,6 +42,7 @@ describe("isGlobalShortcutSuppressed", () => {
       "KeyT",
       "KeyA",
       "KeyC",
+      "Slash",
     ]) {
       expect(isGlobalShortcutSuppressed(true, key(code))).toBe(true);
     }
@@ -61,9 +62,10 @@ describe("isGlobalShortcutSuppressed", () => {
 
 describe("resolveEscapeTarget", () => {
   it("closes only the topmost open surface", () => {
-    const all = { isContextMenuOpen: true, isCrateOpen: true, isSettingsOpen: true, isFullscreen: true };
-    expect(resolveEscapeTarget(all)).toBe("contextMenu");
-    expect(resolveEscapeTarget({ ...all, isContextMenuOpen: false })).toBe("crate");
+    const all = { isShortcutsOpen: true, isContextMenuOpen: true, isCrateOpen: true, isSettingsOpen: true, isFullscreen: true };
+    expect(resolveEscapeTarget(all)).toBe("shortcuts");
+    expect(resolveEscapeTarget({ ...all, isShortcutsOpen: false })).toBe("contextMenu");
+    expect(resolveEscapeTarget({ ...all, isShortcutsOpen: false, isContextMenuOpen: false })).toBe("crate");
     expect(resolveEscapeTarget({ isSettingsOpen: true, isFullscreen: true })).toBe("settings");
     expect(resolveEscapeTarget({ isFullscreen: true })).toBe("fullscreen");
   });

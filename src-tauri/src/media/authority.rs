@@ -12,6 +12,7 @@ use super::model::MediaSnapshot;
 
 pub struct PlaybackAuthority {
     current: RwLock<Option<MediaSnapshot>>,
+    selection: RwLock<Option<String>>,
     notifier: watch::Sender<Option<MediaSnapshot>>,
 }
 
@@ -20,8 +21,38 @@ impl PlaybackAuthority {
         let (notifier, _) = watch::channel(None);
         Self {
             current: RwLock::new(None),
+            selection: RwLock::new(None),
             notifier,
         }
+    }
+
+    /// Persisted player choice. `None` means Auto (follow the last playing
+    /// session, falling back to the current/paused one).
+    pub fn selection(&self) -> Option<String> {
+        self.selection
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+    }
+
+    pub fn set_selection(&self, selection: Option<String>) {
+        let selection = selection
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty());
+        *self
+            .selection
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = selection;
+    }
+
+    /// Source used by transport commands: the explicit choice when set,
+    /// otherwise the source of the current snapshot.
+    pub fn selected_source_id(&self) -> Option<String> {
+        self.selection().or_else(|| {
+            self.snapshot()
+                .map(|snapshot| snapshot.source_id)
+                .filter(|source_id| !source_id.is_empty())
+        })
     }
 
     /// Last real snapshot, or `None` when no media session is active.
@@ -93,6 +124,39 @@ mod tests {
         let authority = PlaybackAuthority::new();
         authority.update(Some(snapshot("A", 1.0)));
         assert!(!authority.update(Some(snapshot("A", 1.0))));
+    }
+
+    #[test]
+    fn selection_defaults_to_auto_and_normalizes_blank_ids() {
+        let authority = PlaybackAuthority::new();
+        assert_eq!(authority.selection(), None);
+
+        authority.set_selection(Some("  org.mpris.MediaPlayer2.spotify  ".to_string()));
+        assert_eq!(
+            authority.selection(),
+            Some("org.mpris.MediaPlayer2.spotify".to_string())
+        );
+
+        authority.set_selection(Some("   ".to_string()));
+        assert_eq!(authority.selection(), None);
+    }
+
+    #[test]
+    fn transport_source_prefers_selection_then_snapshot() {
+        let authority = PlaybackAuthority::new();
+        authority.update(Some(MediaSnapshot {
+            source_id: "chrome".to_string(),
+            ..snapshot("A", 1.0)
+        }));
+
+        assert_eq!(authority.selected_source_id(), Some("chrome".to_string()));
+
+        authority.set_selection(Some("spotify".to_string()));
+        assert_eq!(authority.selected_source_id(), Some("spotify".to_string()));
+
+        authority.set_selection(None);
+        authority.update(None);
+        assert_eq!(authority.selected_source_id(), None);
     }
 
     #[test]

@@ -11,6 +11,17 @@ import {
 import type { ThemeId } from "../../lib/themes/applier";
 import { selectSettings, useVinylDeckStore } from "../../lib/playback/store";
 import { commitSettings } from "../../lib/settings";
+import { listMediaPlayers } from "../../lib/media/players";
+import type { MediaPlayer } from "../../lib/media/players";
+import {
+  SLEEP_MINUTE_OPTIONS,
+  cancelSleepTimer,
+  formatSleepTimerStatus,
+  getSleepTimer,
+  startSleepTimer,
+  subscribeToSleepTimer,
+} from "../../lib/sleep";
+import type { SleepTimerMode, SleepTimerSnapshot } from "../../lib/sleep";
 import { setNativeAlwaysOnTop, setNativeWindowMode } from "../../lib/window";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { WindowMode } from "../../lib/window/types";
@@ -19,10 +30,11 @@ import "./Settings.css";
 interface SettingsProps {
   open: boolean;
   onClose: () => void;
+  initialTab?: SettingsTab;
 }
 
-const SETTINGS_TABS = ["LOOK", "VINYL", "DISPLAY", "OTHER", "ABOUT"] as const;
-type SettingsTab = (typeof SETTINGS_TABS)[number];
+const SETTINGS_TABS = ["LOOK", "VINYL", "DISPLAY", "SOURCE", "OTHER", "ABOUT"] as const;
+export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 const SHELL_CARD_META: Record<
   ThemeId,
@@ -42,8 +54,12 @@ const SHELL_CARD_META: Record<
   },
 };
 
-export function Settings({ open, onClose }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("LOOK");
+export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) {
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const [players, setPlayers] = useState<MediaPlayer[]>([]);
+  const [sleepTimer, setSleepTimer] = useState<SleepTimerSnapshot | null>(null);
+  const [sleepNow, setSleepNow] = useState(() => Date.now());
+  const [sleepError, setSleepError] = useState<string | null>(null);
   const settings = useVinylDeckStore(selectSettings);
   const currentTheme = useVinylDeckStore((s) => s.theme);
   const ambientMode = useVinylDeckStore((s) => s.ambientMode);
@@ -53,6 +69,72 @@ export function Settings({ open, onClose }: SettingsProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   // Escape is owned by useKeyboardShortcuts (topmost surface wins).
   useFocusTrap(overlayRef, open);
+
+  useEffect(() => {
+    if (open) setActiveTab(initialTab);
+  }, [open, initialTab]);
+
+  // Refresh the session list on open and while Settings stays open.
+  useEffect(() => {
+    if (!open) return;
+
+    let alive = true;
+    const refresh = () => {
+      void listMediaPlayers().then((next) => {
+        if (alive) setPlayers(next);
+      });
+    };
+
+    refresh();
+    const timer = window.setInterval(refresh, 5_000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [open]);
+
+  // Load the active sleep timer on open and follow backend changes.
+  useEffect(() => {
+    if (!open) return;
+
+    let alive = true;
+    let unlisten: (() => void) | undefined;
+    setSleepNow(Date.now());
+    setSleepError(null);
+
+    void subscribeToSleepTimer((snapshot) => {
+      if (!alive) return;
+      setSleepTimer(snapshot);
+      setSleepNow(Date.now());
+    })
+      .then((nextUnlisten) => {
+        if (!alive) {
+          nextUnlisten();
+          return;
+        }
+        unlisten = nextUnlisten;
+        // Snapshot after subscribing so no change can slip between the two.
+        void getSleepTimer().then((snapshot) => {
+          if (alive) setSleepTimer(snapshot);
+        });
+      })
+      .catch((error) => {
+        console.warn("[Settings] Sleep timer subscribe failed:", error);
+      });
+
+    return () => {
+      alive = false;
+      unlisten?.();
+    };
+  }, [open]);
+
+  // Remaining minutes only need a coarse refresh; events carry real changes.
+  useEffect(() => {
+    if (!open || sleepTimer?.mode !== "minutes") return;
+
+    const timer = window.setInterval(() => setSleepNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, [open, sleepTimer]);
 
   function applyCommittedSettings(nextSettings: typeof settings) {
     hydrateSettings(nextSettings);
@@ -103,6 +185,46 @@ export function Settings({ open, onClose }: SettingsProps) {
         console.warn("[Window] Always-on-top change failed:", error);
       });
   }
+
+  function handlePlayerSelect(player: MediaPlayer | null) {
+    updateBackendSettings({
+      playerSourceId: player?.id ?? "",
+      playerSourceName: player?.name ?? "",
+    });
+  }
+
+  function handleSleepStart(mode: SleepTimerMode, minutes?: number) {
+    setSleepError(null);
+    void startSleepTimer(mode, minutes)
+      .then((snapshot) => {
+        setSleepTimer(snapshot);
+        setSleepNow(Date.now());
+      })
+      .catch((error) => {
+        console.warn("[Settings] Sleep timer failed:", error);
+        setSleepError(
+          error instanceof Error ? error.message : String(error),
+        );
+      });
+  }
+
+  function handleSleepCancel() {
+    setSleepError(null);
+    void cancelSleepTimer()
+      .then(() => setSleepTimer(null))
+      .catch((error) => {
+        console.warn("[Settings] Sleep timer cancel failed:", error);
+        setSleepError(
+          error instanceof Error ? error.message : String(error),
+        );
+      });
+  }
+
+  const selectedPlayer = players.find(
+    (player) => player.id === settings.playerSourceId,
+  );
+  const savedPlayerMissing =
+    settings.playerSourceId.length > 0 && !selectedPlayer;
 
   return (
     <AnimatePresence>
@@ -394,6 +516,52 @@ export function Settings({ open, onClose }: SettingsProps) {
                     />
                   </div>
                 </div>
+              ) : activeTab === "SOURCE" ? (
+                <div className="settings-source">
+                  <div className="settings-look__header">
+                    <h3>Player Source</h3>
+                    <p>
+                      Choose which media session the deck follows. Auto
+                      follows whichever app starts or resumes playback.
+                    </p>
+                  </div>
+                  <div
+                    className="settings-source__list"
+                    role="radiogroup"
+                    aria-label="Media player source"
+                  >
+                    <SourcePlayerRow
+                      label="Auto (most recently playing)"
+                      note="Follows the session that starts or resumes"
+                      selected={settings.playerSourceId.length === 0}
+                      onSelect={() => handlePlayerSelect(null)}
+                    />
+                    {savedPlayerMissing ? (
+                      <SourcePlayerRow
+                        label={settings.playerSourceName || settings.playerSourceId}
+                        note="Saved source - not running"
+                        selected
+                        missing
+                        onSelect={() => {}}
+                      />
+                    ) : null}
+                    {players.map((player) => (
+                      <SourcePlayerRow
+                        key={player.id}
+                        label={player.name}
+                        note={player.id}
+                        selected={player.id === settings.playerSourceId}
+                        playing={player.isPlaying}
+                        onSelect={() => handlePlayerSelect(player)}
+                      />
+                    ))}
+                  </div>
+                  {players.length === 0 ? (
+                    <p className="settings-source__empty">
+                      No media sessions found
+                    </p>
+                  ) : null}
+                </div>
               ) : activeTab === "OTHER" ? (
                 <div className="settings-toggle-list">
                   <SettingsToggle
@@ -427,6 +595,74 @@ export function Settings({ open, onClose }: SettingsProps) {
                       })
                     }
                   />
+
+                  <div className="settings-sleep">
+                    <div className="settings-look__header">
+                      <h3>Sleep Timer</h3>
+                      <p>
+                        Pause playback after a set time, or when the current
+                        track ends and the needle returns to rest.
+                      </p>
+                    </div>
+                    <div
+                      className="settings-sleep__options"
+                      role="group"
+                      aria-label="Sleep timer"
+                    >
+                      <button
+                        type="button"
+                        className={`settings-sleep__option${sleepTimer ? "" : " settings-sleep__option--active"}`}
+                        aria-pressed={!sleepTimer}
+                        onClick={handleSleepCancel}
+                      >
+                        Off
+                      </button>
+                      {SLEEP_MINUTE_OPTIONS.map((minutes) => (
+                        <button
+                          key={minutes}
+                          type="button"
+                          className="settings-sleep__option"
+                          aria-pressed={false}
+                          onClick={() => handleSleepStart("minutes", minutes)}
+                        >
+                          {minutes} min
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className={`settings-sleep__option${sleepTimer?.mode === "endOfTrack" ? " settings-sleep__option--active" : ""}`}
+                        aria-pressed={sleepTimer?.mode === "endOfTrack"}
+                        onClick={() => handleSleepStart("endOfTrack")}
+                      >
+                        End of track
+                      </button>
+                    </div>
+                    <div
+                      className={`settings-sleep__status${sleepTimer ? " settings-sleep__status--active" : ""}${sleepError ? " settings-sleep__status--error" : ""}`}
+                      aria-live="polite"
+                    >
+                      <span
+                        className="settings-sleep__dot"
+                        aria-hidden="true"
+                      />
+                      <span className="settings-sleep__status-label">
+                        {sleepTimer ? "Active" : "Sleep"}
+                      </span>
+                      <span className="settings-sleep__status-value">
+                        {sleepError ??
+                          formatSleepTimerStatus(sleepTimer, sleepNow)}
+                      </span>
+                      {sleepTimer ? (
+                        <button
+                          type="button"
+                          className="settings-sleep__cancel"
+                          onClick={handleSleepCancel}
+                        >
+                          Cancel
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               ) : activeTab === "ABOUT" ? (
                 <div className="settings-about">
@@ -468,6 +704,52 @@ export function Settings({ open, onClose }: SettingsProps) {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+interface SourcePlayerRowProps {
+  label: string;
+  note: string;
+  selected: boolean;
+  playing?: boolean;
+  missing?: boolean;
+  onSelect: () => void;
+}
+
+function SourcePlayerRow({
+  label,
+  note,
+  selected,
+  playing = false,
+  missing = false,
+  onSelect,
+}: SourcePlayerRowProps) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      className={`settings-source__row${selected ? " settings-source__row--active" : ""}${missing ? " settings-source__row--missing" : ""}`}
+      disabled={missing}
+      onClick={onSelect}
+    >
+      <span className="settings-source__radio" aria-hidden="true" />
+      <span className="settings-source__copy">
+        <span className="settings-source__name">{label}</span>
+        <span className="settings-source__note">{note}</span>
+      </span>
+      {playing ? (
+        <span className="settings-source__playing">
+          <span className="settings-source__dot" aria-hidden="true" />
+          Playing
+        </span>
+      ) : null}
+      {missing ? (
+        <span className="settings-source__playing settings-source__playing--idle">
+          Not running
+        </span>
+      ) : null}
+    </button>
   );
 }
 

@@ -4,38 +4,56 @@
 
 use anyhow::{anyhow, Result};
 
-use super::model::MediaSnapshot;
+use super::model::{MediaPlayer, MediaSnapshot};
 
 const UNSUPPORTED: &str = "Media controls are not supported on this platform";
 
-pub(crate) async fn current_media_snapshot_with_metadata() -> Result<Option<MediaSnapshot>> {
+pub(crate) async fn list_players() -> Result<Vec<MediaPlayer>> {
+    Ok(Vec::new())
+}
+
+pub(crate) async fn current_media_snapshot_with_metadata(
+    _selected: Option<String>,
+    _fallback: Option<String>,
+) -> Result<Option<MediaSnapshot>> {
     Ok(None)
 }
 
-pub(crate) async fn current_media_snapshot_with_artwork() -> Result<Option<MediaSnapshot>> {
+pub(crate) async fn current_media_snapshot_with_artwork(
+    _selected: Option<String>,
+    _fallback: Option<String>,
+) -> Result<Option<MediaSnapshot>> {
     Ok(None)
 }
 
-pub(crate) async fn play() -> Result<()> {
+pub(crate) async fn play(_source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }
 
-pub(crate) async fn pause() -> Result<()> {
+pub(crate) async fn pause(_source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }
 
-pub(crate) async fn toggle_play_pause() -> Result<()> {
+pub(crate) async fn toggle_play_pause(_source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }
 
-pub(crate) async fn next() -> Result<()> {
+pub(crate) async fn next(_source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }
 
-pub(crate) async fn previous() -> Result<()> {
+pub(crate) async fn previous(_source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }
 
-pub(crate) async fn seek(_position_seconds: f64) -> Result<()> {
+pub(crate) async fn seek(_position_seconds: f64, _source_id: Option<&str>) -> Result<()> {
+    Err(anyhow!(UNSUPPORTED))
+}
+
+pub(crate) async fn set_repeat(_mode: &str, _source_id: Option<&str>) -> Result<()> {
+    Err(anyhow!(UNSUPPORTED))
+}
+
+pub(crate) async fn set_shuffle(_enabled: bool, _source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }

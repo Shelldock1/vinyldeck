@@ -5,12 +5,16 @@ pub(crate) struct SmtcSessionMetadata {
     pub source_name: String,
 }
 
+use super::model::{
+    order_players, repeat_mode_from_smtc_code, smtc_auto_repeat_code, MediaPlayer, MediaSnapshot,
+};
+
 const TICKS_PER_SECOND: f64 = 10_000_000.0;
 const WINDOWS_UNIX_EPOCH_DIFF_SECONDS: u64 = 11_644_473_600;
 
 #[allow(dead_code)]
 pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSessionMetadata>> {
-    Ok(current_media_snapshot_with_metadata()
+    Ok(current_media_snapshot_with_metadata(None, None)
         .await?
         .map(|snapshot| SmtcSessionMetadata {
             source_id: snapshot.source_id,
@@ -20,8 +24,10 @@ pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSess
 
 #[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_metadata(
+    selected: Option<&str>,
+    fallback: Option<&str>,
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    let Some(session) = current_session().await? else {
+    let Some(session) = current_session(selected, fallback).await? else {
         return Ok(None);
     };
 
@@ -46,8 +52,10 @@ pub(crate) async fn current_media_snapshot_with_metadata(
 
 #[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_artwork(
+    selected: Option<&str>,
+    fallback: Option<&str>,
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    let Some(session) = current_session().await? else {
+    let Some(session) = current_session(selected, fallback).await? else {
         return Ok(None);
     };
 
@@ -76,30 +84,163 @@ pub(crate) async fn current_media_snapshot_with_artwork(
 
 #[allow(dead_code)]
 pub(crate) async fn current_lightweight_snapshot(
+    selected: Option<&str>,
+    fallback: Option<&str>,
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    let Some(session) = current_session().await? else {
+    let Some(session) = current_session(selected, fallback).await? else {
         return Ok(None);
     };
 
     Ok(Some(current_lightweight_snapshot_from_session(&session)))
 }
 
-async fn current_session(
-) -> anyhow::Result<Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession>> {
+/// Enumerates every SMTC session for the Settings picker.
+#[allow(dead_code)]
+pub(crate) async fn list_players() -> anyhow::Result<Vec<MediaPlayer>> {
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
 
     let manager = GlobalSystemMediaTransportControlsSessionManager::RequestAsync()?.await?;
-    match manager.GetCurrentSession() {
-        Ok(session) => Ok(Some(session)),
-        Err(_) => Ok(None),
+    let sessions = manager.GetSessions()?;
+    let mut players = Vec::new();
+
+    for index in 0..sessions.Size()? {
+        let Ok(session) = sessions.GetAt(index) else {
+            continue;
+        };
+        let source_id = session
+            .SourceAppUserModelId()
+            .map(|value| value.to_string())
+            .unwrap_or_default();
+        if source_id.is_empty() {
+            continue;
+        }
+        players.push(MediaPlayer {
+            name: super::model::friendly_source_name(&source_id),
+            id: source_id,
+            is_playing: session_is_playing(&session),
+        });
     }
+
+    Ok(order_players(players))
 }
 
-async fn current_session_for_command(
-) -> anyhow::Result<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
-    current_session()
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("No active media session"))
+async fn manager(
+) -> anyhow::Result<windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager> {
+    use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
+
+    Ok(GlobalSystemMediaTransportControlsSessionManager::RequestAsync()?.await?)
+}
+
+async fn current_session(
+    selected: Option<&str>,
+    fallback: Option<&str>,
+) -> anyhow::Result<Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession>> {
+    let manager = manager().await?;
+
+    if let Some(selected) = selected.map(str::trim).filter(|value| !value.is_empty()) {
+        if let Some(session) = session_by_source_id(&manager, selected) {
+            return Ok(Some(session));
+        }
+    }
+
+    if let Some(session) = first_playing_session(&manager) {
+        return Ok(Some(session));
+    }
+
+    if let Some(fallback) = fallback.map(str::trim).filter(|value| !value.is_empty()) {
+        if let Some(session) = session_by_source_id(&manager, fallback) {
+            return Ok(Some(session));
+        }
+    }
+
+    if let Ok(session) = manager.GetCurrentSession() {
+        return Ok(Some(session));
+    }
+
+    Ok(first_paused_session(&manager))
+}
+
+fn session_source_id(
+    session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+) -> String {
+    session
+        .SourceAppUserModelId()
+        .map(|value| value.to_string())
+        .unwrap_or_default()
+}
+
+fn session_is_playing(
+    session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+) -> bool {
+    use windows::Media::Control::GlobalSystemMediaTransportControlsSessionPlaybackStatus;
+
+    session
+        .GetPlaybackInfo()
+        .ok()
+        .and_then(|info| info.PlaybackStatus().ok())
+        .is_some_and(|status| {
+            status == GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing
+        })
+}
+
+fn session_is_paused(
+    session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+) -> bool {
+    use windows::Media::Control::GlobalSystemMediaTransportControlsSessionPlaybackStatus;
+
+    session
+        .GetPlaybackInfo()
+        .ok()
+        .and_then(|info| info.PlaybackStatus().ok())
+        .is_some_and(|status| {
+            status == GlobalSystemMediaTransportControlsSessionPlaybackStatus::Paused
+        })
+}
+
+fn session_by_source_id(
+    manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
+    source_id: &str,
+) -> Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
+    let sessions = manager.GetSessions().ok()?;
+    for index in 0..sessions.Size().ok()? {
+        let Ok(session) = sessions.GetAt(index) else {
+            continue;
+        };
+        if session_source_id(&session) == source_id {
+            return Some(session);
+        }
+    }
+    None
+}
+
+fn first_playing_session(
+    manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
+) -> Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
+    let sessions = manager.GetSessions().ok()?;
+    for index in 0..sessions.Size().ok()? {
+        let Ok(session) = sessions.GetAt(index) else {
+            continue;
+        };
+        if session_is_playing(&session) {
+            return Some(session);
+        }
+    }
+    None
+}
+
+fn first_paused_session(
+    manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
+) -> Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
+    let sessions = manager.GetSessions().ok()?;
+    for index in 0..sessions.Size().ok()? {
+        let Ok(session) = sessions.GetAt(index) else {
+            continue;
+        };
+        if session_is_paused(&session) {
+            return Some(session);
+        }
+    }
+    None
 }
 
 fn current_lightweight_snapshot_from_session(
@@ -132,6 +273,19 @@ fn current_lightweight_snapshot_from_session(
             snapshot.can_control = controls.IsPlayEnabled().unwrap_or(false)
                 || controls.IsPauseEnabled().unwrap_or(false);
         }
+
+        // Playback info is the SMTC capability surface for these two modes:
+        // a readable repeat/shuffle value means the session exposes it.
+        if let Ok(repeat_mode) = playback_info.AutoRepeatMode() {
+            snapshot.can_repeat = true;
+            if let Ok(mode) = repeat_mode.Value() {
+                snapshot.repeat_mode = repeat_mode_from_smtc_code(mode.0).to_string();
+            }
+        }
+        if let Ok(shuffle) = playback_info.IsShuffleActive() {
+            snapshot.can_shuffle = true;
+            snapshot.shuffle = shuffle.Value().unwrap_or(false);
+        }
     }
 
     if let Ok(timeline) = session.GetTimelineProperties() {
@@ -159,20 +313,20 @@ fn current_lightweight_snapshot_from_session(
 }
 
 #[allow(dead_code)]
-pub(crate) async fn play() -> anyhow::Result<()> {
-    let session = current_session_for_command().await?;
+pub(crate) async fn play(source_id: Option<&str>) -> anyhow::Result<()> {
+    let session = current_session_for_command(source_id).await?;
     require_command_accepted(session.TryPlayAsync()?.await?, "play")
 }
 
 #[allow(dead_code)]
-pub(crate) async fn pause() -> anyhow::Result<()> {
-    let session = current_session_for_command().await?;
+pub(crate) async fn pause(source_id: Option<&str>) -> anyhow::Result<()> {
+    let session = current_session_for_command(source_id).await?;
     require_command_accepted(session.TryPauseAsync()?.await?, "pause")
 }
 
 #[allow(dead_code)]
-pub(crate) async fn toggle_play_pause() -> anyhow::Result<()> {
-    let session = current_session_for_command().await?;
+pub(crate) async fn toggle_play_pause(source_id: Option<&str>) -> anyhow::Result<()> {
+    let session = current_session_for_command(source_id).await?;
     require_command_accepted(
         session.TryTogglePlayPauseAsync()?.await?,
         "toggle play/pause",
@@ -180,25 +334,57 @@ pub(crate) async fn toggle_play_pause() -> anyhow::Result<()> {
 }
 
 #[allow(dead_code)]
-pub(crate) async fn next() -> anyhow::Result<()> {
-    let session = current_session_for_command().await?;
+pub(crate) async fn next(source_id: Option<&str>) -> anyhow::Result<()> {
+    let session = current_session_for_command(source_id).await?;
     require_command_accepted(session.TrySkipNextAsync()?.await?, "next")
 }
 
 #[allow(dead_code)]
-pub(crate) async fn previous() -> anyhow::Result<()> {
-    let session = current_session_for_command().await?;
+pub(crate) async fn previous(source_id: Option<&str>) -> anyhow::Result<()> {
+    let session = current_session_for_command(source_id).await?;
     require_command_accepted(session.TrySkipPreviousAsync()?.await?, "previous")
 }
 
 #[allow(dead_code)]
-pub(crate) async fn seek(position_seconds: f64) -> anyhow::Result<()> {
+pub(crate) async fn seek(position_seconds: f64, source_id: Option<&str>) -> anyhow::Result<()> {
     let ticks = seconds_to_ticks(position_seconds)?;
-    let session = current_session_for_command().await?;
+    let session = current_session_for_command(source_id).await?;
     require_command_accepted(
         session.TryChangePlaybackPositionAsync(ticks)?.await?,
         "seek",
     )
+}
+
+#[allow(dead_code)]
+pub(crate) async fn set_repeat(mode: &str, source_id: Option<&str>) -> anyhow::Result<()> {
+    use windows::Media::MediaPlaybackAutoRepeatMode;
+
+    let code = smtc_auto_repeat_code(mode)
+        .ok_or_else(|| anyhow::anyhow!("invalid repeat mode: {mode}; expected off, all, or one"))?;
+    let session = current_session_for_command(source_id).await?;
+    require_command_accepted(
+        session
+            .TryChangeAutoRepeatModeAsync(MediaPlaybackAutoRepeatMode(code))?
+            .await?,
+        "repeat",
+    )
+}
+
+#[allow(dead_code)]
+pub(crate) async fn set_shuffle(enabled: bool, source_id: Option<&str>) -> anyhow::Result<()> {
+    let session = current_session_for_command(source_id).await?;
+    require_command_accepted(
+        session.TryChangeShuffleActiveAsync(enabled)?.await?,
+        "shuffle",
+    )
+}
+
+async fn current_session_for_command(
+    source_id: Option<&str>,
+) -> anyhow::Result<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
+    current_session(source_id, None)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("No active media session"))
 }
 
 fn require_command_accepted(accepted: bool, action: &'static str) -> anyhow::Result<()> {

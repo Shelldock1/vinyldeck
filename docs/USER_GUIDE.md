@@ -27,10 +27,15 @@ The main view combines:
 - track title, artist, and album
 - progress ring and seek support when the source allows it
 - play/pause, previous, and next controls
+- shuffle and repeat levers when the source supports them
 - shell picker
 - source badge
 
 Controls automatically disable when the active media source does not support that action.
+
+### Shuffle and Repeat
+
+Two small metal levers sit beside the transport pill. Shuffle flips on and off. Repeat cycles Off -> All -> One -> Off, and the tiny `1` engraved on the lever marks repeat-one. If the active source does not report shuffle or repeat support, its lever is hidden. The same states are available from the tray menu while VinylDeck is minimized to the tray.
 
 ### Needle Drop
 
@@ -86,10 +91,11 @@ Shortcuts work while a VinylDeck window is focused.
 | Settings | `S` |
 | Toggle Art Ambient | `A` |
 | The Crate | `C` |
+| Show keyboard shortcuts | `?` |
 | Close the topmost menu, crate, or settings / leave fullscreen | `Escape` |
 | Quit | `Ctrl+Q` |
 
-Disable shortcuts in Settings -> Other. Escape remains available for closing menus, the crate, Settings, and leaving fullscreen.
+Disable shortcuts in Settings -> Other. Escape remains available for closing the cheat sheet, menus, the crate, Settings, and leaving fullscreen. Press `?` in Main or Fullscreen to open the cheat sheet; Mini ignores it. Escape closes the topmost surface in this order: keyboard shortcuts, context menu, The Crate, Settings, fullscreen.
 
 The progress ring around the record is a keyboard slider: `Tab` to it, then use `Left` / `Right` (with or without `Shift`) to seek 5 seconds, or `Home` to restart the track. While Settings or the crate is open, `Tab` stays inside it and focus returns to where you were when it closes.
 
@@ -108,12 +114,19 @@ Settings persist across app windows.
 | Look | Noir and Glass visual shells |
 | Vinyl | Vinyl wobble, film grain, album-art ambient lighting |
 | Display | Main/fullscreen/mini, always-on-top, lean-back, cursor behavior, idle timeout, Mini Transparency |
-| Other | Keyboard Shortcuts, Quit To Tray, Start With Windows |
+| Source | Which media session VinylDeck follows (Auto, or a specific app) |
+| Other | Keyboard Shortcuts, Quit To Tray, Start With Windows, Sleep Timer |
 | About | App identity and build information |
+
+When more than one media app is open, Settings -> Source chooses which session the deck follows. Auto (the default) follows whichever app is playing, then the last one that played, and the choice is remembered between launches.
 
 ## Context Menu
 
-Right-click the player to open the VinylDeck command menu. It includes playback actions, Art Ambient, fullscreen, mini player, Settings, and Quit. Mini mode keeps only actions that make sense for the compact window.
+Right-click the player to open the VinylDeck command menu. It includes playback actions, Sleep 30 min, Sleep after track, Cancel sleep timer (while one is running), Art Ambient, fullscreen, mini player, Settings, Player source, and Quit. Mini mode keeps only actions that make sense for the compact window.
+
+## Sleep Timer
+
+Settings -> Other offers a Sleep Timer keypad: Off, 15, 30, 45, or 60 minutes, or End of track. The same 30-minute and end-of-track choices are in the right-click menu, with Cancel sleep timer while one is active. The timer runs in the backend, so switching between Main, Mini, and the tray does not reset it. When it fires, playback pauses and the tonearm lifts and parks on its rest. Timers are ephemeral and do not survive a restart.
 
 ## Visual Behavior
 

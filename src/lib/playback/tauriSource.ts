@@ -1,7 +1,7 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { EMPTY_PLAYBACK } from "./store";
-import type { PlaybackSource, PlaybackState } from "./types";
+import type { PlaybackSource, PlaybackState, RepeatMode } from "./types";
 
 const MEDIA_SNAPSHOT_EVENT = "media-state-changed";
 const MEDIA_POSITION_EVENT = "media-position-changed";
@@ -21,6 +21,12 @@ export interface BackendMediaSnapshot {
   canSeek: boolean;
   canSkip: boolean;
   canControl: boolean;
+  // Added after the first backend snapshot contract; older payloads omit
+  // these, so validation accepts absence and mapping supplies defaults.
+  canRepeat?: boolean;
+  canShuffle?: boolean;
+  repeatMode?: string;
+  shuffle?: boolean;
 }
 
 type MediaCommand =
@@ -43,6 +49,14 @@ function isNullableString(value: unknown): value is string | null {
   return typeof value === "string" || value === null;
 }
 
+function isOptionalBoolean(value: unknown): boolean {
+  return value === undefined || typeof value === "boolean";
+}
+
+export function normalizeRepeatMode(value: unknown): RepeatMode {
+  return value === "all" || value === "one" ? value : "off";
+}
+
 export function isBackendMediaSnapshot(value: unknown): value is BackendMediaSnapshot {
   if (!isRecord(value)) return false;
 
@@ -58,7 +72,11 @@ export function isBackendMediaSnapshot(value: unknown): value is BackendMediaSna
     typeof value.sourceId === "string" &&
     typeof value.canSeek === "boolean" &&
     typeof value.canSkip === "boolean" &&
-    typeof value.canControl === "boolean"
+    typeof value.canControl === "boolean" &&
+    isOptionalBoolean(value.canRepeat) &&
+    isOptionalBoolean(value.canShuffle) &&
+    isOptionalBoolean(value.shuffle) &&
+    (value.repeatMode === undefined || typeof value.repeatMode === "string")
   );
 }
 
@@ -88,6 +106,10 @@ export function mapBackendMediaSnapshot(
     canSeek: snapshot.canSeek,
     canSkip: snapshot.canSkip,
     canControl: snapshot.canControl,
+    canRepeat: snapshot.canRepeat === true,
+    canShuffle: snapshot.canShuffle === true,
+    repeatMode: normalizeRepeatMode(snapshot.repeatMode),
+    shuffle: snapshot.shuffle === true,
   };
 }
 

@@ -52,7 +52,14 @@ pub fn start_smtc_poller(app: AppHandle) {
 }
 
 async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<()> {
-    let snapshot = poller.snapshot_for_poll().await?;
+    let selection = app
+        .try_state::<PlaybackAuthority>()
+        .and_then(|authority| authority.selection());
+    let fallback = poller.last_playing_source_id.clone();
+    let snapshot = poller
+        .snapshot_for_poll(selection.as_deref(), fallback.as_deref())
+        .await?;
+    poller.observe_playing_source(snapshot.as_ref());
     if let Some(authority) = app.try_state::<PlaybackAuthority>() {
         authority.update(snapshot.clone());
     }
@@ -83,6 +90,7 @@ struct SmtcPoller {
     last_emitted_key: Option<MediaSemanticKey>,
     last_emit_at: Option<Instant>,
     had_session: bool,
+    last_playing_source_id: Option<String>,
     listens: ListenTracker,
 }
 
@@ -112,9 +120,16 @@ impl SmtcPoller {
         None
     }
 
-    async fn snapshot_for_poll(&mut self) -> anyhow::Result<Option<MediaSnapshot>> {
-        let Some(metadata_snapshot) =
-            super::platform::current_media_snapshot_with_metadata().await?
+    async fn snapshot_for_poll(
+        &mut self,
+        selected: Option<&str>,
+        fallback: Option<&str>,
+    ) -> anyhow::Result<Option<MediaSnapshot>> {
+        let Some(metadata_snapshot) = super::platform::current_media_snapshot_with_metadata(
+            selected.map(str::to_string),
+            fallback.map(str::to_string),
+        )
+        .await?
         else {
             self.cached_media = None;
             return Ok(None);
@@ -132,7 +147,11 @@ impl SmtcPoller {
             )));
         }
 
-        let Some(full_snapshot) = super::platform::current_media_snapshot_with_artwork().await?
+        let Some(full_snapshot) = super::platform::current_media_snapshot_with_artwork(
+            selected.map(str::to_string),
+            fallback.map(str::to_string),
+        )
+        .await?
         else {
             self.cached_media = None;
             return Ok(Some(metadata_snapshot));
@@ -145,6 +164,14 @@ impl SmtcPoller {
 
         self.cached_media = None;
         Ok(Some(metadata_snapshot))
+    }
+
+    fn observe_playing_source(&mut self, snapshot: Option<&MediaSnapshot>) {
+        if let Some(snapshot) =
+            snapshot.filter(|snapshot| snapshot.is_playing && !snapshot.source_id.is_empty())
+        {
+            self.last_playing_source_id = Some(snapshot.source_id.clone());
+        }
     }
 
     fn session_ended_snapshot(&mut self) -> Option<MediaSnapshot> {
@@ -457,6 +484,7 @@ mod tests {
             })),
             last_emitted_key: None,
             last_emit_at: None,
+            last_playing_source_id: None,
             listens: Default::default(),
         };
 
@@ -528,6 +556,33 @@ mod tests {
             poller.handle_polled_snapshot(None, now + Duration::from_secs(4)),
             None
         );
+    }
+
+    #[test]
+    fn remembers_last_playing_source_only_while_playing() {
+        let mut poller = SmtcPoller::default();
+        let playing = MediaSnapshot {
+            source_id: "spotify".to_string(),
+            is_playing: true,
+            ..MediaSnapshot::default()
+        };
+        let paused = MediaSnapshot {
+            source_id: "chrome".to_string(),
+            is_playing: false,
+            ..MediaSnapshot::default()
+        };
+
+        poller.observe_playing_source(Some(&paused));
+        assert_eq!(poller.last_playing_source_id, None);
+
+        poller.observe_playing_source(Some(&playing));
+        assert_eq!(poller.last_playing_source_id.as_deref(), Some("spotify"));
+
+        poller.observe_playing_source(Some(&paused));
+        assert_eq!(poller.last_playing_source_id.as_deref(), Some("spotify"));
+
+        poller.observe_playing_source(None);
+        assert_eq!(poller.last_playing_source_id.as_deref(), Some("spotify"));
     }
 
     #[test]

@@ -62,10 +62,9 @@
 /* ── Header ─────────────────────────────────────────────────── */
 .crate-panel__header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 24px;
-  padding: 22px 24px 16px;
-  border-bottom: 0.5px solid var(--surface-border, var(--ui-border));
+  padding: 20px 24px 10px;
 }
 
 .crate-panel__heading {
@@ -79,7 +78,6 @@
 .crate-panel__eyebrow,
 .crate-panel__stats dt,
 .crate-sort__tab,
-.crate-sort__hint,
 .crate-card__rarity,
 .crate-detail__number,
 .crate-detail__rarity,
@@ -103,30 +101,57 @@
   letter-spacing: -0.02em;
 }
 
+/* ── Stats strip: tracked metadata, no cards ────────────────── */
 .crate-panel__stats {
   display: flex;
-  gap: 22px;
+  align-items: baseline;
+  gap: 18px;
+  min-width: 0;
   margin: 0;
+  padding: 0 24px 12px;
+  overflow: hidden;
+  border-bottom: 0.5px solid var(--surface-border, var(--ui-border));
 }
 
-.crate-panel__stats div {
+.crate-panel__stat {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.crate-panel__stat + .crate-panel__stat {
+  padding-left: 18px;
+  border-left: 0.5px solid
+    color-mix(in srgb, var(--surface-border, var(--ui-border)) 72%, transparent);
 }
 
 .crate-panel__stats dt {
-  font-size: 9px;
+  flex-shrink: 0;
+  font-size: 10px;
   color: var(--ui-text-secondary);
 }
 
 .crate-panel__stats dd {
+  min-width: 0;
   margin: 0;
-  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
-  font-size: 20px;
+  overflow: hidden;
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 10.5px;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ui-text-primary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.crate-panel__stat--album {
+  flex: 1 1 150px;
+}
+
+.crate-panel__stat--album dd {
+  letter-spacing: 0.02em;
 }
 
 .crate-panel__close {
@@ -141,13 +166,20 @@
   background: transparent;
   border: 0.5px solid var(--surface-border, var(--ui-border));
   cursor: pointer;
-  transition: color 160ms ease, background 160ms ease;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
 .crate-panel__close:hover,
 .crate-panel__close:focus-visible {
   color: var(--ui-text-primary);
   background: var(--ui-control-hover, rgba(255, 255, 255, 0.06));
+}
+
+.crate-panel__close:active {
+  transform: scale(0.92);
 }
 
 /* ── Body: shelf + record card ──────────────────────────────── */
@@ -164,25 +196,128 @@
   flex-direction: column;
 }
 
-.crate-sort {
+/* ── Toolbar: search + sort, one compact row ────────────────── */
+.crate-toolbar {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
   padding: 12px 20px 4px;
 }
 
+.crate-search {
+  position: relative;
+  flex: 0 1 236px;
+  min-width: 132px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  border-radius: 999px;
+  /* Flat tint + hairline: reads as glass without a blur dependency. */
+  background: color-mix(in srgb, var(--ui-text-primary) 4%, transparent);
+  border: 0.5px solid color-mix(in srgb, var(--ui-text-primary) 15%, transparent);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.crate-search:hover {
+  background: color-mix(in srgb, var(--ui-text-primary) 5%, transparent);
+  border-color: color-mix(in srgb, var(--ui-text-primary) 23%, transparent);
+}
+
+.crate-search:focus-within {
+  background: color-mix(in srgb, var(--ui-text-primary) 6%, transparent);
+  border-color: color-mix(in srgb, var(--ui-accent) 58%, transparent);
+}
+
+.crate-search__icon {
+  position: absolute;
+  left: 10px;
+  color: var(--ui-text-secondary);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.crate-search input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 29px 0 30px;
+  border: 0;
+  outline: none;
+  color: var(--ui-text-primary);
+  background: transparent;
+  font-family: var(--font-body, "Inter"), system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.crate-search input::placeholder {
+  color: var(--ui-text-secondary);
+  opacity: 0.78;
+}
+
+.crate-search__clear {
+  position: absolute;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.crate-search__clear:hover,
+.crate-search__clear:focus-visible {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.08));
+}
+
+.crate-search__clear:active {
+  transform: scale(0.9);
+}
+
+.crate-sort {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ui-text-primary) 3%, transparent);
+  border: 0.5px solid color-mix(in srgb, var(--ui-text-primary) 10%, transparent);
+}
+
 .crate-sort__tab {
-  padding: 6px 10px;
+  padding: 5px 8px;
   border: 0;
   border-radius: 999px;
-  font-size: 9.5px;
+  font-size: 9px;
   color: var(--ui-text-secondary);
   background: transparent;
   cursor: pointer;
-  transition: color 160ms ease, background 160ms ease;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
 .crate-sort__tab:hover {
   color: var(--ui-text-primary);
+}
+
+.crate-sort__tab:active {
+  transform: scale(0.94);
 }
 
 .crate-sort__tab--active {
@@ -190,17 +325,73 @@
   background: var(--ui-control-hover, rgba(255, 255, 255, 0.08));
 }
 
-/* First-open hint: ghosted metadata, never competes with the shelf. */
-.crate-sort__hint {
-  align-self: center;
-  margin-left: auto;
+.crate-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
   overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
-  text-overflow: ellipsis;
-  min-width: 0;
-  font-size: 9px;
+  border: 0;
+}
+
+/* Search with no hits: distinct from an empty collection. */
+.crate-panel__no-match {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.crate-panel__no-match-title {
+  margin: 0;
+  font-family: var(--font-display, "Sora"), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.crate-panel__no-match-copy {
+  max-width: 280px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--ui-text-secondary);
-  pointer-events: none;
+}
+
+.crate-panel__no-match-clear {
+  height: 30px;
+  margin-top: 4px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--ui-text-secondary);
+  background: transparent;
+  border: 0.5px solid color-mix(in srgb, var(--ui-text-primary) 16%, transparent);
+  font-family: var(--font-mono, "JetBrains Mono"), monospace;
+  font-size: 9px;
+  letter-spacing: var(--mono-tracking, 0.12em);
+  text-transform: uppercase;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.crate-panel__no-match-clear:hover,
+.crate-panel__no-match-clear:focus-visible {
+  color: var(--ui-text-primary);
+  background: var(--ui-control-hover, rgba(255, 255, 255, 0.06));
+}
+
+.crate-panel__no-match-clear:active {
+  transform: scale(0.95);
 }
 
 .crate-grid {
@@ -760,9 +951,24 @@
   .crate-card__sleeve {
     transition: none;
   }
+
+  .crate-panel__close,
+  .crate-search,
+  .crate-search__clear,
+  .crate-sort__tab,
+  .crate-panel__no-match-clear {
+    transition: none;
+  }
+
+  .crate-panel__close:active,
+  .crate-search__clear:active,
+  .crate-sort__tab:active,
+  .crate-panel__no-match-clear:active {
+    transform: none;
+  }
 }
 
-/* Narrow windows: card stacks under the shelf. */
+/* Narrow windows: card stacks under the shelf; stats stay legible. */
 @media (max-width: 720px) {
   .crate-panel__body {
     grid-template-columns: 1fr;
@@ -774,6 +980,26 @@
   }
 
   .crate-panel__stats {
-    display: none;
+    gap: 12px;
+  }
+
+  .crate-panel__stat + .crate-panel__stat {
+    padding-left: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .crate-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .crate-search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .crate-sort {
+    width: 100%;
+    justify-content: space-between;
   }
 }

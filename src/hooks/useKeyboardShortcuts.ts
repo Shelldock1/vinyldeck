@@ -10,6 +10,7 @@ import {
   canUseTransportControls,
 } from "../lib/playback/capabilities";
 import { useVinylDeckStore } from "../lib/playback/store";
+import { isShortcutCheatSheetKey } from "../lib/shortcuts";
 import { setNativeWindowMode } from "../lib/window";
 import type { RenderWindowMode, WindowMode } from "../lib/window/types";
 
@@ -26,6 +27,10 @@ interface KeyboardShortcutOptions {
   onToggleCrate?: () => void;
   isContextMenuOpen?: boolean;
   onCloseContextMenu?: () => void;
+  isShortcutsOpen?: boolean;
+  onCloseShortcuts?: () => void;
+  onOpenShortcuts?: () => void;
+  onToggleShortcuts?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -38,6 +43,10 @@ export function useKeyboardShortcuts({
   onToggleCrate,
   isContextMenuOpen = false,
   onCloseContextMenu,
+  isShortcutsOpen = false,
+  onCloseShortcuts,
+  onOpenShortcuts,
+  onToggleShortcuts,
 }: KeyboardShortcutOptions) {
   const optionsRef = useRef({
     renderMode,
@@ -49,6 +58,10 @@ export function useKeyboardShortcuts({
     onToggleCrate,
     isContextMenuOpen,
     onCloseContextMenu,
+    isShortcutsOpen,
+    onCloseShortcuts,
+    onOpenShortcuts,
+    onToggleShortcuts,
   });
 
   useEffect(() => {
@@ -62,6 +75,10 @@ export function useKeyboardShortcuts({
       onToggleCrate,
       isContextMenuOpen,
       onCloseContextMenu,
+      isShortcutsOpen,
+      onCloseShortcuts,
+      onOpenShortcuts,
+      onToggleShortcuts,
     };
   }, [
     renderMode,
@@ -73,6 +90,10 @@ export function useKeyboardShortcuts({
     onToggleCrate,
     isContextMenuOpen,
     onCloseContextMenu,
+    isShortcutsOpen,
+    onCloseShortcuts,
+    onOpenShortcuts,
+    onToggleShortcuts,
   ]);
 
   useEffect(() => {
@@ -97,6 +118,27 @@ export function useKeyboardShortcuts({
         void quitApplication().catch((error) => {
           console.warn("[Shortcuts] Quit failed:", error);
         });
+        return;
+      }
+
+      // "?" toggles the cheat sheet, but never stacks it over another surface.
+      if (isShortcutCheatSheetKey(event)) {
+        if (optionsRef.current.isShortcutsOpen) {
+          event.preventDefault();
+          optionsRef.current.onCloseShortcuts?.();
+          return;
+        }
+        if (
+          optionsRef.current.isSettingsOpen ||
+          optionsRef.current.isCrateOpen
+        ) {
+          return;
+        }
+        event.preventDefault();
+        (
+          optionsRef.current.onOpenShortcuts ??
+          optionsRef.current.onToggleShortcuts
+        )?.();
         return;
       }
 
@@ -200,17 +242,25 @@ function shouldIgnoreShortcut(event: KeyboardEvent): boolean {
   return editable instanceof HTMLElement && editable.isContentEditable;
 }
 
-export type EscapeTarget = "contextMenu" | "crate" | "settings" | "fullscreen";
+export type EscapeTarget =
+  | "shortcuts"
+  | "contextMenu"
+  | "crate"
+  | "settings"
+  | "fullscreen";
 
 /** The single Escape policy: the topmost open surface closes first. */
 export function resolveEscapeTarget(state: {
+  isShortcutsOpen?: boolean;
   isContextMenuOpen?: boolean;
   isCrateOpen?: boolean;
   isSettingsOpen?: boolean;
   isFullscreen?: boolean;
 }): EscapeTarget | null {
+  // The cheat sheet is the topmost surface and closes before anything under it.
+  if (state.isShortcutsOpen) return "shortcuts";
   if (state.isContextMenuOpen) return "contextMenu";
-  // Crate (z:80) stacks above Settings (z:40).
+  // Crate (z:92) stacks above Settings (z:40).
   if (state.isCrateOpen) return "crate";
   if (state.isSettingsOpen) return "settings";
   if (state.isFullscreen) return "fullscreen";
@@ -231,6 +281,9 @@ function handleEscape(
 
   event.preventDefault();
   switch (target) {
+    case "shortcuts":
+      options.onCloseShortcuts?.();
+      break;
     case "contextMenu":
       options.onCloseContextMenu?.();
       break;
