@@ -75,3 +75,9 @@ bgs-1.md
 *.tsbuildinfo
 # Local Netlify folder
 .netlify
+
+# Machine-local build environment (absolute sysroot paths)
+/.cargo/config.toml
+/src-tauri/.cargo/config.toml
+/linux-env.sh
+/run-tauri.sh

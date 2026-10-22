@@ -8,7 +8,6 @@ pub(crate) struct SmtcSessionMetadata {
 const TICKS_PER_SECOND: f64 = 10_000_000.0;
 const WINDOWS_UNIX_EPOCH_DIFF_SECONDS: u64 = 11_644_473_600;
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSessionMetadata>> {
     Ok(current_media_snapshot_with_metadata()
@@ -19,7 +18,6 @@ pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSess
         }))
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_metadata(
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
@@ -46,7 +44,6 @@ pub(crate) async fn current_media_snapshot_with_metadata(
     Ok(Some(snapshot))
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_artwork(
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
@@ -77,7 +74,6 @@ pub(crate) async fn current_media_snapshot_with_artwork(
     Ok(Some(snapshot))
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn current_lightweight_snapshot(
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
@@ -88,7 +84,6 @@ pub(crate) async fn current_lightweight_snapshot(
     Ok(Some(current_lightweight_snapshot_from_session(&session)))
 }
 
-#[cfg(windows)]
 async fn current_session(
 ) -> anyhow::Result<Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession>> {
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
@@ -100,7 +95,6 @@ async fn current_session(
     }
 }
 
-#[cfg(windows)]
 async fn current_session_for_command(
 ) -> anyhow::Result<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
     current_session()
@@ -108,7 +102,6 @@ async fn current_session_for_command(
         .ok_or_else(|| anyhow::anyhow!("No active media session"))
 }
 
-#[cfg(windows)]
 fn current_lightweight_snapshot_from_session(
     session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
 ) -> super::model::MediaSnapshot {
@@ -165,21 +158,18 @@ fn current_lightweight_snapshot_from_session(
     snapshot
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn play() -> anyhow::Result<()> {
     let session = current_session_for_command().await?;
     require_command_accepted(session.TryPlayAsync()?.await?, "play")
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn pause() -> anyhow::Result<()> {
     let session = current_session_for_command().await?;
     require_command_accepted(session.TryPauseAsync()?.await?, "pause")
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn toggle_play_pause() -> anyhow::Result<()> {
     let session = current_session_for_command().await?;
@@ -189,21 +179,18 @@ pub(crate) async fn toggle_play_pause() -> anyhow::Result<()> {
     )
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn next() -> anyhow::Result<()> {
     let session = current_session_for_command().await?;
     require_command_accepted(session.TrySkipNextAsync()?.await?, "next")
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn previous() -> anyhow::Result<()> {
     let session = current_session_for_command().await?;
     require_command_accepted(session.TrySkipPreviousAsync()?.await?, "previous")
 }
 
-#[cfg(windows)]
 #[allow(dead_code)]
 pub(crate) async fn seek(position_seconds: f64) -> anyhow::Result<()> {
     let ticks = seconds_to_ticks(position_seconds)?;
@@ -279,81 +266,6 @@ fn clamp_position(position: f64, duration_seconds: f64) -> f64 {
     }
 
     position
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSessionMetadata>> {
-    Ok(None)
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn current_media_snapshot_with_metadata(
-) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    Ok(None)
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn current_media_snapshot_with_artwork(
-) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    Ok(None)
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn current_lightweight_snapshot(
-) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    Ok(None)
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn play() -> anyhow::Result<()> {
-    Err(anyhow::anyhow!(
-        "SMTC commands are only available on Windows"
-    ))
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn pause() -> anyhow::Result<()> {
-    Err(anyhow::anyhow!(
-        "SMTC commands are only available on Windows"
-    ))
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn toggle_play_pause() -> anyhow::Result<()> {
-    Err(anyhow::anyhow!(
-        "SMTC commands are only available on Windows"
-    ))
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn next() -> anyhow::Result<()> {
-    Err(anyhow::anyhow!(
-        "SMTC commands are only available on Windows"
-    ))
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn previous() -> anyhow::Result<()> {
-    Err(anyhow::anyhow!(
-        "SMTC commands are only available on Windows"
-    ))
-}
-
-#[cfg(not(windows))]
-#[allow(dead_code)]
-pub(crate) async fn seek(_position_seconds: f64) -> anyhow::Result<()> {
-    Err(anyhow::anyhow!(
-        "SMTC commands are only available on Windows"
-    ))
 }
 
 #[cfg(test)]

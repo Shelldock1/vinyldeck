@@ -13,7 +13,7 @@
 // Phase 7: useIdleMode — 3s inactivity → TrackInfo/Controls/ThemePicker fade out
 // Phase 8: ProgressRing receives onSeek for scrub-to-seek
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   EMPTY_PLAYBACK,
   useVinylDeckStore,
@@ -42,6 +42,7 @@ import { ThemePicker } from "../components/ThemePicker";
 import { SourceBadge } from "../components/SourceBadge";
 import { Settings } from "../components/Settings";
 import { AppContextMenu } from "../components/AppContextMenu";
+import type { AppContextMenuHandle } from "../components/AppContextMenu";
 import { Crate } from "../components/Crate";
 import { CrateStamp } from "../components/Crate/CrateStamp";
 import { useCratePressing, useCurrentRecord } from "../hooks/useCrate";
@@ -135,6 +136,8 @@ export function MainView() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [needlePreview, setNeedlePreview] = useState<number | null>(null);
   const [isCrateOpen, setIsCrateOpen] = useState(false);
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const contextMenuRef = useRef<AppContextMenuHandle>(null);
   const effectivePlayback = devForceEmpty ? EMPTY_PLAYBACK : playback;
   const isPlaying = devForceEmpty ? false : rawIsPlaying;
   const artworkDataUrl = devForceEmpty ? null : rawArtworkDataUrl;
@@ -147,6 +150,8 @@ export function MainView() {
     isCrateOpen,
     onCloseCrate: () => setIsCrateOpen(false),
     onToggleCrate: () => setIsCrateOpen((open) => !open),
+    isContextMenuOpen,
+    onCloseContextMenu: () => contextMenuRef.current?.close(),
   });
 
   // The Crate: press this album into the collection; wear follows play count.
@@ -166,17 +171,6 @@ export function MainView() {
     hideCursor: settings.cursorHide,
     timeoutMs: settings.idleTimeoutSeconds * 1000,
   });
-
-  useEffect(() => {
-    if (!isSettingsOpen) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setIsSettingsOpen(false);
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isSettingsOpen]);
 
   // Controls handlers — delegate to source
   function handlePlay() {
@@ -447,7 +441,11 @@ export function MainView() {
         />
       </div>
 
-      <AppContextMenu actions={contextMenuActions} />
+      <AppContextMenu
+        ref={contextMenuRef}
+        actions={contextMenuActions}
+        onOpenChange={setIsContextMenuOpen}
+      />
 
       {/* z:90 — Crate trigger */}
       <Tooltip side="bottom">

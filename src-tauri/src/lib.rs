@@ -22,6 +22,11 @@ pub fn run() {
     apply_linux_window_theme();
 
     tauri::Builder::default()
+        // Must be registered first: a second launch hands off to this
+        // instance and exits before any other plugin initializes.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            window::focus_existing(app);
+        }))
         .manage(media::authority::PlaybackAuthority::new())
         .manage(settings::SettingsState::new())
         .manage(collection::CollectionState::new())

@@ -75,6 +75,7 @@ jobs:
 
       - run: npm ci
       - run: cargo check --manifest-path ${{ env.MANIFEST }} --all-targets
+      - run: cargo test --manifest-path ${{ env.MANIFEST }}
       - run: npm run tauri build -- --debug --no-bundle
 
   landing:

@@ -215,3 +215,49 @@ describe("playback store scrub and track-change runtime state", () => {
     expect(useVinylDeckStore.getState().trackChangeDirection).toBe("unknown");
   });
 });
+
+describe("playback store position-only resync", () => {
+  it("updates sync position without replacing the playback object", () => {
+    const fake = createFakeSource();
+    const snapshot = makeSnapshot("Four");
+
+    useVinylDeckStore.getState().setSource(fake.source);
+    fake.emit(snapshot);
+    const before = useVinylDeckStore.getState().playback;
+    const playbackListener = vi.fn();
+    const unsubscribe = useVinylDeckStore.subscribe((s) => s.playback, playbackListener);
+
+    fake.emit({ ...snapshot, position: 30 });
+    unsubscribe();
+
+    expect(useVinylDeckStore.getState().playback).toBe(before);
+    expect(useVinylDeckStore.getState().lastKnownPosition).toBe(30);
+    expect(playbackListener).not.toHaveBeenCalled();
+  });
+
+  it("still replaces playback when anything besides position changes", () => {
+    const fake = createFakeSource();
+    const snapshot = makeSnapshot("Five");
+
+    useVinylDeckStore.getState().setSource(fake.source);
+    fake.emit(snapshot);
+    const before = useVinylDeckStore.getState().playback;
+
+    fake.emit({ ...snapshot, position: 31, isPlaying: false });
+
+    expect(useVinylDeckStore.getState().playback).not.toBe(before);
+    expect(useVinylDeckStore.getState().playback.isPlaying).toBe(false);
+  });
+
+  it("settles a pending seek from a position-only resync", () => {
+    const fake = createFakeSource();
+    const snapshot = makeSnapshot("Six");
+
+    useVinylDeckStore.getState().setSource(fake.source);
+    fake.emit(snapshot);
+    useVinylDeckStore.getState().beginPendingSeek(60);
+    fake.emit({ ...snapshot, position: 60.5 });
+
+    expect(useVinylDeckStore.getState().pendingSeekPosition).toBeNull();
+  });
+});

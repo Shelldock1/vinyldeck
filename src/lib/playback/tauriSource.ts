@@ -4,6 +4,7 @@ import { EMPTY_PLAYBACK } from "./store";
 import type { PlaybackSource, PlaybackState } from "./types";
 
 const MEDIA_SNAPSHOT_EVENT = "media-state-changed";
+const MEDIA_POSITION_EVENT = "media-position-changed";
 const SMTC_SNAPSHOT_COMMAND = "cmd_smtc_snapshot";
 const COMMAND_ERROR_LOG_INTERVAL_MS = 5_000;
 
@@ -61,6 +62,14 @@ export function isBackendMediaSnapshot(value: unknown): value is BackendMediaSna
   );
 }
 
+export interface BackendMediaPosition {
+  position: number;
+}
+
+export function isBackendMediaPosition(value: unknown): value is BackendMediaPosition {
+  return isRecord(value) && isNonNegativeFiniteNumber(value.position);
+}
+
 export function mapBackendMediaSnapshot(
   snapshot: BackendMediaSnapshot | null | undefined,
 ): PlaybackState {
@@ -109,6 +118,17 @@ export function createTauriSource(): PlaybackSource {
     } catch (error) {
       console.warn(`[TauriSource] ${context} payload rejected:`, error);
     }
+  }
+
+  // Resyncs between full snapshots carry position only; merge onto the last
+  // full state so the store sees an unchanged track and skips re-renders.
+  function notifyPositionFromBackendPayload(payload: unknown) {
+    if (!isBackendMediaPosition(payload)) {
+      console.warn(`[TauriSource] ${MEDIA_POSITION_EVENT} payload rejected:`, payload);
+      return;
+    }
+    if (currentState === EMPTY_PLAYBACK) return;
+    notify({ ...currentState, position: payload.position });
   }
 
   function releaseUnlisteners() {
@@ -169,6 +189,19 @@ export function createTauriSource(): PlaybackSource {
         started = false;
         releaseUnlisteners();
         console.warn(`[TauriSource] ${MEDIA_SNAPSHOT_EVENT} listener failed:`, error);
+        return;
+      }
+
+      try {
+        const unlistenPosition = await listen<unknown>(
+          MEDIA_POSITION_EVENT,
+          ({ payload }) => notifyPositionFromBackendPayload(payload),
+        );
+        if (!retainUnlistener(unlistenPosition)) return;
+      } catch (error) {
+        started = false;
+        releaseUnlisteners();
+        console.warn(`[TauriSource] ${MEDIA_POSITION_EVENT} listener failed:`, error);
         return;
       }
 

@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useCrateStore } from "../../lib/collection";
 import {
   formatPressingNumber,
@@ -92,6 +93,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
 
   const records = useMemo(() => Object.values(recordsByKey), [recordsByKey]);
@@ -107,8 +109,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   useEffect(() => {
     if (!open) return;
     setSelectedKey(focusKey && recordsByKey[focusKey] ? focusKey : null);
-    closeRef.current?.focus();
-    // Only re-focus when the crate opens, not on every record update.
+    // Only re-select when the crate opens, not on every record update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -125,17 +126,8 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
     };
   }, [open, hasRecords]);
 
-  // Own Escape handler: global shortcuts ignore keys while a button has focus.
-  useEffect(() => {
-    if (!open) return;
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  // Escape is owned by useKeyboardShortcuts (topmost surface wins).
+  useFocusTrap(overlayRef, open, closeRef);
 
   if (!open) return null;
 
@@ -143,7 +135,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
     (selectedKey && recordsByKey[selectedKey]) || sorted[0] || null;
 
   return (
-    <div className="crate-overlay" role="dialog" aria-modal="true" aria-label="The Crate">
+    <div ref={overlayRef} className="crate-overlay" role="dialog" aria-modal="true" aria-label="The Crate">
       <button
         type="button"
         className="crate-overlay__scrim"

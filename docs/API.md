@@ -25,7 +25,8 @@ This is the internal command/event contract between the React app and the Tauri 
 
 | Event | Payload | Meaning |
 | --- | --- | --- |
-| `media-state-changed` | `MediaSnapshot` | Current media changed, controls changed, position resync, or clean empty state |
+| `media-state-changed` | `MediaSnapshot` | Track, metadata, artwork (content hash), play state, or controls changed, or clean empty state. Carries `artworkDataUrl`. |
+| `media-position-changed` | `{ position: number }` | Periodic position resync (every 2s) while nothing else changed. No metadata or artwork; `TauriSource` merges it onto the last full snapshot and the store updates only `lastKnownPosition`/`lastSyncTime`, keeping the `playback` object identity. |
 
 ## SMTC Commands
 

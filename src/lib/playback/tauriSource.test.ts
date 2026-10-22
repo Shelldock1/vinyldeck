@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_PLAYBACK } from "./store";
-import { isBackendMediaSnapshot, mapBackendMediaSnapshot } from "./tauriSource";
+import {
+  isBackendMediaPosition,
+  isBackendMediaSnapshot,
+  mapBackendMediaSnapshot,
+} from "./tauriSource";
 import type { BackendMediaSnapshot } from "./tauriSource";
 
 const VALID_SNAPSHOT: BackendMediaSnapshot = {
@@ -52,5 +56,19 @@ describe("TauriSource backend snapshot adapter", () => {
     expect(isBackendMediaSnapshot({ ...VALID_SNAPSHOT, artworkDataUrl: 123 })).toBe(false);
     expect(isBackendMediaSnapshot({ ...VALID_SNAPSHOT, canControl: "yes" })).toBe(false);
     expect(isBackendMediaSnapshot(null)).toBe(false);
+  });
+});
+
+describe("TauriSource backend position adapter", () => {
+  it("accepts the Rust MediaPosition camelCase contract", () => {
+    expect(isBackendMediaPosition({ position: 42.5 })).toBe(true);
+    expect(isBackendMediaPosition({ position: 0 })).toBe(true);
+  });
+
+  it("rejects missing, negative, and non-finite positions", () => {
+    expect(isBackendMediaPosition(null)).toBe(false);
+    expect(isBackendMediaPosition({})).toBe(false);
+    expect(isBackendMediaPosition({ position: -1 })).toBe(false);
+    expect(isBackendMediaPosition({ position: null })).toBe(false);
   });
 });

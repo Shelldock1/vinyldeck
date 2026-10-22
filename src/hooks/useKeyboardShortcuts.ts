@@ -4,12 +4,17 @@ import { commitSettings } from "../lib/settings";
 import { ART_AMBIENT_MODE, applyVisualMode, resetAmbientColors } from "../lib/themes/applier";
 import type { ThemeId } from "../lib/themes/applier";
 import { quitApplication } from "../lib/appLifecycle";
-import { canUseSkipControls, canUseTransportControls } from "../lib/playback/capabilities";
+import {
+  canUseSeekControl,
+  canUseSkipControls,
+  canUseTransportControls,
+} from "../lib/playback/capabilities";
 import { useVinylDeckStore } from "../lib/playback/store";
 import { setNativeWindowMode } from "../lib/window";
 import type { RenderWindowMode, WindowMode } from "../lib/window/types";
 
 const THEMES: ThemeId[] = ["noir", "glass"];
+export const KEYBOARD_SEEK_STEP_SECONDS = 5;
 
 interface KeyboardShortcutOptions {
   renderMode: RenderWindowMode;
@@ -19,6 +24,8 @@ interface KeyboardShortcutOptions {
   isCrateOpen?: boolean;
   onCloseCrate?: () => void;
   onToggleCrate?: () => void;
+  isContextMenuOpen?: boolean;
+  onCloseContextMenu?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -29,6 +36,8 @@ export function useKeyboardShortcuts({
   isCrateOpen = false,
   onCloseCrate,
   onToggleCrate,
+  isContextMenuOpen = false,
+  onCloseContextMenu,
 }: KeyboardShortcutOptions) {
   const optionsRef = useRef({
     renderMode,
@@ -38,6 +47,8 @@ export function useKeyboardShortcuts({
     isCrateOpen,
     onCloseCrate,
     onToggleCrate,
+    isContextMenuOpen,
+    onCloseContextMenu,
   });
 
   useEffect(() => {
@@ -49,6 +60,8 @@ export function useKeyboardShortcuts({
       isCrateOpen,
       onCloseCrate,
       onToggleCrate,
+      isContextMenuOpen,
+      onCloseContextMenu,
     };
   }, [
     renderMode,
@@ -58,6 +71,8 @@ export function useKeyboardShortcuts({
     isCrateOpen,
     onCloseCrate,
     onToggleCrate,
+    isContextMenuOpen,
+    onCloseContextMenu,
   ]);
 
   useEffect(() => {
@@ -87,7 +102,9 @@ export function useKeyboardShortcuts({
           break;
         case "ArrowLeft":
           event.preventDefault();
-          if (canUseSkipControls(playback)) {
+          if (event.shiftKey) {
+            seekBy(-KEYBOARD_SEEK_STEP_SECONDS);
+          } else if (canUseSkipControls(playback)) {
             useVinylDeckStore
               .getState()
               .markTrackChangeIntent("previous");
@@ -96,7 +113,9 @@ export function useKeyboardShortcuts({
           break;
         case "ArrowRight":
           event.preventDefault();
-          if (canUseSkipControls(playback)) {
+          if (event.shiftKey) {
+            seekBy(KEYBOARD_SEEK_STEP_SECONDS);
+          } else if (canUseSkipControls(playback)) {
             useVinylDeckStore.getState().markTrackChangeIntent("next");
             source?.next();
           }
@@ -153,6 +172,9 @@ function shouldIgnoreShortcut(event: KeyboardEvent): boolean {
   if (event.defaultPrevented) return true;
   if (event.altKey || event.metaKey) return true;
 
+  // Escape closes the topmost surface even while one of its controls has focus.
+  if (event.code === "Escape") return false;
+
   const target = event.target;
   if (!(target instanceof Element)) return false;
   if (target.closest("input, textarea, select, button")) return true;
@@ -161,27 +183,63 @@ function shouldIgnoreShortcut(event: KeyboardEvent): boolean {
   return editable instanceof HTMLElement && editable.isContentEditable;
 }
 
+export type EscapeTarget = "contextMenu" | "crate" | "settings" | "fullscreen";
+
+/** The single Escape policy: the topmost open surface closes first. */
+export function resolveEscapeTarget(state: {
+  isContextMenuOpen?: boolean;
+  isCrateOpen?: boolean;
+  isSettingsOpen?: boolean;
+  isFullscreen?: boolean;
+}): EscapeTarget | null {
+  if (state.isContextMenuOpen) return "contextMenu";
+  // Crate (z:80) stacks above Settings (z:40).
+  if (state.isCrateOpen) return "crate";
+  if (state.isSettingsOpen) return "settings";
+  if (state.isFullscreen) return "fullscreen";
+  return null;
+}
+
 function handleEscape(
   event: KeyboardEvent,
   optionsRef: RefObject<KeyboardShortcutOptions>,
 ) {
-  const { isSettingsOpen, onCloseSettings, isCrateOpen, onCloseCrate } =
-    optionsRef.current;
-  if (isCrateOpen) {
-    event.preventDefault();
-    onCloseCrate?.();
-    return;
-  }
-  if (isSettingsOpen) {
-    event.preventDefault();
-    onCloseSettings?.();
-    return;
-  }
+  const options = optionsRef.current;
+  const target = resolveEscapeTarget({
+    ...options,
+    isFullscreen:
+      useVinylDeckStore.getState().settings.windowMode === "fullscreen",
+  });
+  if (!target) return;
 
-  if (useVinylDeckStore.getState().settings.windowMode === "fullscreen") {
-    event.preventDefault();
-    void switchWindowMode("main").catch(logShortcutError);
+  event.preventDefault();
+  switch (target) {
+    case "contextMenu":
+      options.onCloseContextMenu?.();
+      break;
+    case "crate":
+      options.onCloseCrate?.();
+      break;
+    case "settings":
+      options.onCloseSettings?.();
+      break;
+    case "fullscreen":
+      void switchWindowMode("main").catch(logShortcutError);
+      break;
   }
+}
+
+/** Seek target for a relative keyboard step, clamped to the track. */
+export function clampSeek(position: number, delta: number, duration: number): number {
+  return Math.min(Math.max(position + delta, 0), Math.max(duration, 0));
+}
+
+function seekBy(delta: number) {
+  const store = useVinylDeckStore.getState();
+  if (!canUseSeekControl(store.playback)) return;
+  const target = clampSeek(store.getPosition(), delta, store.playback.duration);
+  store.beginPendingSeek(target);
+  store.source?.seekTo(target);
 }
 
 function nextFullscreenMode(): WindowMode {

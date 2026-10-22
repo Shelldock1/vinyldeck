@@ -101,6 +101,7 @@ export function useBrowserListenTracker() {
               id: `${playback.sourceId}|${playback.track}|${playback.artist}|${playback.album}`,
               isPlaying: playback.isPlaying,
               duration: playback.duration,
+              position: playback.position,
             };
       if (tracker.observe(sample, Date.now())) {
         countBrowserPlay(playback.artist, playback.album, playback.track);

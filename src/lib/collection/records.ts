@@ -157,11 +157,16 @@ export function isCollectedRecord(value: unknown): value is CollectedRecord {
 const MIN_TRACK_SECONDS = 30;
 const MAX_THRESHOLD_SECONDS = 120;
 const MAX_TICK_MS = 2000;
+/** A backward position jump larger than this is a restart, not resync jitter. */
+const RESTART_JUMP_SECONDS = 3;
+/** Resuming playback this close to the start is a restart. */
+const RESTART_START_SECONDS = 3;
 
 export interface ListenSample {
   id: string;
   isPlaying: boolean;
   duration: number;
+  position: number;
 }
 
 export class ListenTracker {
@@ -169,8 +174,14 @@ export class ListenTracker {
   private listenedMs = 0;
   private counted = false;
   private lastTick = 0;
+  private lastPosition = 0;
+  private wasPlaying = false;
 
-  /** Returns true exactly once per track instance when the play counts. */
+  /**
+   * Returns true exactly once per track instance when the play counts. A
+   * restart (repeat-one loop, seeking back, resuming from the start) begins a
+   * new instance.
+   */
   observe(sample: ListenSample | null, now: number): boolean {
     if (!sample) {
       this.id = null;
@@ -181,7 +192,16 @@ export class ListenTracker {
       this.listenedMs = 0;
       this.counted = false;
       this.lastTick = now;
+      this.lastPosition = sample.position;
+      this.wasPlaying = sample.isPlaying;
     }
+
+    if (this.isRestart(sample)) {
+      this.listenedMs = 0;
+      this.counted = false;
+    }
+    this.lastPosition = sample.position;
+    this.wasPlaying = sample.isPlaying;
 
     const tick = now - this.lastTick;
     this.lastTick = now;
@@ -194,6 +214,14 @@ export class ListenTracker {
     if (threshold === null || this.listenedMs / 1000 < threshold) return false;
     this.counted = true;
     return true;
+  }
+
+  private isRestart(sample: ListenSample): boolean {
+    if (!Number.isFinite(sample.position) || !Number.isFinite(this.lastPosition)) return false;
+    const jumpedBack = this.lastPosition - sample.position > RESTART_JUMP_SECONDS;
+    const resumedAtStart =
+      !this.wasPlaying && sample.isPlaying && sample.position < RESTART_START_SECONDS;
+    return jumpedBack || resumedAtStart;
   }
 }
 

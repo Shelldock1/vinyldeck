@@ -62,7 +62,21 @@ describe("crate records", () => {
 });
 
 describe("listen tracker", () => {
-  const sample = (id: string, isPlaying = true, duration = 120) => ({ id, isPlaying, duration });
+  const sample = (id: string, isPlaying = true, duration = 120, position = 0) => ({
+    id,
+    isPlaying,
+    duration,
+    position,
+  });
+
+  /** Plays from `from` seconds for `secs`, advancing position with time. */
+  const playFrom = (tracker: ListenTracker, start: number, from: number, secs: number, duration = 100) => {
+    let counted = 0;
+    for (let step = 0; step <= secs * 2; step += 1) {
+      if (tracker.observe(sample("a", true, duration, from + step * 0.5), start + step * 500)) counted += 1;
+    }
+    return counted;
+  };
 
   it("counts once after half the track has been heard", () => {
     const tracker = new ListenTracker();
@@ -83,6 +97,43 @@ describe("listen tracker", () => {
     expect(tracker.observe(sample("a"), 1_000_000)).toBe(false);
     for (let t = 0; t <= 50_000; t += 500) tracker.observe(sample("b"), 2_000_000 + t);
     expect(tracker.observe(sample("c"), 2_100_000)).toBe(false);
+  });
+
+  it("counts each pass of a repeat-one loop", () => {
+    const tracker = new ListenTracker();
+    expect(playFrom(tracker, 0, 0, 99)).toBe(1);
+    // Position wraps from ~99s back to 0 while still playing.
+    expect(playFrom(tracker, 99_500, 0, 99)).toBe(1);
+  });
+
+  it("counts again after a manual restart", () => {
+    const tracker = new ListenTracker();
+    expect(playFrom(tracker, 0, 0, 60)).toBe(1);
+    // Pause, scrub to 0, play.
+    tracker.observe(sample("a", false, 100, 60), 61_000);
+    tracker.observe(sample("a", false, 100, 0), 70_000);
+    expect(playFrom(tracker, 71_000, 0, 60)).toBe(1);
+  });
+
+  it("treats resuming at the start as a restart", () => {
+    const tracker = new ListenTracker();
+    expect(playFrom(tracker, 0, 0, 60)).toBe(1);
+    tracker.observe(sample("a", false, 100, 0), 200_000);
+    expect(playFrom(tracker, 201_000, 1, 60)).toBe(1);
+  });
+
+  it("ignores small backward jitter and mid-track resumes", () => {
+    const tracker = new ListenTracker();
+    expect(playFrom(tracker, 0, 0, 60)).toBe(1);
+    expect(playFrom(tracker, 60_500, 58, 30)).toBe(0);
+    tracker.observe(sample("a", false, 100, 88), 95_000);
+    expect(playFrom(tracker, 96_000, 88, 10)).toBe(0);
+  });
+
+  it("does not credit a forward seek as listening", () => {
+    const tracker = new ListenTracker();
+    expect(playFrom(tracker, 0, 0, 10)).toBe(0);
+    expect(playFrom(tracker, 10_500, 90, 9)).toBe(0);
   });
 
   it("caps the threshold and skips jingles", () => {

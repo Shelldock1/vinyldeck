@@ -1,0 +1,20 @@
+/* Keyboard focus for the seek ring: no browser box outline around a circle. */
+.progress-ring:focus {
+  outline: none;
+}
+
+.progress-ring__focus {
+  opacity: 0;
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.progress-ring:focus-visible .progress-ring__focus {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-ring__focus {
+    transition: none;
+  }
+}

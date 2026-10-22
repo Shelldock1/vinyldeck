@@ -15,6 +15,28 @@ Use browser mode for visual work that does not need Windows media integration:
 npm run dev
 ```
 
+### Linux
+
+Install the Tauri v2 system packages (same list CI uses):
+
+```bash
+sudo apt-get install -y --no-install-recommends \
+  libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+  libxdo-dev libssl-dev build-essential pkg-config
+```
+
+Then run `npm install` and `npm run tauri dev`. The Linux media backend talks D-Bus (MPRIS) through `zbus`, so no `libdbus` package is needed.
+
+Without root access, unpack the `-dev` packages into a local sysroot instead and point `pkg-config` at it. A checkout-local `.cargo/config.toml` (and `src-tauri/.cargo/config.toml`) can set this for every cargo build:
+
+```toml
+[env]
+PKG_CONFIG_SYSROOT_DIR = { value = "/path/to/tauri-sysroot", force = true }
+PKG_CONFIG_PATH = { value = "/path/to/tauri-sysroot/usr/lib/x86_64-linux-gnu/pkgconfig:/path/to/tauri-sysroot/usr/share/pkgconfig:/path/to/tauri-sysroot/usr/lib/pkgconfig", force = true }
+```
+
+These files hold machine-specific absolute paths and are gitignored, as are local `linux-env.sh` / `run-tauri.sh` helper scripts. In VMs and containers, set `WEBKIT_DISABLE_DMABUF_RENDERER=1` if the WebView renders blank.
+
 ## Runtime Modes
 
 | Runtime | Playback source |
@@ -65,6 +87,22 @@ npm run tauri build -- --debug
 | `src-tauri/src/window/` | Window-mode service |
 | `src-tauri/src/tray.rs` | Tray menu and close/quit lifecycle |
 | `.agents/memory/` | Internal project memory for future agent sessions |
+
+## Content Security Policy
+
+`src-tauri/tauri.conf.json` sets `app.security.csp` to:
+
+```text
+default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'
+```
+
+- Artwork arrives as `data:` URLs from the backend, so `img-src` allows `data:` and `blob:`. Inline `style` attributes (motion/react, CSS variables) rely on `'unsafe-inline'` in `style-src`.
+- Tauri appends hashes for its own injected scripts to `script-src` at build time; do not add inline `<script>` tags to `index.html`.
+- Known gaps under this exact policy (tracked, not yet relaxed):
+  - Google Fonts `@import` in `src/styles/global.css` is refused (`style-src`), and `fonts.gstatic.com` would be refused by `font-src` falling back to `default-src`. Brand fonts fall back to system fonts until fonts are self-hosted under `public/` or the policy adds `https://fonts.googleapis.com` to `style-src` and `font-src https://fonts.gstatic.com`.
+  - No `connect-src`, so Tauri's custom-protocol IPC (`ipc://localhost` on Linux/macOS, `http://ipc.localhost` on Windows) is refused on first call; Tauri logs a warning and falls back to the `postMessage` IPC for the session. Adding `connect-src 'self' ipc: http://ipc.localhost` restores the faster path.
+- Desktop `tauri dev` loads `devUrl` directly from Vite, so the policy only applies to bundled builds. Check CSP changes against `npm run build` output, not just dev.
+- Never set `csp` back to `null`.
 
 ## Architecture Rules
 

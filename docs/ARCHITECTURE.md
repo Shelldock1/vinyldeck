@@ -60,7 +60,11 @@ sequenceDiagram
   loop every 500ms
     Poller->>SMTC: read lightweight timeline/capabilities
     Poller->>SMTC: read metadata/artwork on semantic change
-    Poller-->>Source: media-state-changed
+    alt semantic or artwork change
+      Poller-->>Source: media-state-changed (full snapshot)
+    else 2s position resync
+      Poller-->>Source: media-position-changed (position only)
+    end
     Source-->>UI: PlaybackState
   end
   UI->>Source: play/pause/next/previous/seek intent
@@ -114,10 +118,14 @@ stateDiagram-v2
   Main --> HiddenTray: close request
   Mini --> HiddenTray: close request
   HiddenTray --> Main: tray open / left click
+  HiddenTray --> Main: second launch
+  Mini --> Main: second launch
   HiddenTray --> [*]: tray quit / Ctrl+Q
 ```
 
 Main and fullscreen reuse the `main` window. Mini is a separate frameless, transparent-capable, always-on-top WebView window. It starts at `280x280`, can shrink down to a small `140x140` floor, cannot expand beyond the original square, can opt into native Windows Acrylic blur-through through `miniTransparentMode`, and is destroyed when returning to main/fullscreen. Close requests hide to tray; explicit quit destroys windows and exits.
+
+Only one instance runs at a time (`tauri-plugin-single-instance`, registered first in the builder). A second launch exits and asks the running instance to come forward: a visible main or fullscreen window is unminimized and focused in place; from mini or tray it follows the tray Open path to main.
 
 ## Implementation Boundaries
 

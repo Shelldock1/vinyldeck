@@ -67,6 +67,27 @@ pub(crate) async fn set_window_mode(app: &AppHandle, mode: WindowMode) -> Result
     }
 }
 
+/// Brings the running instance forward when a second launch is attempted.
+/// A visible main window (windowed or fullscreen) keeps its mode; otherwise
+/// this follows the tray "Open VinylDeck" path so mini closes and main shows.
+pub(crate) fn focus_existing(app: &AppHandle) {
+    if let Some(main) = app.get_webview_window(MAIN_LABEL) {
+        let in_mini = app.get_webview_window(MINI_LABEL).is_some();
+        if !in_mini && main.is_visible().unwrap_or(false) {
+            let _ = main.unminimize();
+            let _ = main.set_focus();
+            return;
+        }
+    }
+
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(error) = set_window_mode(&app, WindowMode::Main).await {
+            eprintln!("[VinylDeck] failed to focus existing instance: {error}");
+        }
+    });
+}
+
 fn show_main(app: &AppHandle) -> Result<(), String> {
     if let Some(mini) = app.get_webview_window(MINI_LABEL) {
         mini.destroy().map_err(|error| error.to_string())?;

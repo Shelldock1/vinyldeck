@@ -12,6 +12,7 @@ import type { ThemeId } from "../../lib/themes/applier";
 import { selectSettings, useVinylDeckStore } from "../../lib/playback/store";
 import { commitSettings } from "../../lib/settings";
 import { setNativeAlwaysOnTop, setNativeWindowMode } from "../../lib/window";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { WindowMode } from "../../lib/window/types";
 import "./Settings.css";
 
@@ -49,6 +50,9 @@ export function Settings({ open, onClose }: SettingsProps) {
   const hydrateSettings = useVinylDeckStore((s) => s.hydrateSettings);
   const devForceEmpty = useVinylDeckStore((s) => s.devForceEmpty);
   const setDevForceEmpty = useVinylDeckStore((s) => s.setDevForceEmpty);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  // Escape is owned by useKeyboardShortcuts (topmost surface wins).
+  useFocusTrap(overlayRef, open);
 
   function applyCommittedSettings(nextSettings: typeof settings) {
     hydrateSettings(nextSettings);
@@ -104,6 +108,7 @@ export function Settings({ open, onClose }: SettingsProps) {
     <AnimatePresence>
       {open && (
         <motion.div
+          ref={overlayRef}
           className="settings-overlay"
           aria-modal="true"
           role="dialog"
@@ -117,6 +122,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             className="settings-overlay__scrim"
             type="button"
             aria-label="Close settings"
+            tabIndex={-1}
             onClick={onClose}
           />
           <SettingsParticles />

@@ -57,6 +57,10 @@ export interface PlaybackStoreActions {
   // Called by source.onStateChange
   updatePlayback(state: PlaybackState): void;
 
+  // Position-only resync: keeps the `playback` object identity so views
+  // selecting it do not re-render; live position comes from getPosition().
+  updatePosition(position: number): void;
+
   // Client-side position (extrapolated from lastSync + elapsed)
   getPosition(): number;
   beginPendingSeek(seconds: number): void;
@@ -92,6 +96,22 @@ export const EMPTY_PLAYBACK: PlaybackState = {
   canSkip: false,
   canControl: false,
 };
+
+function isPositionOnlyChange(previous: PlaybackState, next: PlaybackState): boolean {
+  return (
+    previous.track === next.track &&
+    previous.artist === next.artist &&
+    previous.album === next.album &&
+    previous.artworkDataUrl === next.artworkDataUrl &&
+    previous.duration === next.duration &&
+    previous.isPlaying === next.isPlaying &&
+    previous.sourceName === next.sourceName &&
+    previous.sourceId === next.sourceId &&
+    previous.canSeek === next.canSeek &&
+    previous.canSkip === next.canSkip &&
+    previous.canControl === next.canControl
+  );
+}
 
 // ── Store ─────────────────────────────────────────────────────
 export const useVinylDeckStore = create<VinylDeckStore>()(
@@ -173,6 +193,10 @@ export const useVinylDeckStore = create<VinylDeckStore>()(
     // ── Update playback snapshot from source event ────────────
     updatePlayback(state) {
       const current = get();
+      if (isPositionOnlyChange(current.playback, state)) {
+        current.updatePosition(state.position);
+        return;
+      }
       const trackChanged =
         state.track !== current.playback.track ||
         state.artist !== current.playback.artist ||
@@ -211,6 +235,24 @@ export const useVinylDeckStore = create<VinylDeckStore>()(
         pendingTrackChangeDirection: consumeDirection
           ? "unknown"
           : current.pendingTrackChangeDirection,
+      });
+    },
+
+    updatePosition(position) {
+      const current = get();
+      const pendingSeekExpired =
+        current.pendingSeekPosition !== null &&
+        Date.now() - current.pendingSeekStartedAt > PENDING_SEEK_TIMEOUT_MS;
+      const pendingSeekSettled =
+        current.pendingSeekPosition !== null &&
+        Math.abs(position - current.pendingSeekPosition) <= PENDING_SEEK_SETTLE_SECONDS;
+      const clearPendingSeek = pendingSeekExpired || pendingSeekSettled;
+
+      set({
+        lastKnownPosition: position,
+        lastSyncTime: Date.now(),
+        pendingSeekPosition: clearPendingSeek ? null : current.pendingSeekPosition,
+        pendingSeekStartedAt: clearPendingSeek ? 0 : current.pendingSeekStartedAt,
       });
     },
 

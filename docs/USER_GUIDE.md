@@ -77,16 +77,19 @@ Shortcuts work while a VinylDeck window is focused.
 | Play / pause | `Space` |
 | Previous | `Left` |
 | Next | `Right` |
+| Seek back / forward 5s | `Shift+Left` / `Shift+Right` |
 | Fullscreen | `F` |
 | Mini player | `M` |
 | Cycle shell | `T` |
 | Settings | `S` |
 | Toggle Art Ambient | `A` |
 | The Crate | `C` |
-| Close crate or settings / leave fullscreen | `Escape` |
+| Close the topmost menu, crate, or settings / leave fullscreen | `Escape` |
 | Quit | `Ctrl+Q` |
 
-Disable shortcuts in Settings -> Other. Escape remains available for closing Settings and leaving fullscreen.
+Disable shortcuts in Settings -> Other. Escape remains available for closing menus, the crate, Settings, and leaving fullscreen.
+
+The progress ring around the record is a keyboard slider: `Tab` to it, then use `Left` / `Right` (with or without `Shift`) to seek 5 seconds, or `Home` to restart the track. While Settings or the crate is open, `Tab` stays inside it and focus returns to where you were when it closes.
 
 Start With Windows is opt-in. When enabled, VinylDeck launches automatically after sign-in so it can sit ready while you start music normally.
 

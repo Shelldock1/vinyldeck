@@ -91,6 +91,7 @@ npm run dev
 | --- | --- |
 | Play / pause | `Space` |
 | Previous / next | `Left` / `Right` |
+| Seek -5s / +5s | `Shift+Left` / `Shift+Right` (or arrows with the progress ring focused) |
 | Fullscreen | `F` |
 | Mini player | `M` |
 | Cycle shell | `T` |
@@ -99,7 +100,7 @@ npm run dev
 | The Crate (your collection) | `C` |
 | Quit | `Ctrl+Q` |
 
-Shortcuts can be turned off in Settings. Escape remains available for closing Settings or leaving fullscreen.
+Shortcuts can be turned off in Settings. Escape stays available and closes the topmost surface: context menu, then The Crate, then Settings, then fullscreen. Mini player accepts only `Space` and `Ctrl+Q`.
 
 ## Documentation
 
@@ -140,4 +141,11 @@ VinylDeck is actively developed for Windows. The current version is `0.1.1`. Rea
 
 ## License
 
-No license file is currently published.
+VinylDeck is released under the [MIT License](./LICENSE).
+
+Third-party content keeps its own license:
+
+- Fonts (Sora, Inter, JetBrains Mono and the other families in `src/styles/global.css`) are loaded from Google Fonts and are licensed under the SIL Open Font License.
+- npm and Cargo dependencies are covered by their own licenses, listed in their package metadata.
+- The sample album art in `public/art-1.jpg` and `public/art-2.jpg` is demo media for the browser mock source; its origin and license are unverified and it is not covered by the MIT License.
+- Album artwork shown at runtime comes from your media player and belongs to its respective rights holders.

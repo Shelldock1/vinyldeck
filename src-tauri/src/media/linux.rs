@@ -166,14 +166,10 @@ fn snapshot_from(proxy: &Proxy<'_>, session: &PlayerSession) -> Option<MediaSnap
         return None;
     }
 
-    let can_control = proxy
-        .get_property::<bool>("CanControl")
-        .unwrap_or(false);
+    let can_control = proxy.get_property::<bool>("CanControl").unwrap_or(false);
     let can_seek = proxy.get_property::<bool>("CanSeek").unwrap_or(false);
     let can_next = proxy.get_property::<bool>("CanGoNext").unwrap_or(false);
-    let can_previous = proxy
-        .get_property::<bool>("CanGoPrevious")
-        .unwrap_or(false);
+    let can_previous = proxy.get_property::<bool>("CanGoPrevious").unwrap_or(false);
 
     Some(MediaSnapshot {
         track: metadata_string(&metadata, "xesam:title").unwrap_or_default(),
@@ -277,7 +273,10 @@ pub(crate) async fn current_media_snapshot_with_artwork() -> Result<Option<Media
     .await?
 }
 
-fn call_player_method(method: &str, body: &(impl serde::Serialize + zbus::zvariant::DynamicType)) -> Result<()> {
+fn call_player_method(
+    method: &str,
+    body: &(impl serde::Serialize + zbus::zvariant::DynamicType),
+) -> Result<()> {
     let connection = session_bus()?;
     let Some(session) = active_session(&connection)? else {
         return Err(anyhow!("no active MPRIS media session"));
@@ -291,28 +290,23 @@ fn call_player_method(method: &str, body: &(impl serde::Serialize + zbus::zvaria
 }
 
 pub(crate) async fn play() -> Result<()> {
-    tokio::task::spawn_blocking(|| call_player_method("Play", &()))
-        .await?
+    tokio::task::spawn_blocking(|| call_player_method("Play", &())).await?
 }
 
 pub(crate) async fn pause() -> Result<()> {
-    tokio::task::spawn_blocking(|| call_player_method("Pause", &()))
-        .await?
+    tokio::task::spawn_blocking(|| call_player_method("Pause", &())).await?
 }
 
 pub(crate) async fn toggle_play_pause() -> Result<()> {
-    tokio::task::spawn_blocking(|| call_player_method("PlayPause", &()))
-        .await?
+    tokio::task::spawn_blocking(|| call_player_method("PlayPause", &())).await?
 }
 
 pub(crate) async fn next() -> Result<()> {
-    tokio::task::spawn_blocking(|| call_player_method("Next", &()))
-        .await?
+    tokio::task::spawn_blocking(|| call_player_method("Next", &())).await?
 }
 
 pub(crate) async fn previous() -> Result<()> {
-    tokio::task::spawn_blocking(|| call_player_method("Previous", &()))
-        .await?
+    tokio::task::spawn_blocking(|| call_player_method("Previous", &())).await?
 }
 
 pub(crate) async fn seek(seconds: f64) -> Result<()> {

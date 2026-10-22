@@ -21,6 +21,16 @@ Current task track:
 - User confirmed visual satisfaction and authorized backend planning.
 - Backend plan is approved and ready to build.
 
+## Audit Remediation (branch `audit-remediation`, 2026-10-22)
+- Baseline `4a98926` snapshots prior uncommitted WIP.
+- Phase 1 done: `3f80ba3` PlaybackAuthority (`media/authority.rs`, RwLock + watch; poller writes every poll), `81fa15c` tray rewired to authority + platform, mock `MediaState`/`mock.rs`/`cmd_media_*` deleted, `b0ad864` `#[cfg(windows)] mod smtc` + `media/unsupported.rs` stub for non-Windows/non-Linux, crate formatted; `51a9400` + follow-up CI (`.github/workflows/ci.yml`: ubuntu full lint/test, windows check+test+debug build, landing).
+- Linux verified: fmt --check clean, clippy --all-targets -D warnings clean, cargo test 47 passed (smtc tests now Windows-only). Windows/macOS typecheck not verified locally (targets not installed); CI covers Windows only.
+- Phase 2 done: `f288aaa` resync emits `media-position-changed` `{position}` only; full `media-state-changed` (with artwork) on semantic or artwork-hash change; store `updatePosition()` keeps `playback` identity so views don't re-render. `3ac2741` listen tracker resets on >3s backward jump or paused→playing under 3s (repeat/restart count again), Rust+TS mirrored. `296ecc6` tauri-plugin-single-instance (second launch focuses main). `2db72aa` CSP `default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'`.
+- OPEN CSP issues (not relaxed, awaiting decision): Google Fonts `@import` in `src/styles/global.css` is blocked → brand fonts fall back (fix: self-host under `public/`, or add `https://fonts.googleapis.com` to style-src + `font-src https://fonts.gstatic.com`). No `connect-src` → Tauri custom-protocol IPC refused, falls back to postMessage (proposed `connect-src 'self' ipc: http://ipc.localhost`). Verified in headless Chromium on built dist only, not WebKitGTK/WebView2.
+- Phase 3 done: `9929307` MIT LICENSE (holder `ItsRudraksh` 2026 from first commit — owner to confirm; `public/art-*.jpg` provenance unverified) + license fields + README third-party note. `ced316b` `useFocusTrap` for Settings/Crate, Escape owned solely by `useKeyboardShortcuts` (`resolveEscapeTarget`: context menu > Crate > Settings > fullscreen), progress ring `role="slider"` with ±5s arrow seek; global Shift+Left/Right = ±5s seek (was track skip). `2dd82fb` ignores local `.cargo/config.toml` (root + src-tauri) and `linux-env.sh`/`run-tauri.sh`; Linux env documented in `docs/DEVELOPMENT.md`.
+- Final Linux verification 2026-10-22: npm build ok, frontend 53 passed, cargo fmt/clippy -D warnings clean, cargo test 53 passed. Not manually verified in live app: tray vs real SMTC/MPRIS, single-instance handoff, focus ring visuals, CSP in WebKitGTK/WebView2.
+- Superseded: Phase 4 B4.3/B4.6 notes below describing tray on mock `MediaState`.
+
 ## Stage 2 Final Status
 - Core visual engine sub-stages 2a–2k implemented and verified.
 - Master Task List visual polish phases 9–11 are complete.
@@ -50,7 +60,7 @@ Current task track:
 
 ## Known Limitations / Deferred
 - Phase 11 Windows distribution smoke validation passed for release installers and installed-app behavior. Remaining release polish: WebView2 bootstrapper validation, settings location note, player compatibility matrix, bundle identifier cleanup, and code signing.
-- In-app playback controls use real `cmd_smtc_*` commands. Tray playback menu code still references the older backend media command path and should be unified/revalidated before distribution.
+- In-app playback controls use real `cmd_smtc_*` commands. Tray reads `PlaybackAuthority` (subscribe) and dispatches to `platform::*`; backend mock `MediaState`/`cmd_media_*` deleted 2026-10-22. Live tray check vs real SMTC/MPRIS still pending manual approval.
 - Debug build currently emits a non-blocking Tauri warning that identifier `com.vinyldeck.app` ends with `.app`; handle during Phase 11 distribution cleanup.
 - Mini mode async creation fix is implemented; no current mini white-window blocker is active in the V1 baseline.
 

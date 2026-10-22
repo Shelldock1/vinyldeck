@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent, Ref } from "react";
 import { Kbd } from "../Kbd";
 import "./AppContextMenu.css";
 
@@ -12,8 +12,15 @@ export interface AppContextMenuAction {
   onSelect: () => void;
 }
 
+export interface AppContextMenuHandle {
+  close: () => void;
+}
+
 interface AppContextMenuProps {
   actions: AppContextMenuAction[];
+  ref?: Ref<AppContextMenuHandle>;
+  /** Lets the owner route Escape (useKeyboardShortcuts) to this menu. */
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface MenuPoint {
@@ -25,8 +32,15 @@ const MENU_WIDTH = 216;
 const MENU_ITEM_HEIGHT = 36;
 const MENU_PADDING = 8;
 
-export function AppContextMenu({ actions }: AppContextMenuProps) {
+export function AppContextMenu({ actions, ref, onOpenChange }: AppContextMenuProps) {
   const [point, setPoint] = useState<MenuPoint | null>(null);
+  const isOpen = point !== null;
+
+  useImperativeHandle(ref, () => ({ close: () => setPoint(null) }), []);
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
   const [activeIndex, setActiveIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const enabledIndexes = useMemo(
@@ -74,12 +88,6 @@ export function AppContextMenu({ actions }: AppContextMenuProps) {
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setPoint(null);
-      return;
-    }
-
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       selectAction(actions[activeIndex]);

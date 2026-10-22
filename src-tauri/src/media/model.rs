@@ -1,3 +1,5 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
@@ -52,7 +54,15 @@ pub(crate) struct MediaSemanticKey {
     can_seek: bool,
     can_skip: bool,
     can_control: bool,
-    has_artwork: bool,
+    artwork_hash: Option<u64>,
+}
+
+/// Position-only payload for periodic resyncs; the full snapshot (and its
+/// artwork) is only re-sent when the semantic key changes.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaPosition {
+    pub position: f64,
 }
 
 impl MediaSnapshot {
@@ -69,9 +79,21 @@ impl MediaSnapshot {
             can_seek: self.can_seek,
             can_skip: self.can_skip,
             can_control: self.can_control,
-            has_artwork: self.artwork_data_url.is_some(),
+            artwork_hash: self.artwork_data_url.as_deref().map(hash_str),
         }
     }
+
+    pub(crate) fn media_position(&self) -> MediaPosition {
+        MediaPosition {
+            position: self.position,
+        }
+    }
+}
+
+fn hash_str(value: &str) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    value.hash(&mut hasher);
+    hasher.finish()
 }
 
 #[allow(dead_code)]

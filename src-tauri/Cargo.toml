@@ -3,6 +3,7 @@ name = "vinyldeck"
 version = "0.1.1"
 description = "A cinematic vinyl experience for everything playing on your computer."
 authors = ["VinylDeck"]
+license = "MIT"
 edition = "2021"
 
 [lib]
@@ -41,3 +42,6 @@ windows = { version = "0.56", features = [
   "Media",
   "Media_MediaProperties",
 ] }
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = "2"

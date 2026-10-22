@@ -7,8 +7,11 @@
 //   - RULES OF HOOKS: ALL hooks declared before any early return
 
 import { useRef, useState, useCallback } from "react";
+import type { KeyboardEvent } from "react";
 import { motion } from "motion/react";
 import { useVinylDeckStore, selectAmbientMode } from "../../lib/playback/store";
+import { KEYBOARD_SEEK_STEP_SECONDS, clampSeek } from "../../hooks/useKeyboardShortcuts";
+import "./ProgressRing.css";
 
 interface ProgressRingProps {
   duration: number;
@@ -91,6 +94,28 @@ export function ProgressRing({
     },
     [isScrubbing, onSeek, duration, angleFromPointer]
   );
+
+  // Slider keys: arrows (Shift optional) step ±5s, Home restarts.
+  // Handled here so the global ArrowLeft/Right track skip doesn't also fire.
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<SVGSVGElement>) => {
+      if (!onSeek || duration <= 0 || e.altKey || e.ctrlKey || e.metaKey) return;
+      let target: number;
+      if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+        target = clampSeek(position, -KEYBOARD_SEEK_STEP_SECONDS, duration);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+        target = clampSeek(position, KEYBOARD_SEEK_STEP_SECONDS, duration);
+      } else if (e.key === "Home") {
+        target = 0;
+      } else {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      onSeek(target);
+    },
+    [onSeek, duration, position]
+  );
   // ── End of hooks block ────────────────────────────────────────
 
   // Early return AFTER all hooks
@@ -138,7 +163,16 @@ export function ProgressRing({
         cursor: isScrubbing ? "grabbing" : (onSeek ? "pointer" : "default"),
         overflow: "visible",
       }}
-      aria-label={`Track progress: ${formatTime(displayPosition)} / ${formatTime(duration)}`}
+      className="progress-ring"
+      role={onSeek ? "slider" : "progressbar"}
+      tabIndex={onSeek ? 0 : undefined}
+      aria-label="Track position"
+      aria-valuemin={0}
+      aria-valuemax={Math.round(duration)}
+      // Whole seconds: the attribute only changes ~1Hz, not per render.
+      aria-valuenow={Math.round(Math.min(position, duration))}
+      aria-valuetext={`${formatTime(position)} of ${formatTime(duration)}`}
+      onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -157,6 +191,29 @@ export function ProgressRing({
           animate={{ opacity: [0.2, 0.5, 0.2] }}
           transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
         />
+      )}
+
+      {/* Keyboard focus ring — physical edge + accent, shown on :focus-visible */}
+      {onSeek && (
+        <g className="progress-ring__focus" aria-hidden="true">
+          <circle
+            cx={center}
+            cy={center}
+            r={radius + 7}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.12)"
+            strokeWidth={0.5}
+          />
+          <circle
+            cx={center}
+            cy={center}
+            r={radius + 5}
+            fill="none"
+            stroke="var(--ui-accent, #fff)"
+            strokeWidth={1.5}
+            strokeOpacity={0.7}
+          />
+        </g>
       )}
 
       {/* Track circle — full dim ring */}

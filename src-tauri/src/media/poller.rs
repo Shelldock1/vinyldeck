@@ -8,8 +8,8 @@ use tauri::{AppHandle, Manager};
 
 use super::{
     authority::PlaybackAuthority,
-    emit_media_snapshot,
-    model::{MediaSemanticKey, MediaSnapshot},
+    emit_media_position, emit_media_snapshot,
+    model::{MediaPosition, MediaSemanticKey, MediaSnapshot},
 };
 use crate::collection::{self, listen::ListenTracker};
 
@@ -60,11 +60,21 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
     if let Some(play) = poller.listens.observe(snapshot.as_ref(), now) {
         collection::record_play(app, &play.artist, &play.album, &play.track).await;
     }
-    if let Some(snapshot) = poller.handle_polled_snapshot(snapshot, now) {
-        emit_media_snapshot(app, &snapshot);
+    match poller.handle_polled_snapshot(snapshot, now) {
+        Some(MediaEmission::Snapshot(snapshot)) => emit_media_snapshot(app, &snapshot),
+        Some(MediaEmission::Position(position)) => emit_media_position(app, position),
+        None => {}
     }
 
     Ok(())
+}
+
+/// Full snapshots (with artwork) go out only on semantic change; periodic
+/// resyncs carry position alone.
+#[derive(Debug, Clone, PartialEq)]
+enum MediaEmission {
+    Snapshot(MediaSnapshot),
+    Position(MediaPosition),
 }
 
 #[derive(Debug, Default)]
@@ -81,22 +91,30 @@ impl SmtcPoller {
         &mut self,
         snapshot: Option<MediaSnapshot>,
         now: Instant,
-    ) -> Option<MediaSnapshot> {
+    ) -> Option<MediaEmission> {
         let Some(snapshot) = snapshot else {
-            return self.session_ended_snapshot();
+            return self.session_ended_snapshot().map(MediaEmission::Snapshot);
         };
         self.had_session = true;
-        if self.should_emit_snapshot(&snapshot, now) {
-            self.last_emitted_key = Some(snapshot.semantic_key());
+
+        let key = snapshot.semantic_key();
+        if self.last_emitted_key.as_ref() != Some(&key) {
+            self.last_emitted_key = Some(key);
             self.last_emit_at = Some(now);
-            return Some(snapshot);
+            return Some(MediaEmission::Snapshot(snapshot));
+        }
+
+        if self.position_resync_due(now) {
+            self.last_emit_at = Some(now);
+            return Some(MediaEmission::Position(snapshot.media_position()));
         }
 
         None
     }
 
     async fn snapshot_for_poll(&mut self) -> anyhow::Result<Option<MediaSnapshot>> {
-        let Some(metadata_snapshot) = super::platform::current_media_snapshot_with_metadata().await?
+        let Some(metadata_snapshot) =
+            super::platform::current_media_snapshot_with_metadata().await?
         else {
             self.cached_media = None;
             return Ok(None);
@@ -114,7 +132,8 @@ impl SmtcPoller {
             )));
         }
 
-        let Some(full_snapshot) = super::platform::current_media_snapshot_with_artwork().await? else {
+        let Some(full_snapshot) = super::platform::current_media_snapshot_with_artwork().await?
+        else {
             self.cached_media = None;
             return Ok(Some(metadata_snapshot));
         };
@@ -141,12 +160,7 @@ impl SmtcPoller {
         None
     }
 
-    fn should_emit_snapshot(&self, snapshot: &MediaSnapshot, now: Instant) -> bool {
-        let key = snapshot.semantic_key();
-        if self.last_emitted_key.as_ref() != Some(&key) {
-            return true;
-        }
-
+    fn position_resync_due(&self, now: Instant) -> bool {
         self.last_emit_at
             .is_none_or(|last| now.duration_since(last) >= position_resync_interval())
     }
@@ -269,7 +283,7 @@ mod tests {
 
     use super::{
         apply_cached_media, error_log_interval, position_resync_interval, CachedMedia,
-        ErrorRateLimiter, MediaSnapshot, SmtcPoller, TrackCacheKey,
+        ErrorRateLimiter, MediaEmission, MediaPosition, MediaSnapshot, SmtcPoller, TrackCacheKey,
     };
 
     fn claim_start(flag: &AtomicBool) -> bool {
@@ -378,18 +392,57 @@ mod tests {
         };
         let now = std::time::Instant::now();
 
-        assert!(poller.should_emit_snapshot(&snapshot, now));
-        poller.last_emitted_key = Some(snapshot.semantic_key());
-        poller.last_emit_at = Some(now);
+        assert_eq!(
+            poller.handle_polled_snapshot(Some(snapshot.clone()), now),
+            Some(MediaEmission::Snapshot(snapshot.clone()))
+        );
 
         let mut drifted = snapshot.clone();
         drifted.position = 1.5;
-        assert!(!poller.should_emit_snapshot(&drifted, now + Duration::from_millis(500)));
-        assert!(poller.should_emit_snapshot(&drifted, now + position_resync_interval()));
+        assert_eq!(
+            poller.handle_polled_snapshot(Some(drifted.clone()), now + Duration::from_millis(500)),
+            None
+        );
+        assert_eq!(
+            poller.handle_polled_snapshot(Some(drifted.clone()), now + position_resync_interval()),
+            Some(MediaEmission::Position(MediaPosition { position: 1.5 }))
+        );
 
         let mut paused = drifted;
         paused.is_playing = false;
-        assert!(poller.should_emit_snapshot(&paused, now + Duration::from_millis(600)));
+        assert_eq!(
+            poller.handle_polled_snapshot(
+                Some(paused.clone()),
+                now + position_resync_interval() + Duration::from_millis(100),
+            ),
+            Some(MediaEmission::Snapshot(paused))
+        );
+    }
+
+    #[test]
+    fn artwork_change_on_same_track_sends_full_snapshot() {
+        let mut poller = SmtcPoller::default();
+        let now = std::time::Instant::now();
+        let first = MediaSnapshot {
+            track: "Track".to_string(),
+            source_id: "spotify".to_string(),
+            duration: 180.0,
+            artwork_data_url: Some("data:image/png;base64,AAAA".to_string()),
+            ..MediaSnapshot::default()
+        };
+        let swapped = MediaSnapshot {
+            artwork_data_url: Some("data:image/png;base64,BBBB".to_string()),
+            ..first.clone()
+        };
+
+        assert!(matches!(
+            poller.handle_polled_snapshot(Some(first), now),
+            Some(MediaEmission::Snapshot(_))
+        ));
+        assert_eq!(
+            poller.handle_polled_snapshot(Some(swapped.clone()), now + Duration::from_millis(500)),
+            Some(MediaEmission::Snapshot(swapped))
+        );
     }
 
     #[test]
@@ -432,7 +485,7 @@ mod tests {
 
         assert_eq!(
             poller.handle_polled_snapshot(Some(playing.clone()), now),
-            Some(playing.clone())
+            Some(MediaEmission::Snapshot(playing.clone()))
         );
 
         let position_only = MediaSnapshot {
@@ -451,7 +504,7 @@ mod tests {
                 Some(position_only.clone()),
                 now + position_resync_interval(),
             ),
-            Some(position_only.clone())
+            Some(MediaEmission::Position(MediaPosition { position: 10.5 }))
         );
 
         let track_changed = MediaSnapshot {
@@ -464,12 +517,12 @@ mod tests {
                 Some(track_changed.clone()),
                 now + position_resync_interval() + Duration::from_millis(500),
             ),
-            Some(track_changed)
+            Some(MediaEmission::Snapshot(track_changed))
         );
 
         assert_eq!(
             poller.handle_polled_snapshot(None, now + Duration::from_secs(3)),
-            Some(MediaSnapshot::default())
+            Some(MediaEmission::Snapshot(MediaSnapshot::default()))
         );
         assert_eq!(
             poller.handle_polled_snapshot(None, now + Duration::from_secs(4)),
@@ -511,12 +564,12 @@ mod tests {
 
         assert_eq!(
             poller.handle_polled_snapshot(Some(spotify.clone()), now + Duration::from_secs(1)),
-            Some(spotify.clone())
+            Some(MediaEmission::Snapshot(spotify.clone()))
         );
 
         assert_eq!(
             poller.handle_polled_snapshot(None, now + Duration::from_secs(2)),
-            Some(MediaSnapshot::default())
+            Some(MediaEmission::Snapshot(MediaSnapshot::default()))
         );
         assert_eq!(
             poller.handle_polled_snapshot(None, now + Duration::from_secs(3)),
@@ -529,11 +582,11 @@ mod tests {
         };
         assert_eq!(
             poller.handle_polled_snapshot(Some(restarted.clone()), now + Duration::from_secs(4)),
-            Some(restarted)
+            Some(MediaEmission::Snapshot(restarted))
         );
         assert_eq!(
             poller.handle_polled_snapshot(Some(chrome.clone()), now + Duration::from_secs(5)),
-            Some(chrome)
+            Some(MediaEmission::Snapshot(chrome))
         );
     }
 
@@ -553,7 +606,9 @@ mod tests {
 
         assert_eq!(
             poller.handle_polled_snapshot(Some(empty_metadata_missing_artwork.clone()), now),
-            Some(empty_metadata_missing_artwork.clone())
+            Some(MediaEmission::Snapshot(
+                empty_metadata_missing_artwork.clone()
+            ))
         );
 
         let unknown_duration_position = MediaSnapshot {
@@ -573,8 +628,9 @@ mod tests {
             Some(unknown_duration_position),
             now + position_resync_interval(),
         );
-        let resynced = resynced.expect("unknown timeline values should still resync");
-        assert!(resynced.duration.is_infinite());
+        let Some(MediaEmission::Position(resynced)) = resynced else {
+            panic!("unknown timeline values should still resync position");
+        };
         assert!(resynced.position.is_nan());
     }
 
