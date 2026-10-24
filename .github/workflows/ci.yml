@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/setup-node@v4.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       # dtolnay/rust-toolchain publishes one ref per toolchain, not release tags.
@@ -69,16 +69,19 @@ jobs:
 
       - uses: actions/setup-node@v4.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - uses: Swatinem/rust-cache@v2.7.5
         with:
           workspaces: src-tauri
 
       - run: npm ci
+      - run: cargo clippy --manifest-path ${{ env.MANIFEST }} --all-targets -- -D warnings
       - run: cargo check --manifest-path ${{ env.MANIFEST }} --all-targets
       - run: cargo test --manifest-path ${{ env.MANIFEST }}
       - run: npm run tauri build -- --debug --no-bundle
@@ -94,7 +97,7 @@ jobs:
 
       - uses: actions/setup-node@v4.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: landing/package-lock.json
 

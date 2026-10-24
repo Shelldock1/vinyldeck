@@ -42,7 +42,6 @@ pub(crate) fn bytes_to_data_url(bytes: &[u8]) -> Option<String> {
 }
 
 #[cfg(windows)]
-#[allow(dead_code)]
 pub(crate) async fn thumbnail_to_data_url(
     thumbnail: windows::Storage::Streams::IRandomAccessStreamReference,
 ) -> anyhow::Result<Option<String>> {

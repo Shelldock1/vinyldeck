@@ -1,10 +1,3 @@
-#[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct SmtcSessionMetadata {
-    pub source_id: String,
-    pub source_name: String,
-}
-
 use super::model::{
     order_players, repeat_mode_from_smtc_code, smtc_auto_repeat_code, MediaPlayer, MediaSnapshot,
 };
@@ -12,17 +5,6 @@ use super::model::{
 const TICKS_PER_SECOND: f64 = 10_000_000.0;
 const WINDOWS_UNIX_EPOCH_DIFF_SECONDS: u64 = 11_644_473_600;
 
-#[allow(dead_code)]
-pub(crate) async fn current_session_metadata() -> anyhow::Result<Option<SmtcSessionMetadata>> {
-    Ok(current_media_snapshot_with_metadata(None, None)
-        .await?
-        .map(|snapshot| SmtcSessionMetadata {
-            source_id: snapshot.source_id,
-            source_name: snapshot.source_name,
-        }))
-}
-
-#[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_metadata(
     selected: Option<String>,
     fallback: Option<String>,
@@ -50,7 +32,6 @@ pub(crate) async fn current_media_snapshot_with_metadata(
     Ok(Some(snapshot))
 }
 
-#[allow(dead_code)]
 pub(crate) async fn current_media_snapshot_with_artwork(
     selected: Option<String>,
     fallback: Option<String>,
