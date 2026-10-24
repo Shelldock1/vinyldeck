@@ -53,6 +53,15 @@ Current task track:
 - `902cacf` idle perf: `useWindowActivity` (visibility + Tauri minimize) suspends the vinyl rAF without resetting angle; 30s paused backstop. Linux release measurements (30s): visible playing WebKit ~100% before/after, minimized 0.13% both (WebKitGTK already throttles iconified windows), paused visible 2.27% → 1.2% web. Main process 2.1% → 2.0% playing, 0.8% → 0.55% paused.
 - Phase 3 verification: `npm run build`, 96 frontend tests, fmt/clippy `-D warnings` clean, 72 cargo tests, `git diff --check` clean. Live Tauri verification pending (Phase 4 smoke).
 
+### Optimization Pass — Phase 1 (2026-10-24)
+Roadmap execution in strict phases; Phase 1 = critical fixes + CI.
+- `05abe72` settings race: `SettingsState::update`/`reset` keep the state lock from read through write, so concurrent Main/Mini writes cannot clobber each other.
+- `cf14620` CI: all jobs Node 24; Windows job runs `cargo clippy --all-targets -- -D warnings`; dead `SmtcSessionMetadata`/`current_session_metadata` and the stale `#[allow(dead_code)]` in `smtc.rs`/`artwork.rs` removed. Local check is Linux-only; Windows typecheck remains CI.
+- `78618fb` ESLint: flat config (`eslint.config.js`, eslint 9) with `typescript-eslint`, react-hooks classic rules (rules-of-hooks + exhaustive-deps; React Compiler rules explicitly off), jsx-a11y recommended, `no-console` warning; `npm run lint` (`--max-warnings 0`) added to CI; console chatter now routes through `src/lib/logger.ts` (debug DEV-only). Surfaced fixes: prefer-const in useColorExtraction, `any` cast in applier, theme-menu `tabIndex`, justified suppressions for the tooltip wrapper, mini-player surface, and three effect dep arrays.
+- `1c04b02` progress ring: interval runs only while playing and the window is visible/unminimized (`useWindowActivity` passed in), with one sync on state change.
+- `8d6915b` artwork: poller emits metadata first, fetches artwork on a spawned task, delivers via `mpsc`, caches it, and emits a follow-up snapshot; stale results for a previous track are dropped. Applies to Linux HTTP/file reads and Windows WinRT thumbnails.
+- Phase 1 verification: `npm run lint`, `npm run build`, 99 frontend tests, `cargo fmt --check`, `cargo clippy -D warnings`, 73 cargo tests, `git diff --check` all clean. Not verified live: artwork timing on a real MPRIS/SMTC session, Windows CI run.
+
 ## Stage 2 Final Status
 - Core visual engine sub-stages 2a–2k implemented and verified.
 - Master Task List visual polish phases 9–11 are complete.

@@ -22,11 +22,17 @@
 - Crate play counting: a play now counts after half the track or 120 s of listening, whichever comes first (was half the track, capped at 4 minutes).
 - Window controls: close, minimize, and maximize/restore now sit at the top-right, and the floating Settings, Crate, and Mini triggers moved to a single top-left row. This reverses the earlier top-left placement; the 40px titlebar strip was re-measured at 700x560, 900x700, and maximized so neither the controls nor the triggers intersect the tonearm pivot or counterweight (narrow windows stack the controls down the right edge instead of crossing the arm). Fullscreen keeps the hover-revealed top-edge bar with the controls on the same side, and Mini shows its hover controls top-right with the return control top-left.
 - Pausing lifts the tonearm in place instead of swinging it to a fixed angle; track skips re-cue the arm to the start groove.
+- Artwork no longer blocks the playback poll. A new track's metadata and controls appear immediately, and the cover follows as a separate update once the image is read.
+- CI runs on Node 24 (Node 20 is end-of-life), lints Windows with `clippy -D warnings`, and now runs ESLint (react-hooks + jsx-a11y) on every push.
+- Frontend logging goes through `src/lib/logger.ts`; `console.debug` chatter is stripped from production builds while warnings and errors stay.
 
 ### Fixed
 
 - Arrow keys no longer skip tracks or seek while the context menu is open. The focused menu container let Left/Right leak to the global shortcuts; the menu now owns the keyboard (Escape still routes through the single topmost-surface handler), so Up/Down, Enter and Space act only on the menu item.
 - Double-clicking the custom title bar no longer maximizes and immediately snaps back; the bar kept a React double-click handler on top of Tauri's built-in drag-region maximize, so both toggled the window. Double-click maximize now runs through Tauri's script alone.
+- Concurrent settings writes from the Main and Mini windows can no longer overwrite each other; `cmd_settings_update` now holds the lock across the whole read-modify-write.
+- The progress ring stops its 500 ms ticker while playback is paused or the window is hidden or minimized, instead of polling forever.
+- Theme menu, tooltip triggers, and the mini-player surface now satisfy the new jsx-a11y checks, and dead SMTC/artwork code no longer needs `#[allow(dead_code)]`.
 
 ## 0.1.1 - 2026-07-03
 
