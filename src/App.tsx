@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { initCollection } from "./lib/collection";
 import { useBrowserListenTracker } from "./hooks/useCrate";
+import { useAudioReactivity } from "./hooks/useAudioReactivity";
 import { createPlaybackSource } from "./lib/playback/sourceFactory";
 import { useVinylDeckStore } from "./lib/playback/store";
 import {
@@ -95,6 +96,8 @@ function App() {
     // setSource/clearSource are stable (Zustand actions, never change)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useAudioReactivity();
 
   const windowMode = useVinylDeckStore((s) => s.settings.windowMode);
   const view = renderMode === "mini" ? <MiniView /> : <MainView />;

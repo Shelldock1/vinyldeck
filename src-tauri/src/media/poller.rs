@@ -114,6 +114,11 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
         .snapshot_for_poll(selection.clone(), fallback.clone())
         .await?;
     poller.observe_playing_source(snapshot.as_ref());
+    crate::reactivity::set_playing(
+        snapshot
+            .as_ref()
+            .is_some_and(|snapshot| snapshot.is_playing),
+    );
     if let Some(authority) = app.try_state::<PlaybackAuthority>() {
         authority.update(snapshot.clone());
     }

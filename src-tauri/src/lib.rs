@@ -1,6 +1,7 @@
 mod app_lifecycle;
 mod collection;
 mod media;
+mod reactivity;
 mod settings;
 mod shortcuts;
 mod sleep;
@@ -76,6 +77,7 @@ pub fn run() {
                 eprintln!("[VinylDeck crate] failed to load collection: {error}");
             }
             media::poller::start_smtc_poller(app.handle().clone());
+            reactivity::start(app.handle().clone());
             shortcuts::register(app.handle());
             tray::setup_tray(app)?;
             Ok(())

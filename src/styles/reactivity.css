@@ -1,0 +1,51 @@
+/* System-audio reactivity.
+   Values come from useAudioReactivity as unitless custom properties. Keeping
+   the effects in CSS means the 30 Hz stream never re-renders React. */
+
+:root {
+  --audio-level: 0;
+  --audio-bass: 0;
+  --audio-mid: 0;
+  --audio-treble: 0;
+}
+
+/* Tonearm: the whole arm picks up a sub-pixel jitter on the bass, and the
+   headshell carries a slightly faster shimmer from the highs. `translate` is
+   independent of the motion/react `transform` used for cueing, so the arm's
+   spring animation is untouched. */
+.controls-reactivity {
+  position: absolute;
+  left: 50%;
+  bottom: -13px;
+  transform: translateX(-50%);
+}
+
+.needle-arm {
+  translate: 0 calc(var(--audio-bass, 0) * -0.7px) 0;
+}
+
+.needle-arm__headshell-plate {
+  translate: calc(var(--audio-treble, 0) * 0.45px)
+    calc(var(--audio-bass, 0) * -0.55px);
+}
+
+/* Groove glow (full paint path): the existing glow breathes with the bass.
+   The layer is hidden by soft-render.css on Linux CPU compositing. */
+.vinyl-glow.playing {
+  opacity: calc(var(--glow-opacity, 0.5) * (1.2 + var(--audio-bass, 0) * 0.9));
+}
+
+/* Groove visibility on the soft-render path: a bass hit lifts the ring
+   highlights a little instead of animating a blurred glow. */
+.vinyl-grooves {
+  opacity: calc(
+    0.72 * var(--pressing-groove-visibility, 1) * (1 + var(--audio-bass, 0) * 0.3)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .needle-arm,
+  .needle-arm__headshell-plate {
+    translate: 0 0;
+  }
+}

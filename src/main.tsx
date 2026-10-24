@@ -8,6 +8,7 @@ import "./styles/themes.css";
 import "./styles/schemes.css";
 import "./styles/animations.css";
 import "./styles/soft-render.css";
+import "./styles/reactivity.css";
 
 // ── Apply default theme before first paint ───────────────────
 document.documentElement.setAttribute("data-theme", "noir");

@@ -1,0 +1,32 @@
+.audio-meter {
+  width: 84px;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.audio-meter__fill {
+  height: 100%;
+  width: calc(var(--audio-level, 0) * 100%);
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--ui-accent, #d9b45c) 0%,
+    color-mix(in srgb, var(--ui-accent, #d9b45c) 60%, #ffffff) 70%,
+    #ffffff 100%
+  );
+  -webkit-mask-image: repeating-linear-gradient(
+    90deg,
+    #000 0 3px,
+    transparent 3px 5px
+  );
+  mask-image: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 5px);
+  transition: width 60ms linear;
+}
+
+[data-soft-render="1"] .audio-meter {
+  box-shadow: none;
+}

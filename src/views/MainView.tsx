@@ -44,6 +44,7 @@ import { NeedleArm } from "../components/NeedleArm";
 import { ProgressRing } from "../components/ProgressRing";
 import { TrackInfo } from "../components/TrackInfo";
 import { Controls } from "../components/Controls";
+import { AudioMeter } from "../components/AudioMeter";
 import { ThemePicker } from "../components/ThemePicker";
 import { ThemeMenu } from "../components/ThemeMenu";
 import { SourceBadge } from "../components/SourceBadge";
@@ -564,7 +565,7 @@ export function MainView() {
         </div>
 
         {/* Controls — Phase 7: fades on idle */}
-        <div style={idleHideStyle}>
+        <div style={{ ...idleHideStyle, position: "relative" }}>
           <Controls
             isPlaying={isPlaying}
             canControl={effectivePlayback.canControl}
@@ -580,6 +581,9 @@ export function MainView() {
             onToggleRepeat={handleToggleRepeat}
             onToggleShuffle={handleToggleShuffle}
           />
+          <div className="controls-reactivity">
+            <AudioMeter />
+          </div>
         </div>
 
         {/* Theme picker — Phase 7: fades on idle */}
