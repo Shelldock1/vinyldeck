@@ -92,10 +92,15 @@ export async function pressRecord(input: PressInput): Promise<PressResult | null
 }
 
 /** Browser dev fallback only — Tauri counts plays in the Rust poller. */
-export function countBrowserPlay(artist: string, album: string, track: string) {
+export function countBrowserPlay(
+  artist: string,
+  album: string,
+  track: string,
+  source: { id: string; name: string },
+) {
   if (isTauri()) return;
   const records = readBrowserRecords();
-  const record = countPlayInto(records, artist, album, track, Date.now());
+  const record = countPlayInto(records, artist, album, track, Date.now(), source);
   if (!record) return;
   writeBrowserRecords(records);
   useCrateStore.getState().upsert(record);

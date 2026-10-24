@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::{clip, record_key, CollectedRecord};
+use crate::media::model::{SOURCE_KIND_APP, SOURCE_KIND_BROWSER};
 
 pub const MAX_HISTORY: usize = 10_000;
 const TOP_RECORDS: usize = 5;
@@ -26,6 +27,20 @@ pub struct PlayEvent {
     pub artist: String,
     pub album: String,
     pub track: String,
+    /// `"app"` or `"browser"`; absent on events logged before sources were
+    /// tracked (see [`event_source_kind`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_kind: Option<String>,
+}
+
+/// The event's source bucket. Legacy events without one are classified by
+/// album: browsers (YouTube) do not report albums, music players do.
+pub fn event_source_kind(event: &PlayEvent) -> &str {
+    match event.source_kind.as_deref() {
+        Some(kind) => kind,
+        None if event.album.trim().is_empty() => SOURCE_KIND_BROWSER,
+        None => SOURCE_KIND_APP,
+    }
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -99,6 +114,9 @@ pub fn validate_history(value: Option<Value>) -> Vec<PlayEvent> {
             artist: clip(event.artist.trim()),
             album: clip(event.album.trim()),
             track: clip(event.track.trim()),
+            source_kind: event
+                .source_kind
+                .filter(|kind| kind == SOURCE_KIND_APP || kind == SOURCE_KIND_BROWSER),
         });
     }
 
@@ -112,8 +130,15 @@ pub fn build_wrapped(
     records: &[CollectedRecord],
     history: &[PlayEvent],
     requested_month: Option<&str>,
+    source: Option<&str>,
     now: u64,
 ) -> WrappedStats {
+    // `None` or "all" keeps every source; otherwise one bucket only.
+    let source = source.filter(|kind| *kind == SOURCE_KIND_APP || *kind == SOURCE_KIND_BROWSER);
+    let history: Vec<&PlayEvent> = history
+        .iter()
+        .filter(|event| source.is_none_or(|kind| event_source_kind(event) == kind))
+        .collect();
     let mut available_months: Vec<String> = history
         .iter()
         .map(|event| month_key(event.at))
@@ -142,6 +167,7 @@ pub fn build_wrapped(
 
     let events: Vec<&PlayEvent> = history
         .iter()
+        .copied()
         .filter(|event| month_key(event.at) == month)
         .collect();
 
@@ -345,6 +371,8 @@ mod tests {
                     accent: "#222".into(),
                 },
                 thumbnail: None,
+                source_id: String::new(),
+                source_name: String::new(),
             },
             month_start(2026, 10),
         )
@@ -358,6 +386,7 @@ mod tests {
             artist: artist.to_string(),
             album: album.to_string(),
             track: track.to_string(),
+            source_kind: None,
         }
     }
 
@@ -415,7 +444,7 @@ mod tests {
             ),
         ];
 
-        let stats = build_wrapped(&records, &history, Some("2026-10"), october + 5_000);
+        let stats = build_wrapped(&records, &history, Some("2026-10"), None, october + 5_000);
         assert_eq!(stats.month, "2026-10");
         assert_eq!(stats.label, "October 2026");
         assert_eq!(stats.total_plays, 4);
@@ -434,14 +463,37 @@ mod tests {
     #[test]
     fn defaults_to_the_newest_month_and_handles_empty_history() {
         let history = vec![event("A", "B", "C", month_start(2026, 9))];
-        let stats = build_wrapped(&[], &history, None, month_start(2026, 10));
+        let stats = build_wrapped(&[], &history, None, None, month_start(2026, 10));
         assert_eq!(stats.month, "2026-09");
         assert_eq!(stats.total_plays, 1);
 
-        let empty = build_wrapped(&[], &[], None, month_start(2026, 10));
+        let empty = build_wrapped(&[], &[], None, None, month_start(2026, 10));
         assert_eq!(empty.month, "2026-10");
         assert_eq!(empty.total_plays, 0);
         assert!(empty.top_records.is_empty());
         assert!(empty.busiest_day.is_none());
+    }
+
+    #[test]
+    fn filters_by_source_and_classifies_legacy_events() {
+        let october = month_start(2026, 10);
+        let mut youtube = event("Channel", "", "Video", october + 1_000);
+        youtube.source_kind = Some("browser".to_string());
+        let history = vec![
+            event("A", "One", "Song", october + 2_000),
+            youtube,
+            // Legacy, no album: counted as a browser listen.
+            event("Vlogger", "", "Clip", october + 3_000),
+        ];
+
+        let music = build_wrapped(&[], &history, Some("2026-10"), Some("app"), october);
+        assert_eq!(music.total_plays, 1);
+        assert_eq!(music.top_artist.unwrap().artist, "A");
+
+        let browser = build_wrapped(&[], &history, Some("2026-10"), Some("browser"), october);
+        assert_eq!(browser.total_plays, 2);
+
+        let all = build_wrapped(&[], &history, Some("2026-10"), Some("all"), october);
+        assert_eq!(all.total_plays, 3);
     }
 }

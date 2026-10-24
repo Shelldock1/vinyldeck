@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   ListenTracker,
   countPlayInto,
+  filterBySource,
   formatPressingNumber,
   listenThresholdSeconds,
   pressInto,
   rarityFor,
   recordKey,
+  sourceKindFor,
   wearFor,
 } from "./records";
 import type { CollectedRecord, PressInput } from "./types";
@@ -20,8 +22,35 @@ function input(artist: string, album: string): PressInput {
     pressingName: "Violet Galaxy",
     colors: { primary: "#111111", secondary: "#222222", accent: "#333333" },
     thumbnail: "data:image/jpeg;base64,AAAA",
+    sourceId: "org.mpris.MediaPlayer2.spotify",
+    sourceName: "Spotify",
   };
 }
+
+describe("crate sources", () => {
+  it("splits browsers from music apps like the backend", () => {
+    expect(sourceKindFor("org.mpris.MediaPlayer2.firefox.instance_1_42", "Mozilla Firefox")).toBe("browser");
+    expect(sourceKindFor("org.mpris.MediaPlayer2.yandex-browser", "Yandex Browser")).toBe("browser");
+    expect(sourceKindFor("MSEdge", "Edge")).toBe("browser");
+    expect(sourceKindFor("org.mpris.MediaPlayer2.spotify", "Spotify")).toBe("app");
+    expect(sourceKindFor("org.mpris.MediaPlayer2.youtube-music", "YouTube Music")).toBe("app");
+  });
+
+  it("tags records and keeps a music app tag sticky", () => {
+    const records: CollectedRecord[] = [];
+    const video = countPlayInto(records, "Channel", "", "Video", 1, { id: "firefox", name: "Firefox" });
+    expect(video?.sourceKind).toBe("browser");
+
+    pressInto(records, input("A", "One"), 2);
+    const again = countPlayInto(records, "A", "One", "Song", 3, { id: "chromium", name: "Chromium" });
+    expect(again?.sourceKind).toBe("app");
+    expect(again?.sourceName).toBe("Chromium");
+
+    expect(filterBySource(records, "app").map((record) => record.key)).toEqual(["a|one"]);
+    expect(filterBySource(records, "browser").map((record) => record.key)).toEqual(["channel|video"]);
+    expect(filterBySource(records, "all")).toHaveLength(2);
+  });
+});
 
 describe("crate records", () => {
   it("keys match the backend: lowercase artist + album, track fallback", () => {

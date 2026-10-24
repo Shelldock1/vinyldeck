@@ -298,6 +298,12 @@
   border: 0.5px solid color-mix(in srgb, var(--ui-text-primary) 10%, transparent);
 }
 
+/* Source filter: Music apps / Browser / All, above the stats row. */
+.crate-source {
+  align-self: flex-start;
+  margin: 0 24px 12px;
+}
+
 .crate-sort__tab {
   padding: 5px 8px;
   border: 0;

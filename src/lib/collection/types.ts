@@ -4,6 +4,11 @@
 
 import type { VinylPressingRecipe } from "../vinyl/pressingEngine";
 
+/** Where a record was heard: a music player or a web browser (video). */
+export type SourceKind = "app" | "browser";
+/** Crate shelf filter: one source bucket, or everything. */
+export type CrateSource = SourceKind | "all";
+
 export interface PressingColors {
   primary: string;
   secondary: string;
@@ -25,6 +30,9 @@ export interface CollectedRecord {
   pressingName: string | null;
   colors: PressingColors | null;
   thumbnail: string | null;
+  /** Missing on records collected before sources were tracked. */
+  sourceKind?: SourceKind | null;
+  sourceName?: string | null;
 }
 
 export interface PressInput {
@@ -35,6 +43,8 @@ export interface PressInput {
   pressingName: string;
   colors: PressingColors;
   thumbnail: string | null;
+  sourceId: string;
+  sourceName: string;
 }
 
 export interface PressResult {

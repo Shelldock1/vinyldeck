@@ -4,9 +4,11 @@
 
 import type {
   CollectedRecord,
+  CrateSource,
   PressInput,
   PressResult,
   RarityTier,
+  SourceKind,
 } from "./types";
 
 const RARITY_BY_RECIPE: Record<string, RarityTier> = {
@@ -40,6 +42,61 @@ export function recordKey(
   const title = (album.trim() || track.trim()).toLowerCase();
   if (!title) return null;
   return `${artist.trim().toLowerCase()}|${title}`;
+}
+
+/** Mirrors `source_kind` in src-tauri/src/media/model.rs. */
+const BROWSER_MARKERS = [
+  "chrome",
+  "chromium",
+  "firefox",
+  "msedge",
+  "microsoftedge",
+  "brave",
+  "opera",
+  "vivaldi",
+  "yandex",
+  "librewolf",
+  "waterfox",
+  "floorp",
+  "zen",
+  "epiphany",
+  "falkon",
+  "plasma-browser-integration",
+  "safari",
+  "arc",
+];
+
+export function sourceKindFor(sourceId: string, sourceName: string): SourceKind {
+  const words = `${sourceId} ${sourceName}`.toLowerCase().split(/[^a-z0-9-]+/);
+  const isBrowser = words.some((word) =>
+    BROWSER_MARKERS.some(
+      (marker) =>
+        word === marker || (marker.length > 4 && word.startsWith(marker)),
+    ),
+  );
+  return isBrowser ? "browser" : "app";
+}
+
+/** Same rule as the backend: a music app tag is sticky. */
+function applySource(
+  record: CollectedRecord,
+  sourceId: string,
+  sourceName: string,
+) {
+  if (!sourceId.trim() && !sourceName.trim()) return;
+  if (record.sourceKind !== "app") {
+    record.sourceKind = sourceKindFor(sourceId, sourceName);
+  }
+  if (sourceName.trim()) record.sourceName = sourceName.trim();
+}
+
+/** Untagged legacy records only show under "all". */
+export function filterBySource(
+  records: readonly CollectedRecord[],
+  source: CrateSource,
+): CollectedRecord[] {
+  if (source === "all") return [...records];
+  return records.filter((record) => record.sourceKind === source);
 }
 
 export function rarityFor(recipe: string | null): RarityTier {
@@ -241,6 +298,7 @@ export function pressInto(
       existing.colors = input.colors;
     }
     existing.thumbnail ??= input.thumbnail;
+    applySource(existing, input.sourceId, input.sourceName);
     return { record: { ...existing }, newlyPressed };
   }
 
@@ -258,6 +316,7 @@ export function pressInto(
     colors: input.colors,
     thumbnail: input.thumbnail,
   };
+  applySource(record, input.sourceId, input.sourceName);
   records.push(record);
   return { record: { ...record }, newlyPressed: true };
 }
@@ -268,6 +327,7 @@ export function countPlayInto(
   album: string,
   track: string,
   now: number,
+  source: { id: string; name: string } = { id: "", name: "" },
 ): CollectedRecord | null {
   const key = recordKey(artist, album, track);
   if (!key) return null;
@@ -276,6 +336,7 @@ export function countPlayInto(
   if (existing) {
     existing.playCount += 1;
     existing.lastPlayedAt = now;
+    applySource(existing, source.id, source.name);
     return { ...existing };
   }
 
@@ -293,6 +354,7 @@ export function countPlayInto(
     colors: null,
     thumbnail: null,
   };
+  applySource(record, source.id, source.name);
   records.push(record);
   return { ...record };
 }

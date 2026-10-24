@@ -228,6 +228,51 @@ pub(crate) fn friendly_source_name(app_id: &str) -> String {
         .to_string()
 }
 
+/// Collection bucket for a dedicated music player (Spotify, VLC, mpv, ...).
+pub(crate) const SOURCE_KIND_APP: &str = "app";
+/// Collection bucket for web browsers: mostly YouTube and other video.
+pub(crate) const SOURCE_KIND_BROWSER: &str = "browser";
+
+/// Lowercase fragments of browser MPRIS bus names, identities, and SMTC AUMIDs.
+const BROWSER_MARKERS: &[&str] = &[
+    "chrome",
+    "chromium",
+    "firefox",
+    "msedge",
+    "microsoftedge",
+    "brave",
+    "opera",
+    "vivaldi",
+    "yandex",
+    "librewolf",
+    "waterfox",
+    "floorp",
+    "zen",
+    "epiphany",
+    "falkon",
+    "plasma-browser-integration",
+    "safari",
+    "arc",
+];
+
+/// Splits sources into dedicated music apps and web browsers so the Crate can
+/// keep video sites out of the music collection.
+pub(crate) fn source_kind(source_id: &str, source_name: &str) -> &'static str {
+    let haystack = format!("{source_id} {source_name}").to_lowercase();
+    let is_browser = haystack
+        .split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '-')
+        .any(|word| {
+            BROWSER_MARKERS
+                .iter()
+                .any(|marker| word == *marker || (marker.len() > 4 && word.starts_with(marker)))
+        });
+    if is_browser {
+        SOURCE_KIND_BROWSER
+    } else {
+        SOURCE_KIND_APP
+    }
+}
+
 #[allow(dead_code)]
 fn seconds_to_millis(seconds: f64) -> u64 {
     if !seconds.is_finite() || seconds <= 0.0 {
@@ -241,8 +286,8 @@ fn seconds_to_millis(seconds: f64) -> u64 {
 mod tests {
     use super::{
         friendly_source_name, mpris_loop_status, order_players, repeat_mode_from_mpris,
-        repeat_mode_from_smtc_code, smtc_auto_repeat_code, ticks_to_seconds, MediaPlayer,
-        MediaSnapshot,
+        repeat_mode_from_smtc_code, smtc_auto_repeat_code, source_kind, ticks_to_seconds,
+        MediaPlayer, MediaSnapshot,
     };
 
     #[test]
@@ -434,5 +479,36 @@ mod tests {
             empty_metadata.semantic_key(),
             infinite_duration.semantic_key()
         );
+    }
+
+    #[test]
+    fn source_kind_separates_browsers_from_music_apps() {
+        for (id, name) in [
+            (
+                "org.mpris.MediaPlayer2.firefox.instance_1_42",
+                "Mozilla Firefox",
+            ),
+            ("org.mpris.MediaPlayer2.chromium.instance1234", "Chromium"),
+            ("org.mpris.MediaPlayer2.yandex-browser", "Yandex Browser"),
+            (
+                "org.mpris.MediaPlayer2.plasma-browser-integration",
+                "Plasma Browser Integration",
+            ),
+            ("MSEdge", "Edge"),
+            ("Chrome", "Chrome"),
+        ] {
+            assert_eq!(source_kind(id, name), "browser", "{id}");
+        }
+        for (id, name) in [
+            ("org.mpris.MediaPlayer2.spotify", "Spotify"),
+            ("org.mpris.MediaPlayer2.vlc", "VLC media player"),
+            ("org.mpris.MediaPlayer2.mpv", "mpv"),
+            ("org.mpris.MediaPlayer2.youtube-music", "YouTube Music"),
+            ("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify", "Spotify"),
+            ("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App", "Apple Music"),
+            ("", ""),
+        ] {
+            assert_eq!(source_kind(id, name), "app", "{id}");
+        }
     }
 }

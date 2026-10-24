@@ -124,7 +124,7 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
     }
     let now = Instant::now();
     if let Some(play) = poller.listens.observe(snapshot.as_ref(), now) {
-        collection::record_play(app, &play.artist, &play.album, &play.track).await;
+        collection::record_play(app, &play).await;
     }
     // Metadata goes out now; the artwork download runs off the poll thread and
     // is emitted as a follow-up snapshot once it lands.

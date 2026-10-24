@@ -58,6 +58,8 @@ export function useCratePressing(playback: PlaybackState) {
             accent: pressing.colors.accent.hex,
           },
           thumbnail,
+          sourceId: current.sourceId,
+          sourceName: current.sourceName,
         }).then((result) => {
           // Let a failed press retry on the next pressing event.
           if (!result) pressedKeysRef.current.delete(key);
@@ -104,7 +106,10 @@ export function useBrowserListenTracker() {
               position: playback.position,
             };
       if (tracker.observe(sample, Date.now())) {
-        countBrowserPlay(playback.artist, playback.album, playback.track);
+        countBrowserPlay(playback.artist, playback.album, playback.track, {
+          id: playback.sourceId,
+          name: playback.sourceName,
+        });
       }
     }, LISTEN_POLL_MS);
 

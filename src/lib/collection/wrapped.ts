@@ -3,17 +3,19 @@
 // current month instead of pretending the localStorage collection has dates.
 
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import type { WrappedStats } from "./types";
+import type { CrateSource, WrappedStats } from "./types";
 import { logger } from "../logger";
 
 export async function getCollectionWrapped(
   month?: string,
+  source: CrateSource = "all",
 ): Promise<WrappedStats> {
   if (!isTauri()) return emptyWrapped();
 
   try {
     return await invoke<WrappedStats>("cmd_collection_wrapped", {
       month: month ?? null,
+      source,
     });
   } catch (error) {
     logger.warn("[Crate] Wrapped failed:", error);

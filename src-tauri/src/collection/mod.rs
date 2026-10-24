@@ -10,6 +10,9 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 
+use crate::media::model::{source_kind, SOURCE_KIND_APP};
+use listen::CountedPlay;
+
 pub mod listen;
 mod wrapped;
 
@@ -48,6 +51,13 @@ pub struct CollectedRecord {
     pub pressing_name: Option<String>,
     pub colors: Option<PressingColors>,
     pub thumbnail: Option<String>,
+    /// `"app"` (music player) or `"browser"`. None only for records collected
+    /// before sources were tracked whose history gave no hint.
+    #[serde(default)]
+    pub source_kind: Option<String>,
+    /// Display name of the player that last fed this record.
+    #[serde(default)]
+    pub source_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -60,6 +70,10 @@ pub struct PressInput {
     pub pressing_name: String,
     pub colors: PressingColors,
     pub thumbnail: Option<String>,
+    #[serde(default)]
+    pub source_id: String,
+    #[serde(default)]
+    pub source_name: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -86,8 +100,9 @@ impl CollectionState {
 
 pub fn initialize_collection(app: &AppHandle) -> Result<(), String> {
     let store = app.store(STORE_FILE).map_err(|error| error.to_string())?;
-    let records = validate_records(store.get(STORE_KEY));
+    let mut records = validate_records(store.get(STORE_KEY));
     let history = wrapped::validate_history(store.get(HISTORY_KEY));
+    backfill_source_kinds(&mut records, &history);
     let state = app.state::<CollectionState>();
     tauri::async_runtime::block_on(async {
         *state.records.lock().await = records;
@@ -118,20 +133,21 @@ pub async fn cmd_collection_press(
 }
 
 /// Called by the media poller once a listen crosses the scrobble threshold.
-pub async fn record_play(app: &AppHandle, artist: &str, album: &str, track: &str) {
+pub async fn record_play(app: &AppHandle, play: &CountedPlay) {
     let state = app.state::<CollectionState>();
     let now = now_millis();
     let mut records = state.records.lock().await;
-    let Some(record) = count_play(&mut records, artist, album, track, now) else {
+    let Some(record) = count_play(&mut records, play, now) else {
         return;
     };
 
     let mut history = state.history.lock().await;
     history.push(wrapped::PlayEvent {
         at: now,
-        artist: clip(artist.trim()),
-        album: clip(album.trim()),
-        track: clip(track.trim()),
+        artist: clip(play.artist.trim()),
+        album: clip(play.album.trim()),
+        track: clip(play.track.trim()),
+        source_kind: Some(source_kind(&play.source_id, &play.source_name).to_string()),
     });
     if history.len() > wrapped::MAX_HISTORY {
         let excess = history.len() - wrapped::MAX_HISTORY;
@@ -150,6 +166,7 @@ pub async fn record_play(app: &AppHandle, artist: &str, album: &str, track: &str
 pub async fn cmd_collection_wrapped(
     state: State<'_, CollectionState>,
     month: Option<String>,
+    source: Option<String>,
 ) -> Result<wrapped::WrappedStats, String> {
     let records = state.records.lock().await.clone();
     let history = state.history.lock().await.clone();
@@ -157,6 +174,7 @@ pub async fn cmd_collection_wrapped(
         &records,
         &history,
         month.as_deref(),
+        source.as_deref(),
         now_millis(),
     ))
 }
@@ -197,6 +215,7 @@ pub(crate) fn press(
         if record.thumbnail.is_none() {
             record.thumbnail = thumbnail;
         }
+        apply_source(record, &input.source_id, &input.source_name);
         return Ok(PressResult {
             record: record.clone(),
             newly_pressed,
@@ -207,7 +226,7 @@ pub(crate) fn press(
         return Err("collection is full".to_string());
     }
 
-    let record = CollectedRecord {
+    let mut record = CollectedRecord {
         key,
         album: clip(input.album.trim()),
         artist: clip(input.artist.trim()),
@@ -220,7 +239,10 @@ pub(crate) fn press(
         pressing_name: Some(clip(&input.pressing_name)),
         colors: Some(clip_colors(input.colors)),
         thumbnail,
+        source_kind: None,
+        source_name: None,
     };
+    apply_source(&mut record, &input.source_id, &input.source_name);
     records.push(record.clone());
     Ok(PressResult {
         record,
@@ -230,16 +252,16 @@ pub(crate) fn press(
 
 fn count_play(
     records: &mut Vec<CollectedRecord>,
-    artist: &str,
-    album: &str,
-    track: &str,
+    play: &CountedPlay,
     now: u64,
 ) -> Option<CollectedRecord> {
+    let (artist, album, track) = (&play.artist, &play.album, &play.track);
     let key = record_key(artist, album, track)?;
 
     if let Some(record) = records.iter_mut().find(|record| record.key == key) {
         record.play_count = record.play_count.saturating_add(1);
         record.last_played_at = Some(now);
+        apply_source(record, &play.source_id, &play.source_name);
         return Some(record.clone());
     }
 
@@ -253,7 +275,7 @@ fn count_play(
     } else {
         album
     };
-    let record = CollectedRecord {
+    let mut record = CollectedRecord {
         key,
         album: clip(title.trim()),
         artist: clip(artist.trim()),
@@ -266,9 +288,53 @@ fn count_play(
         pressing_name: None,
         colors: None,
         thumbnail: None,
+        source_kind: None,
+        source_name: None,
     };
+    apply_source(&mut record, &play.source_id, &play.source_name);
     records.push(record.clone());
     Some(record)
+}
+
+/// Tags a record with the player feeding it. A music app is sticky: an album
+/// once heard in Spotify stays in the music shelf even if a browser later
+/// plays something with the same key.
+fn apply_source(record: &mut CollectedRecord, source_id: &str, source_name: &str) {
+    if source_id.trim().is_empty() && source_name.trim().is_empty() {
+        return;
+    }
+    let kind = source_kind(source_id, source_name);
+    if record.source_kind.as_deref() != Some(SOURCE_KIND_APP) {
+        record.source_kind = Some(kind.to_string());
+    }
+    if !source_name.trim().is_empty() {
+        record.source_name = Some(clip(source_name.trim()));
+    }
+}
+
+/// Records collected before sources were tracked get a kind from their play
+/// history. Browser sessions (YouTube) report no album, while music players
+/// do, so an album-less listen marks a browser record.
+fn backfill_source_kinds(records: &mut [CollectedRecord], history: &[wrapped::PlayEvent]) {
+    for record in records
+        .iter_mut()
+        .filter(|record| record.source_kind.is_none())
+    {
+        let mut kind = None;
+        for event in history {
+            if record_key(&event.artist, &event.album, &event.track).as_deref()
+                != Some(record.key.as_str())
+            {
+                continue;
+            }
+            let event_kind = wrapped::event_source_kind(event);
+            kind = Some(event_kind);
+            if event_kind == SOURCE_KIND_APP {
+                break;
+            }
+        }
+        record.source_kind = kind.map(str::to_string);
+    }
 }
 
 fn next_pressing_number(records: &[CollectedRecord]) -> u32 {
@@ -363,7 +429,20 @@ fn now_millis() -> u64 {
 mod tests {
     use serde_json::json;
 
-    use super::{count_play, press, record_key, validate_records, PressInput, PressingColors};
+    use super::{
+        backfill_source_kinds, count_play, press, record_key, validate_records, wrapped::PlayEvent,
+        CountedPlay, PressInput, PressingColors,
+    };
+
+    fn play(artist: &str, album: &str, track: &str, source: &str) -> CountedPlay {
+        CountedPlay {
+            artist: artist.to_string(),
+            album: album.to_string(),
+            track: track.to_string(),
+            source_id: source.to_lowercase(),
+            source_name: source.to_string(),
+        }
+    }
 
     fn input(artist: &str, album: &str) -> PressInput {
         PressInput {
@@ -378,6 +457,8 @@ mod tests {
                 accent: "#778899".to_string(),
             },
             thumbnail: Some("data:image/jpeg;base64,AAAA".to_string()),
+            source_id: "org.mpris.MediaPlayer2.spotify".to_string(),
+            source_name: "Spotify".to_string(),
         }
     }
 
@@ -409,7 +490,7 @@ mod tests {
     #[test]
     fn plays_accumulate_and_stub_records_get_pressed_later() {
         let mut records = Vec::new();
-        let stub = count_play(&mut records, "A", "One", "Track", 5).unwrap();
+        let stub = count_play(&mut records, &play("A", "One", "Track", "Spotify"), 5).unwrap();
         assert_eq!(stub.play_count, 1);
         assert!(stub.recipe.is_none());
 
@@ -418,7 +499,7 @@ mod tests {
         assert_eq!(pressed.record.play_count, 1);
         assert_eq!(pressed.record.recipe.as_deref(), Some("galaxy"));
 
-        let played = count_play(&mut records, "A", "One", "Other", 7).unwrap();
+        let played = count_play(&mut records, &play("A", "One", "Other", "Spotify"), 7).unwrap();
         assert_eq!(played.play_count, 2);
         assert_eq!(played.last_played_at, Some(7));
     }
@@ -451,5 +532,53 @@ mod tests {
         assert_eq!(records[0].play_count, 3);
         assert!(records[0].thumbnail.is_none());
         assert!(validate_records(Some(json!({ "not": "a list" }))).is_empty());
+    }
+
+    #[test]
+    fn records_remember_their_source_and_music_apps_are_sticky() {
+        let mut records = Vec::new();
+        let video = count_play(&mut records, &play("Channel", "", "Video", "Firefox"), 1).unwrap();
+        assert_eq!(video.source_kind.as_deref(), Some("browser"));
+        assert_eq!(video.source_name.as_deref(), Some("Firefox"));
+
+        let pressed = press(&mut records, input("A", "One"), 2).unwrap();
+        assert_eq!(pressed.record.source_kind.as_deref(), Some("app"));
+
+        let again = count_play(&mut records, &play("A", "One", "Song", "Chromium"), 3).unwrap();
+        assert_eq!(again.source_kind.as_deref(), Some("app"));
+        assert_eq!(again.source_name.as_deref(), Some("Chromium"));
+    }
+
+    #[test]
+    fn legacy_records_are_classified_from_history() {
+        let mut records = validate_records(Some(json!([
+            { "key": "a|one", "album": "One", "artist": "A", "pressingNumber": 1,
+              "firstPressedAt": 1, "lastPlayedAt": 2, "playCount": 1,
+              "recipe": null, "pressingType": null, "pressingName": null,
+              "colors": null, "thumbnail": null },
+            { "key": "channel|video", "album": "Video", "artist": "Channel",
+              "pressingNumber": 2, "firstPressedAt": 1, "lastPlayedAt": 2,
+              "playCount": 1, "recipe": null, "pressingType": null,
+              "pressingName": null, "colors": null, "thumbnail": null },
+            { "key": "never|played", "album": "Played", "artist": "Never",
+              "pressingNumber": 3, "firstPressedAt": 1, "lastPlayedAt": null,
+              "playCount": 0, "recipe": null, "pressingType": null,
+              "pressingName": null, "colors": null, "thumbnail": null }
+        ])));
+        let event = |artist: &str, album: &str, track: &str| PlayEvent {
+            at: 2,
+            artist: artist.to_string(),
+            album: album.to_string(),
+            track: track.to_string(),
+            source_kind: None,
+        };
+        backfill_source_kinds(
+            &mut records,
+            &[event("A", "One", "Song"), event("Channel", "", "Video")],
+        );
+
+        assert_eq!(records[0].source_kind.as_deref(), Some("app"));
+        assert_eq!(records[1].source_kind.as_deref(), Some("browser"));
+        assert_eq!(records[2].source_kind, None);
     }
 }

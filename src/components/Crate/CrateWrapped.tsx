@@ -4,14 +4,16 @@
 
 import { useEffect, useState } from "react";
 import { getCollectionWrapped, formatWrappedDay, formatWrappedMonth } from "../../lib/collection/wrapped";
-import type { WrappedStats } from "../../lib/collection/types";
+import type { CrateSource, WrappedStats } from "../../lib/collection/types";
 
 interface CrateWrappedProps {
   open: boolean;
   onClose: () => void;
+  /** Same source filter as the shelf behind the card. */
+  source: CrateSource;
 }
 
-export function CrateWrapped({ open, onClose }: CrateWrappedProps) {
+export function CrateWrapped({ open, onClose, source }: CrateWrappedProps) {
   const [stats, setStats] = useState<WrappedStats | null>(null);
   const [month, setMonth] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export function CrateWrapped({ open, onClose }: CrateWrappedProps) {
     setLoading(true);
     setError(null);
 
-    void getCollectionWrapped(month)
+    void getCollectionWrapped(month, source)
       .then((next) => {
         if (!alive) return;
         setStats(next);
@@ -39,7 +41,7 @@ export function CrateWrapped({ open, onClose }: CrateWrappedProps) {
     return () => {
       alive = false;
     };
-  }, [open, month]);
+  }, [open, month, source]);
 
   if (!open) return null;
 

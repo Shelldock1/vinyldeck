@@ -22,6 +22,8 @@ pub struct CountedPlay {
     pub artist: String,
     pub album: String,
     pub track: String,
+    pub source_id: String,
+    pub source_name: String,
 }
 
 #[derive(Debug, Default)]
@@ -92,6 +94,8 @@ impl ListenTracker {
             artist: snapshot.artist.clone(),
             album: snapshot.album.clone(),
             track: snapshot.track.clone(),
+            source_id: snapshot.source_id.clone(),
+            source_name: snapshot.source_name.clone(),
         })
     }
 }

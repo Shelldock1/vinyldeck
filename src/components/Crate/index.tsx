@@ -11,6 +11,7 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useCrateStore } from "../../lib/collection";
 import {
   collectionStats,
+  filterBySource,
   filterRecords,
   formatPressingNumber,
   rarityFor,
@@ -19,7 +20,7 @@ import {
   wearFor,
 } from "../../lib/collection/records";
 import type { CrateSort } from "../../lib/collection/records";
-import type { CollectedRecord } from "../../lib/collection/types";
+import type { CollectedRecord, CrateSource } from "../../lib/collection/types";
 import { CrateDisc } from "./CrateDisc";
 import { CrateWrapped } from "./CrateWrapped";
 import "../VinylRecord/wear.css";
@@ -32,6 +33,32 @@ const SORTS: { id: CrateSort; label: string; short: string }[] = [
   { id: "number", label: "Pressing order", short: "Press" },
   { id: "alpha", label: "Artist A–Z", short: "A–Z" },
 ];
+
+const SOURCES: { id: CrateSource; label: string; title: string }[] = [
+  { id: "app", label: "Music", title: "Music apps (Spotify, VLC, ...)" },
+  { id: "browser", label: "Browser", title: "Browsers (YouTube and other sites)" },
+  { id: "all", label: "All", title: "Everything, including older untagged records" },
+];
+
+const SOURCE_STORAGE_KEY = "vinyldeck:crate:source";
+
+function readStoredSource(): CrateSource {
+  try {
+    const stored = window.localStorage.getItem(SOURCE_STORAGE_KEY);
+    if (SOURCES.some((option) => option.id === stored)) return stored as CrateSource;
+  } catch {
+    // Storage blocked: fall back to the music shelf.
+  }
+  return "app";
+}
+
+function storeSource(source: CrateSource) {
+  try {
+    window.localStorage.setItem(SOURCE_STORAGE_KEY, source);
+  } catch {
+    // Not persisted; the choice still applies until the crate closes.
+  }
+}
 
 const RARITY_LABEL = {
   common: "Common",
@@ -70,6 +97,7 @@ interface CrateProps {
 export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   const recordsByKey = useCrateStore((state) => state.records);
   const [sort, setSort] = useState<CrateSort>("recent");
+  const [source, setSource] = useState<CrateSource>(readStoredSource);
   const [query, setQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [wrappedOpen, setWrappedOpen] = useState(false);
@@ -80,7 +108,8 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   const lastFadeKey = useRef("");
   const reduceMotion = useReducedMotion();
 
-  const records = useMemo(() => Object.values(recordsByKey), [recordsByKey]);
+  const allRecords = useMemo(() => Object.values(recordsByKey), [recordsByKey]);
+  const records = useMemo(() => filterBySource(allRecords, source), [allRecords, source]);
   const filtered = useMemo(() => filterRecords(records, query), [records, query]);
   const sorted = useMemo(() => sortRecords(filtered, sort), [filtered, sort]);
   const stats = collectionStats(records);
@@ -109,7 +138,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
     }
     if (reduceMotion) return;
     const node = gridRef.current;
-    const key = `${sort}\u0000${query}`;
+    const key = `${source}\u0000${sort}\u0000${query}`;
     if (!node || lastFadeKey.current === key) return;
     const firstPaint = lastFadeKey.current === "";
     lastFadeKey.current = key;
@@ -118,7 +147,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
       [{ opacity: 0.55 }, { opacity: 1 }],
       { duration: 180, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
     );
-  }, [open, query, sort, reduceMotion, sorted.length]);
+  }, [open, query, sort, source, reduceMotion, sorted.length]);
 
   if (!open) return null;
 
@@ -170,7 +199,29 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
           </div>
         </header>
 
-        <CrateWrapped open={wrappedOpen} onClose={() => setWrappedOpen(false)} />
+        <CrateWrapped
+          open={wrappedOpen}
+          onClose={() => setWrappedOpen(false)}
+          source={source}
+        />
+
+        <div className="crate-sort crate-source" role="group" aria-label="Filter by source">
+          {SOURCES.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={`crate-sort__tab${source === option.id ? " crate-sort__tab--active" : ""}`}
+              aria-pressed={source === option.id}
+              title={option.title}
+              onClick={() => {
+                setSource(option.id);
+                storeSource(option.id);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
 
         <dl className="crate-panel__stats" aria-label="Collection statistics">
           <div className="crate-panel__stat">
@@ -196,11 +247,24 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
         {records.length === 0 ? (
           <div className="crate-panel__empty">
             <CrateEmptyArt />
-            <p className="crate-panel__empty-title">The crate is empty</p>
-            <p className="crate-panel__empty-copy">
-              Play any album. VinylDeck presses a one-of-a-kind copy for it,
-              and every listen leaves its mark.
-            </p>
+            {allRecords.length === 0 ? (
+              <>
+                <p className="crate-panel__empty-title">The crate is empty</p>
+                <p className="crate-panel__empty-copy">
+                  Play any album. VinylDeck presses a one-of-a-kind copy for it,
+                  and every listen leaves its mark.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="crate-panel__empty-title">Nothing from this source</p>
+                <p className="crate-panel__empty-copy">
+                  {source === "app"
+                    ? "Albums from music players like Spotify or VLC land here."
+                    : "Videos and music played in a browser land here."}
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="crate-panel__body">
@@ -360,6 +424,12 @@ function RecordCard({ record }: { record: CollectedRecord }) {
           <dt>Last spin</dt>
           <dd>{record.lastPlayedAt ? dateFormat.format(record.lastPlayedAt) : "Not yet"}</dd>
         </div>
+        {record.sourceName && (
+          <div>
+            <dt>Source</dt>
+            <dd>{record.sourceName}</dd>
+          </div>
+        )}
         <div>
           <dt>Played</dt>
           <dd>{plural(record.playCount, "time")}</dd>
