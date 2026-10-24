@@ -41,9 +41,6 @@
 *.wxs       text eol=crlf
 *.wxi       text eol=crlf
 
-# Executable bits survive clones with core.fileMode=false.
-*.sh        text eol=lf
-
 # Binary assets.
 *.png       binary
 *.jpg       binary

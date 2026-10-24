@@ -8,6 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.2.1] - 2026-10-24
+
+### Fixed
+
+- **`install.ps1` no longer closes the PowerShell window on errors.** The one-line installer runs inside the caller's session (`irm | iex`), so `exit` ended the whole session before the error could be read. Errors are now thrown and printed, and the script's preferences and variables no longer leak into the session.
+- **Stricter release links in the update check.** `cmd_open_release` accepts only the releases index, `/latest` or `/tag/<tag>`, and Windows opens the page through `rundll32 url.dll` instead of `cmd /C start`, so shell metacharacters cannot reach a command interpreter.
+- Broken `0.1.x` comparison links in this changelog and a misleading comment in `.gitattributes`.
+
 ## [0.2.0] - 2026-10-24
 
 The cross-platform release: Windows and Linux reach feature parity, both ship
@@ -143,7 +151,7 @@ full documentation pass.
 - Splash screen.
 - Active WebGL vinyl renderer.
 
-[Unreleased]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Shelldock1/vinyldeck/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/Shelldock1/vinyldeck/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/Shelldock1/vinyldeck/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Shelldock1/vinyldeck/releases/tag/v0.1.1
