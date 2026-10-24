@@ -1,4 +1,5 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import { logger } from "../logger";
 
 export const MEDIA_PLAYERS_COMMAND = "cmd_media_players";
 
@@ -57,7 +58,7 @@ export async function listMediaPlayers(): Promise<MediaPlayer[]> {
       await invoke<unknown>(MEDIA_PLAYERS_COMMAND),
     );
   } catch (error) {
-    console.warn("[MediaPlayers] List failed:", error);
+    logger.warn("[MediaPlayers] List failed:", error);
     return [];
   }
 }

@@ -29,7 +29,7 @@ export function CrateStamp({ record, onOpenCrate }: CrateStampProps) {
     setCelebrating(true);
     const id = setTimeout(() => setCelebrating(false), remaining);
     return () => clearTimeout(id);
-  }, [record?.key, lastNewPressing]);
+  }, [record, lastNewPressing]);
 
   if (!record) return null;
 

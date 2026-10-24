@@ -16,6 +16,7 @@ import {
 import type { ThemeId } from "../../lib/themes/applier";
 import { useVinylDeckStore } from "../../lib/playback/store";
 import { commitSettings } from "../../lib/settings";
+import { logger } from "../../lib/logger";
 
 const SHELL_ACCENT: Record<ThemeId, string> = {
   noir: "#f1efea",
@@ -45,7 +46,7 @@ export function ThemePicker() {
     void commitSettings({ theme: id })
       .then(applyCommittedSettings)
       .catch((error) => {
-        console.warn("[Settings] Theme update failed:", error);
+        logger.warn("[Settings] Theme update failed:", error);
       });
   }
 
@@ -55,7 +56,7 @@ export function ThemePicker() {
     void commitSettings({ ambientMode: nextMode, artAmbient: nextMode !== "off" })
       .then(applyCommittedSettings)
       .catch((error) => {
-        console.warn("[Settings] Art ambient update failed:", error);
+        logger.warn("[Settings] Art ambient update failed:", error);
       });
   }
 

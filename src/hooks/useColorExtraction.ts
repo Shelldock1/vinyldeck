@@ -26,6 +26,7 @@ import type {
   RgbColor,
   VinylPressing,
 } from "../lib/vinyl/pressingEngine";
+import { logger } from "../lib/logger";
 
 const fac = new FastAverageColor();
 const PALETTE_CANVAS_SIZE = 72;
@@ -118,10 +119,10 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
  * Returns "" if the color is near-achromatic (no usable hue).
  */
 function boostToAmbient(r: number, g: number, b: number): string {
-  let [h, s, l] = rgbToHsl(r, g, b);
-  if (s < 0.05) return "";
-  s = Math.min(Math.max(s, 0.55), 0.9);
-  l = Math.min(Math.max(l, 0.25), 0.5);
+  const [h, rawS, rawL] = rgbToHsl(r, g, b);
+  if (rawS < 0.05) return "";
+  const s = Math.min(Math.max(rawS, 0.55), 0.9);
+  const l = Math.min(Math.max(rawL, 0.25), 0.5);
   const [rb, gb, bb] = hslToRgb(h, s, l);
   return `rgb(${rb},${gb},${bb})`;
 }
@@ -137,7 +138,7 @@ export async function extractAmbientColors(artworkSrc: string): Promise<{
     const imgEl = await loadImage(artworkSrc);
     return extractAmbientFromImage(imgEl);
   } catch (err) {
-    console.warn("[VinylDeck] Color extraction failed:", err);
+    logger.warn("[VinylDeck] Color extraction failed:", err);
     return null;
   }
 }
@@ -158,7 +159,7 @@ export async function extractArtworkVisuals(
       pressing,
     };
   } catch (err) {
-    console.warn("[VinylDeck] Artwork visual extraction failed:", err);
+    logger.warn("[VinylDeck] Artwork visual extraction failed:", err);
     return null;
   }
 }
@@ -182,13 +183,13 @@ async function extractAmbientFromImage(imgEl: HTMLImageElement): Promise<{
   const color = boostToAmbient(r, g, b);
 
   if (!color) {
-    console.debug(
+    logger.debug(
       `[VinylDeck] near-achromatic rgb(${r},${g},${b}) → theme ambient fallback`,
     );
     return null;
   }
 
-  console.debug(`[VinylDeck] ambient: raw=rgb(${r},${g},${b}) → ${color}`);
+  logger.debug(`[VinylDeck] ambient: raw=rgb(${r},${g},${b}) → ${color}`);
   return { primary: color, secondary: color };
 }
 
@@ -208,7 +209,7 @@ function colorToAmbientCss(
   color: RgbColor,
   role: "primary" | "secondary" | "accent",
 ): string {
-  let h = color.h / 360;
+  const h = color.h / 360;
   let s = color.s;
   let l = color.l;
 
@@ -240,7 +241,7 @@ export async function extractArtworkPalette(
     const imgEl = await loadImage(artworkSrc);
     return extractArtworkPaletteFromImage(imgEl);
   } catch (err) {
-    console.warn("[VinylDeck] Palette extraction failed:", err);
+    logger.warn("[VinylDeck] Palette extraction failed:", err);
     return null;
   }
 }
@@ -527,7 +528,7 @@ export function useColorExtraction(
         );
       }
 
-      console.debug(
+      logger.debug(
         `[VinylDeck] vinyl pressing: ${result.pressing.type} seed=${result.pressing.seed}`,
         result.palette.characteristics,
       );

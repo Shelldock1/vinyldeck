@@ -15,6 +15,7 @@ import {
 import { DEFAULT_SETTINGS, WINDOW_MODES } from "./types";
 import type { PersistedSettings } from "./types";
 import type { AmbientModeId, LegacyThemeId, ThemeId } from "../themes/applier";
+import { logger } from "../logger";
 
 export const SETTINGS_CHANGED_EVENT = "settings-changed";
 
@@ -83,7 +84,7 @@ export async function loadSettings(): Promise<PersistedSettings> {
       await invoke<PersistedSettings>("cmd_settings_snapshot"),
     );
   } catch (error) {
-    console.warn("[Settings] Snapshot failed:", error);
+    logger.warn("[Settings] Snapshot failed:", error);
     return DEFAULT_SETTINGS;
   }
 }

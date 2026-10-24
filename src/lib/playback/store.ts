@@ -9,6 +9,7 @@ import type { AmbientModeId, ThemeId } from "../themes/applier";
 import { DEFAULT_SETTINGS } from "../settings/types";
 import type { PersistedSettings } from "../settings/types";
 import type { TrackChangeDirection } from "../trackTransition/types";
+import { logger } from "../logger";
 
 const PENDING_SEEK_TIMEOUT_MS = 1500;
 const PENDING_SEEK_SETTLE_SECONDS = 1.25;
@@ -172,7 +173,7 @@ export const useVinylDeckStore = create<VinylDeckStore>()(
 
       // Start the source
       source.start().catch((error) => {
-        console.error(error);
+        logger.error(error);
         if (get().source === source) get().clearSource(source);
       });
     },

@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { logger } from "../lib/logger";
 
 export function isWindowSuspended(hidden: boolean, minimized: boolean): boolean {
   return hidden || minimized;
@@ -63,7 +64,7 @@ export function useWindowActivity(): { isSuspended: boolean } {
         unlisteners.push(unlistenFocus, unlistenResize);
         syncMinimized();
       } catch (error) {
-        console.warn("[WindowActivity] window listeners failed:", error);
+        logger.warn("[WindowActivity] window listeners failed:", error);
       }
     })();
 

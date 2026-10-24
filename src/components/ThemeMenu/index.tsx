@@ -16,6 +16,7 @@ import type { SchemeId } from "../../lib/themes/applier";
 import { useVinylDeckStore } from "../../lib/playback/store";
 import { commitSettings } from "../../lib/settings";
 import "./ThemeMenu.css";
+import { logger } from "../../lib/logger";
 
 export function ThemeMenu() {
   const scheme = useVinylDeckStore((s) => s.settings.scheme);
@@ -54,7 +55,7 @@ export function ThemeMenu() {
         if (settings.ambientMode === "off") resetAmbientColors();
       })
       .catch((error) => {
-        console.warn("[Settings] Scheme update failed:", error);
+        logger.warn("[Settings] Scheme update failed:", error);
       });
   }
 
@@ -125,6 +126,7 @@ export function ThemeMenu() {
           className="theme-menu__list"
           role="menu"
           aria-label="Theme"
+          tabIndex={-1}
           onKeyDown={handleMenuKeyDown}
         >
           {SCHEME_IDS.map((id, index) => {

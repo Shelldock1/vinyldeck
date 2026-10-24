@@ -1,6 +1,7 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useVinylDeckStore } from "../playback/store";
 import type { RepeatMode } from "../playback/types";
+import { logger } from "../logger";
 
 export const MEDIA_SET_REPEAT_COMMAND = "cmd_media_set_repeat";
 export const MEDIA_SET_SHUFFLE_COMMAND = "cmd_media_set_shuffle";
@@ -34,7 +35,7 @@ export async function setRepeatMode(mode: RepeatMode): Promise<void> {
   try {
     await invoke(MEDIA_SET_REPEAT_COMMAND, { mode });
   } catch (error) {
-    console.warn(`[MediaControls] ${MEDIA_SET_REPEAT_COMMAND} failed:`, error);
+    logger.warn(`[MediaControls] ${MEDIA_SET_REPEAT_COMMAND} failed:`, error);
   }
 }
 
@@ -47,6 +48,6 @@ export async function setShuffle(enabled: boolean): Promise<void> {
   try {
     await invoke(MEDIA_SET_SHUFFLE_COMMAND, { enabled });
   } catch (error) {
-    console.warn(`[MediaControls] ${MEDIA_SET_SHUFFLE_COMMAND} failed:`, error);
+    logger.warn(`[MediaControls] ${MEDIA_SET_SHUFFLE_COMMAND} failed:`, error);
   }
 }

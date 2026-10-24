@@ -13,6 +13,7 @@ import { useVinylDeckStore } from "../lib/playback/store";
 import { isShortcutCheatSheetKey } from "../lib/shortcuts";
 import { setNativeWindowMode } from "../lib/window";
 import type { RenderWindowMode, WindowMode } from "../lib/window/types";
+import { logger } from "../lib/logger";
 
 const THEMES: ThemeId[] = ["noir", "glass"];
 export const KEYBOARD_SEEK_STEP_SECONDS = 5;
@@ -116,7 +117,7 @@ export function useKeyboardShortcuts({
       if (event.ctrlKey && event.code === "KeyQ") {
         event.preventDefault();
         void quitApplication().catch((error) => {
-          console.warn("[Shortcuts] Quit failed:", error);
+          logger.warn("[Shortcuts] Quit failed:", error);
         });
         return;
       }
@@ -349,5 +350,5 @@ async function toggleArtAmbient() {
 }
 
 function logShortcutError(error: unknown) {
-  console.warn("[Shortcuts] Action failed:", error);
+  logger.warn("[Shortcuts] Action failed:", error);
 }

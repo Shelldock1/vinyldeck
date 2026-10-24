@@ -80,6 +80,9 @@ export function TooltipTrigger({
   }
 
   return (
+    // The wrapper only mirrors hover/focus into tooltip state; the actual
+    // interactive element is the child control passed by the caller.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <span
       ref={context.triggerRef}
       className={`tooltip-trigger ${className}`.trim()}

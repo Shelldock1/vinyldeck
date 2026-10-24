@@ -58,6 +58,7 @@ import { useCratePressing, useCurrentRecord } from "../hooks/useCrate";
 import { Kbd } from "../components/Kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../components/Tooltip";
 import { useColorExtraction } from "../hooks/useColorExtraction";
+import { logger } from "../lib/logger";
 import { useIdleMode } from "../hooks/useIdleMode";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useWindowActivity } from "../hooks/useWindowActivity";
@@ -209,7 +210,7 @@ export function MainView() {
         });
       })
       .catch((error) => {
-        console.warn("[SleepTimer] Subscribe failed:", error);
+        logger.warn("[SleepTimer] Subscribe failed:", error);
       });
     void subscribeToSleepTimerFired(() => {
       if (alive) setParkRequest((request) => request + 1);
@@ -219,7 +220,7 @@ export function MainView() {
         else unlisten();
       })
       .catch((error) => {
-        console.warn("[SleepTimer] Fired subscribe failed:", error);
+        logger.warn("[SleepTimer] Fired subscribe failed:", error);
       });
 
     return () => {
@@ -290,7 +291,7 @@ export function MainView() {
         return setNativeWindowMode(mode);
       })
       .catch((error) => {
-        console.warn("[ContextMenu] Window mode failed:", error);
+        logger.warn("[ContextMenu] Window mode failed:", error);
       });
   }
 
@@ -303,7 +304,7 @@ export function MainView() {
     })
       .then(applyCommittedSettings)
       .catch((error) => {
-        console.warn("[ContextMenu] Art Ambient failed:", error);
+        logger.warn("[ContextMenu] Art Ambient failed:", error);
       });
   }
 
@@ -311,7 +312,7 @@ export function MainView() {
     void startSleepTimer(mode, minutes)
       .then((snapshot) => setSleepTimer(snapshot))
       .catch((error) => {
-        console.warn("[ContextMenu] Sleep timer failed:", error);
+        logger.warn("[ContextMenu] Sleep timer failed:", error);
       });
   }
 
@@ -319,7 +320,7 @@ export function MainView() {
     void cancelSleepTimer()
       .then(() => setSleepTimer(null))
       .catch((error) => {
-        console.warn("[ContextMenu] Sleep timer cancel failed:", error);
+        logger.warn("[ContextMenu] Sleep timer cancel failed:", error);
       });
   }
 
@@ -417,11 +418,14 @@ export function MainView() {
         destructive: true,
         onSelect: () => {
           void quitApplication().catch((error) => {
-            console.warn("[ContextMenu] Quit failed:", error);
+            logger.warn("[ContextMenu] Quit failed:", error);
           });
         },
       },
     ],
+    // Handlers are recreated every render; including them would rebuild the
+    // menu constantly. The listed values capture everything the labels need.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       effectivePlayback,
       isPlaying,

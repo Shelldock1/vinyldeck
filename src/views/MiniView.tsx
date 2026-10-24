@@ -28,6 +28,7 @@ import {
   useVinylDeckStore,
 } from "../lib/playback/store";
 import "./MiniView.css";
+import { logger } from "../lib/logger";
 
 const MINI_CONTROLS_HIDE_MS = 1400;
 const MINI_SNAP_THRESHOLD_PX = 40;
@@ -114,7 +115,7 @@ export function MiniView() {
     void getCurrentWindow()
       .startDragging()
       .catch((error) => {
-        console.warn("[Window] Mini drag failed:", error);
+        logger.warn("[Window] Mini drag failed:", error);
       });
   }
 
@@ -172,6 +173,9 @@ export function MiniView() {
   }
 
   return (
+    // The mini-player root is a window-sized surface, not a control: pointer
+    // activity reveals chrome and starts native window dragging.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <main
       className={`mini-view${isTransparent ? " mini-view--transparent" : ""}${miniMetrics.isCompact ? " mini-view--compact" : ""}`}
       style={miniStyle}
@@ -243,7 +247,7 @@ export function MiniView() {
             void getCurrentWindow()
               .minimize()
               .catch((error) => {
-                console.warn("[Window] Mini minimize failed:", error);
+                logger.warn("[Window] Mini minimize failed:", error);
               });
           }}
         >
@@ -261,7 +265,7 @@ export function MiniView() {
             void getCurrentWindow()
               .close()
               .catch((error) => {
-                console.warn("[Window] Mini close failed:", error);
+                logger.warn("[Window] Mini close failed:", error);
               });
           }}
         >

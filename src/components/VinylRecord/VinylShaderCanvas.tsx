@@ -17,6 +17,7 @@ import {
 import { bakeVinylTexture } from "../../lib/vinyl/textureBake";
 import { VINYL_VERTEX_SHADER } from "../../lib/vinyl/shaders/vinyl.vert";
 import { VINYL_FRAGMENT_SHADER } from "../../lib/vinyl/shaders/vinyl.frag";
+import { logger } from "../../lib/logger";
 
 export interface VinylShaderHandle {
   setRotation: (rotation: number, velocity: number) => void;
@@ -133,7 +134,7 @@ export const VinylShaderCanvas = forwardRef<
       onReadyRef.current?.(true);
       draw(state);
     } catch (error) {
-      console.warn(
+      logger.warn(
         "[VinylDeck] WebGL vinyl renderer failed; falling back to CSS:",
         error,
       );
@@ -170,6 +171,7 @@ export const VinylShaderCanvas = forwardRef<
       onReadyRef.current?.(false);
     };
     // Initialize WebGL once. Artwork and size updates are handled by dedicated effects.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fallbackPressing]);
 
   useEffect(() => {

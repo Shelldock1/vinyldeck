@@ -2,6 +2,7 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { EMPTY_PLAYBACK } from "./store";
 import type { PlaybackSource, PlaybackState, RepeatMode } from "./types";
+import { logger } from "../logger";
 
 const MEDIA_SNAPSHOT_EVENT = "media-state-changed";
 const MEDIA_POSITION_EVENT = "media-position-changed";
@@ -138,7 +139,7 @@ export function createTauriSource(): PlaybackSource {
     try {
       notify(parseBackendMediaSnapshot(payload));
     } catch (error) {
-      console.warn(`[TauriSource] ${context} payload rejected:`, error);
+      logger.warn(`[TauriSource] ${context} payload rejected:`, error);
     }
   }
 
@@ -146,7 +147,7 @@ export function createTauriSource(): PlaybackSource {
   // full state so the store sees an unchanged track and skips re-renders.
   function notifyPositionFromBackendPayload(payload: unknown) {
     if (!isBackendMediaPosition(payload)) {
-      console.warn(`[TauriSource] ${MEDIA_POSITION_EVENT} payload rejected:`, payload);
+      logger.warn(`[TauriSource] ${MEDIA_POSITION_EVENT} payload rejected:`, payload);
       return;
     }
     if (currentState === EMPTY_PLAYBACK) return;
@@ -158,7 +159,7 @@ export function createTauriSource(): PlaybackSource {
       try {
         unlisteners.pop()?.();
       } catch (error) {
-        console.warn("[TauriSource] event unlisten failed:", error);
+        logger.warn("[TauriSource] event unlisten failed:", error);
       }
     }
   }
@@ -184,7 +185,7 @@ export function createTauriSource(): PlaybackSource {
     const suppressed = previous?.suppressed ?? 0;
     commandErrors.set(command, { lastLoggedAt: now, suppressed: 0 });
     const suffix = suppressed > 0 ? ` (${suppressed} repeats suppressed)` : "";
-    console.warn(`[TauriSource] ${command} failed${suffix}:`, error);
+    logger.warn(`[TauriSource] ${command} failed${suffix}:`, error);
   }
 
   function invokeCommand(command: MediaCommand, args?: Record<string, unknown>) {
@@ -210,7 +211,7 @@ export function createTauriSource(): PlaybackSource {
       } catch (error) {
         started = false;
         releaseUnlisteners();
-        console.warn(`[TauriSource] ${MEDIA_SNAPSHOT_EVENT} listener failed:`, error);
+        logger.warn(`[TauriSource] ${MEDIA_SNAPSHOT_EVENT} listener failed:`, error);
         return;
       }
 
@@ -223,7 +224,7 @@ export function createTauriSource(): PlaybackSource {
       } catch (error) {
         started = false;
         releaseUnlisteners();
-        console.warn(`[TauriSource] ${MEDIA_POSITION_EVENT} listener failed:`, error);
+        logger.warn(`[TauriSource] ${MEDIA_POSITION_EVENT} listener failed:`, error);
         return;
       }
 
@@ -231,7 +232,7 @@ export function createTauriSource(): PlaybackSource {
         const payload = await invoke<unknown>(SMTC_SNAPSHOT_COMMAND);
         if (started) notify(parseBackendMediaSnapshot(payload));
       } catch (error) {
-        console.warn(`[TauriSource] ${SMTC_SNAPSHOT_COMMAND} failed:`, error);
+        logger.warn(`[TauriSource] ${SMTC_SNAPSHOT_COMMAND} failed:`, error);
       }
     },
 

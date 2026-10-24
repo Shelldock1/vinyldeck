@@ -7,6 +7,7 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useVinylDeckStore } from "./playback/store";
+import { logger } from "./logger";
 
 export const SLEEP_TIMER_START_COMMAND = "cmd_sleep_timer_start";
 export const SLEEP_TIMER_CANCEL_COMMAND = "cmd_sleep_timer_cancel";
@@ -248,12 +249,12 @@ export async function getSleepTimer(): Promise<SleepTimerSnapshot | null> {
   try {
     const raw = await invoke<unknown>(SLEEP_TIMER_SNAPSHOT_COMMAND);
     if (raw !== null && !isSleepTimerSnapshot(raw)) {
-      console.warn("[SleepTimer] Snapshot payload rejected:", raw);
+      logger.warn("[SleepTimer] Snapshot payload rejected:", raw);
       return null;
     }
     return normalizeSleepTimer(raw);
   } catch (error) {
-    console.warn("[SleepTimer] Snapshot failed:", error);
+    logger.warn("[SleepTimer] Snapshot failed:", error);
     return null;
   }
 }
@@ -268,7 +269,7 @@ export async function subscribeToSleepTimer(
 
   return listen<unknown>(SLEEP_TIMER_CHANGED_EVENT, ({ payload }) => {
     if (payload !== null && !isSleepTimerSnapshot(payload)) {
-      console.warn("[SleepTimer] Changed payload rejected:", payload);
+      logger.warn("[SleepTimer] Changed payload rejected:", payload);
       return;
     }
     callback(normalizeSleepTimer(payload));
@@ -286,7 +287,7 @@ export async function subscribeToSleepTimerFired(
   return listen<unknown>(SLEEP_TIMER_FIRED_EVENT, ({ payload }) => {
     const event = normalizeSleepTimerFired(payload);
     if (!event) {
-      console.warn("[SleepTimer] Fired payload rejected:", payload);
+      logger.warn("[SleepTimer] Fired payload rejected:", payload);
       return;
     }
     callback(event);

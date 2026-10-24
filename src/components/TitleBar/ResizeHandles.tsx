@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./TitleBar.css";
+import { logger } from "../../lib/logger";
 
 type Direction =
   | "North"
@@ -38,7 +39,7 @@ export function ResizeHandles({ visible }: { visible: boolean }) {
       if (event.button !== 0) return;
       event.preventDefault();
       void appWindow.startResizeDragging(direction).catch((error) => {
-        console.warn("[ResizeHandles] resize drag failed:", error);
+        logger.warn("[ResizeHandles] resize drag failed:", error);
       });
     };
   }

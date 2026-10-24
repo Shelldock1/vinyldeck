@@ -26,6 +26,7 @@ import { setNativeAlwaysOnTop, setNativeWindowMode } from "../../lib/window";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { WindowMode } from "../../lib/window/types";
 import "./Settings.css";
+import { logger } from "../../lib/logger";
 
 interface SettingsProps {
   open: boolean;
@@ -119,7 +120,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
         });
       })
       .catch((error) => {
-        console.warn("[Settings] Sleep timer subscribe failed:", error);
+        logger.warn("[Settings] Sleep timer subscribe failed:", error);
       });
 
     return () => {
@@ -146,7 +147,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
     void commitSettings(patch)
       .then(applyCommittedSettings)
       .catch((error) => {
-        console.warn("[Settings] Update failed:", error);
+        logger.warn("[Settings] Update failed:", error);
       });
   }
 
@@ -170,7 +171,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
         return setNativeWindowMode(mode);
       })
       .catch((error) => {
-        console.warn("[Window] Mode change failed:", error);
+        logger.warn("[Window] Mode change failed:", error);
       });
   }
 
@@ -182,7 +183,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
         return setNativeAlwaysOnTop(next);
       })
       .catch((error) => {
-        console.warn("[Window] Always-on-top change failed:", error);
+        logger.warn("[Window] Always-on-top change failed:", error);
       });
   }
 
@@ -201,7 +202,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
         setSleepNow(Date.now());
       })
       .catch((error) => {
-        console.warn("[Settings] Sleep timer failed:", error);
+        logger.warn("[Settings] Sleep timer failed:", error);
         setSleepError(
           error instanceof Error ? error.message : String(error),
         );
@@ -213,7 +214,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
     void cancelSleepTimer()
       .then(() => setSleepTimer(null))
       .catch((error) => {
-        console.warn("[Settings] Sleep timer cancel failed:", error);
+        logger.warn("[Settings] Sleep timer cancel failed:", error);
         setSleepError(
           error instanceof Error ? error.message : String(error),
         );

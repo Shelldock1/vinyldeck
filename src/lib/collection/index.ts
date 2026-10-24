@@ -9,6 +9,7 @@ import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
 import { countPlayInto, isCollectedRecord, pressInto } from "./records";
 import type { CollectedRecord, PressInput, PressResult } from "./types";
+import { logger } from "../logger";
 
 export const COLLECTION_CHANGED_EVENT = "collection-changed";
 
@@ -60,7 +61,7 @@ export async function initCollection(): Promise<() => void> {
     const records = await invoke<CollectedRecord[]>("cmd_collection_snapshot");
     store.replaceAll(records.filter(isCollectedRecord));
   } catch (error) {
-    console.warn("[Crate] Snapshot failed:", error);
+    logger.warn("[Crate] Snapshot failed:", error);
     store.replaceAll([]);
   }
 
@@ -74,7 +75,7 @@ export async function pressRecord(input: PressInput): Promise<PressResult | null
     try {
       result = await invoke<PressResult>("cmd_collection_press", { input });
     } catch (error) {
-      console.warn("[Crate] Press failed:", error);
+      logger.warn("[Crate] Press failed:", error);
       return null;
     }
   } else {

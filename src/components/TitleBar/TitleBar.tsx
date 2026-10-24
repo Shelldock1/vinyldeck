@@ -5,6 +5,7 @@ import { commitSettings } from "../../lib/settings";
 import { useVinylDeckStore } from "../../lib/playback/store";
 import { setNativeWindowMode } from "../../lib/window";
 import "./TitleBar.css";
+import { logger } from "../../lib/logger";
 
 /** Pointer this close to the top edge reveals the fullscreen bar. */
 const FULLSCREEN_REVEAL_PX = 64;
@@ -76,13 +77,13 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
 
   function handleMinimize() {
     void appWindow?.minimize().catch((error) => {
-      console.warn("[TitleBar] Minimize failed:", error);
+      logger.warn("[TitleBar] Minimize failed:", error);
     });
   }
 
   function handleToggleMaximize() {
     void appWindow?.toggleMaximize().catch((error) => {
-      console.warn("[TitleBar] Toggle maximize failed:", error);
+      logger.warn("[TitleBar] Toggle maximize failed:", error);
     });
   }
 
@@ -93,13 +94,13 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
         return setNativeWindowMode("main");
       })
       .catch((error) => {
-        console.warn("[TitleBar] Exit fullscreen failed:", error);
+        logger.warn("[TitleBar] Exit fullscreen failed:", error);
       });
   }
 
   function handleClose() {
     void appWindow?.close().catch((error) => {
-      console.warn("[TitleBar] Close failed:", error);
+      logger.warn("[TitleBar] Close failed:", error);
     });
   }
 

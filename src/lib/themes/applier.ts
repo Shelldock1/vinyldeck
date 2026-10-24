@@ -118,7 +118,7 @@ export function isAmbientModeId(value: unknown): value is AmbientModeId {
 
 export function normalizeAmbientMode(value: unknown): AmbientModeId {
   if (value === "off") return "off";
-  if (typeof value === "string" && LEGACY_AMBIENT_MODES.includes(value as any)) {
+  if (typeof value === "string" && (LEGACY_AMBIENT_MODES as readonly string[]).includes(value)) {
     return ART_AMBIENT_MODE;
   }
   return "off";
