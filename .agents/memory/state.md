@@ -42,6 +42,15 @@ Post-roadmap:
 - Removed dormant `VaporGrid`, `public/vite.svg`, `public/tauri.svg`.
 - Verified: lint, build, 130 frontend tests, 93 Rust tests, clippy, fmt. Not launched as a native window (layout verified in headless Chromium at 700x560, 900x700, 1000x860, 1366x668).
 
+## i18n + streak fix (2026-10-24)
+
+- Settings field `language` (`auto|en|ru`, default `auto`) in Rust `settings/mod.rs` and TS `settings/types.ts`. `src-tauri/src/i18n.rs` resolves auto via `sys-locale`; `tray.rs` relabels the menu through a `watch` channel (`tray::set_language`, called from settings update/reset).
+- Frontend: `src/lib/i18n/{en,ru,types,plural,index,switch}.ts`. `en.ts` defines the `Dict` shape; `ru.ts` must match (enforced by type + `i18n.test.ts`). Components use `useT()`; plain modules take a dict slice (e.g. `formatSleepTimerStatus(..., t.sleep)`). `SHORTCUTS[].action` stays English for the README test; the sheet reads `t.shortcuts.actions[id]`.
+- Toggle: `.language-trigger` (top-left row, `left: 240px`), `KeyL`, context-menu item, Settings -> Look -> Language.
+- Pressing names (e.g. "Blue/Bone White Merge") are generated and persisted in English; not translated.
+- Streak: `cmd_collection_play_times(source)` feeds `collectionStreak(records, now, playTimes)`. Wrapped takes `utcOffsetMinutes` and buckets on the local clock.
+- Verified: lint, build, 139 frontend tests, 98 Rust tests, clippy, fmt, Windows `cargo check`. Russian UI checked in headless Chromium (main, Crate, Settings, shortcut sheet, L toggle).
+
 ## Phase 3 Implementation Notes
 
 - **K — reactivity:** `src-tauri/src/reactivity/{mod,dsp,linux,windows}.rs`. Linux captures `parec --device=@DEFAULT_MONITOR@`; Windows uses WASAPI loopback behind `windows-rs` features. Capture runs only while playing, emits `audio-reactivity` `{level,bass,mid,treble}` at ~30 Hz, retries after 30 s on failure. Frontend `useAudioReactivity` writes `--audio-level/bass/mid/treble`; `AudioMeter`, needle/headshell jitter, and groove glow read them. No microphone is opened; no FFT dependency.

@@ -4,10 +4,19 @@
 
 ### Added
 
+- Russian localization. Every screen, tooltip, screen-reader label, and the tray menu are available in English and Russian, with correct Russian plurals and localized dates. The language follows the system by default; a round EN/RU button in the top-left row, the `L` key, the right-click menu, and Settings -> Look -> Language switch it. The choice is stored by the Rust settings authority, so Main, Mini, and the tray stay in step.
+
 - The Crate separates sources: every record and listen is tagged as a music app (Spotify, VLC, mpv, ...) or a browser (YouTube and other sites). A Music / Browser / All switch at the top of The Crate filters the shelf, the stats strip, and Wrapped; Music is the default and the choice is remembered. The record card shows which player it came from. Older records are classified from their play history (browser listens report no album); records with no history stay under All.
 - The main deck scales down to fit the window instead of clipping at the top and bottom, and the main window opens at 1000x860, shrunk to fit the monitor working area on smaller screens.
 
 ### Changed
+
+- Settings -> About shows the real app version instead of a hard-coded `0.1.0`, and "Start With Windows" is now "Start At Login" since it works on Linux too.
+
+### Fixed
+
+- The Crate's listening streak counted only each record's latest day, so one album played every day showed a one-day streak. It now uses the full play history.
+- Crate Wrapped bucketed months and busiest days in UTC while the streak used local time; Wrapped now uses the viewer's clock too.
 
 - Window controls now read minimize, maximize, close, with close at the far end.
 
