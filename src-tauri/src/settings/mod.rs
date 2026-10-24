@@ -117,6 +117,48 @@ impl SettingsState {
     async fn replace(&self, settings: PersistedSettings) {
         *self.settings.lock().await = settings;
     }
+
+    /// Atomically applies a settings patch inside a single lock hold so
+    /// concurrent updates (Main + Mini windows) cannot read-modify-write
+    /// stale values and clobber each other.
+    pub async fn update(
+        &self,
+        app: &AppHandle,
+        patch: SettingsPatch,
+    ) -> Result<PersistedSettings, String> {
+        let mut settings = self.settings.lock().await;
+        let current = settings.clone();
+        let next = apply_patch(&current, patch);
+        *settings = next.clone();
+        drop(settings);
+
+        if next.start_with_windows != current.start_with_windows {
+            sync_start_with_windows(app, next.start_with_windows)?;
+        }
+        sync_authority_selection(app, &next);
+        save_settings(app, &next)?;
+        sync_mini_transparency(app, &next, &current);
+        emit_settings_changed(app, &next);
+
+        Ok(next)
+    }
+
+    /// Atomically resets to defaults inside a single lock hold (see `update`).
+    pub async fn reset(&self, app: &AppHandle) -> Result<PersistedSettings, String> {
+        let mut settings = self.settings.lock().await;
+        let current = settings.clone();
+        let next = PersistedSettings::default();
+        *settings = next.clone();
+        drop(settings);
+
+        sync_start_with_windows(app, next.start_with_windows)?;
+        sync_authority_selection(app, &next);
+        save_settings(app, &next)?;
+        sync_mini_transparency(app, &next, &current);
+        emit_settings_changed(app, &next);
+
+        Ok(next)
+    }
 }
 
 pub async fn initialize_settings(app: AppHandle) -> Result<(), String> {
@@ -143,17 +185,7 @@ pub async fn cmd_settings_update(
     state: State<'_, SettingsState>,
     patch: SettingsPatch,
 ) -> Result<PersistedSettings, String> {
-    let current = state.snapshot().await;
-    let settings = apply_patch(&current, patch);
-    if settings.start_with_windows != current.start_with_windows {
-        sync_start_with_windows(&app, settings.start_with_windows)?;
-    }
-    state.replace(settings.clone()).await;
-    sync_authority_selection(&app, &settings);
-    save_settings(&app, &settings)?;
-    sync_mini_transparency(&app, &settings, &current);
-    emit_settings_changed(&app, &settings);
-    Ok(settings)
+    state.update(&app, patch).await
 }
 
 #[tauri::command]
@@ -161,15 +193,7 @@ pub async fn cmd_settings_reset(
     app: AppHandle,
     state: State<'_, SettingsState>,
 ) -> Result<PersistedSettings, String> {
-    let current = state.snapshot().await;
-    let settings = PersistedSettings::default();
-    sync_start_with_windows(&app, settings.start_with_windows)?;
-    state.replace(settings.clone()).await;
-    sync_authority_selection(&app, &settings);
-    save_settings(&app, &settings)?;
-    sync_mini_transparency(&app, &settings, &current);
-    emit_settings_changed(&app, &settings);
-    Ok(settings)
+    state.reset(&app).await
 }
 
 fn load_settings(app: &AppHandle) -> Result<PersistedSettings, String> {
