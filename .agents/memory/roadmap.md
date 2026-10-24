@@ -1,5 +1,7 @@
 # VinylDeck: Roadmap & Build Sequence
 
+> **Status:** The optimization/feature roadmap (Phases 1–3, items A–O) is complete. The historical product phases below are not an active build queue; WebGL and 3D visuals remain disabled by the renderer lock.
+
 This tracks the overarching phases and the strict build sequence for Phase 1.
 
 ## Phases

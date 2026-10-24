@@ -45,7 +45,7 @@ These files hold machine-specific absolute paths and are gitignored, as are loca
 npm run install:linux
 ```
 
-The script sources `./linux-env.sh` when present (local sysroot), runs `npm run tauri build -- --no-bundle` (the configured `bundle.targets` are Windows-only; `--no-bundle` still produces the release binary), and then installs:
+The script sources `./linux-env.sh` when present (local sysroot), runs `npm run tauri build -- --no-bundle` (which stops after the release binary), and then installs:
 
 | Item | Path |
 | --- | --- |
@@ -54,6 +54,19 @@ The script sources `./linux-env.sh` when present (local sysroot), runs `npm run 
 | Desktop entry | `~/.local/share/applications/vinyldeck.desktop` |
 
 The desktop entry uses `Exec="$HOME/.local/bin/vinyldeck"`, `Icon=vinyldeck`, and `StartupWMClass=vinyldeck`, so the panel launcher then points at `~/.local/bin/vinyldeck` and keeps working across rebuilds. No sudo is used; `update-desktop-database` and `gtk-update-icon-cache` run only when installed.
+
+To produce Linux installers instead of a bare binary:
+
+```bash
+source ./linux-env.sh   # only needed on this machine's local sysroot
+npm run tauri build -- --bundles deb
+PKG_CONFIG_SYSROOT_DIR= APPIMAGE_EXTRACT_AND_RUN=1 \
+  npm run tauri bundle -- --bundles appimage
+```
+
+The second step exists because the local sysroot has headers/pkg-config files but no `gtk-3.0` runtime modules; linuxdeploy's GTK plugin reads `PKG_CONFIG_SYSROOT_DIR`, so clearing it for bundling makes the plugin resolve the system module directories. `APPIMAGE_EXTRACT_AND_RUN=1` avoids needing FUSE. With a normal system GTK development install, `npm run tauri build -- --bundles deb,appimage` does both steps.
+
+Outputs land under `src-tauri/target/release/bundle/deb/` and `.../appimage/`. Windows keeps its `msi`/`nsis` targets.
 
 Reuse an existing release binary without rebuilding:
 

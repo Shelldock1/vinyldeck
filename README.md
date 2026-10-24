@@ -101,7 +101,11 @@ Audio reactivity reads the default PipeWire/Pulse monitor through `parec`; insta
 npm run install:linux
 ```
 
-Release bundles build for Windows (`msi`, `nsis`) and Linux (`deb`, `appimage`).
+Release bundles build for Windows (`msi`, `nsis`) and Linux (`deb`, `appimage`):
+
+```bash
+npm run tauri build -- --bundles deb,appimage
+```
 
 ## Controls
 
@@ -159,7 +163,7 @@ Shortcuts can be turned off in Settings. Escape stays available and closes the t
 
 ## Project Status
 
-VinylDeck is actively developed for Windows and Linux. The current version is `0.1.1`. Windows installers and Linux bundles are available on the GitHub Releases page.
+VinylDeck is actively developed for Windows and Linux. The current version is `0.1.1`. Windows installers are available on the GitHub Releases page; Linux users can run `npm run install:linux` for a user-level install or build `deb`/`appimage` bundles with the Tauri CLI.
 
 ## Credits
 

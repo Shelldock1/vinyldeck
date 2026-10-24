@@ -1,11 +1,11 @@
 # VinylDeck: Current State
 
-**Current Phase:** Optimization roadmap Phase 3 (K–O) implemented and verified; awaiting user confirmation of Phase 3.
-**Current Stage:** Windows + Linux desktop app at `0.1.1`, feature-complete for the approved roadmap. No new phase starts without confirmation.
+**Current Phase:** Optimization roadmap complete — Phases 1–3 verified and confirmed. Linux release packaging verified.
+**Current Stage:** Windows + Linux desktop app at `0.1.1`; no further roadmap phase is defined.
 
 ## Active Work
 
-Phase 1 (critical fixes + CI), Phase 2 (event-driven platform + artwork transport), and Phase 3 (K–O) are implemented. Phase 3 is committed; the final docs/tests/packaging commit is the only open item before the Phase 3 report.
+Phase 1 (critical fixes + CI), Phase 2 (event-driven platform + artwork transport), and Phase 3 (K–O) are implemented, verified, and committed. Packaging verification is complete: Linux DEB and AppImage bundles build and pass structural checks. No feature work is in flight; wait for a new user-approved scope.
 
 - Phase 3 work: K audio reactivity, L OBS overlay + Discord Rich Presence, M global shortcuts, N monthly Crate Wrapped, O README/Linux bundles/test coverage/state compression.
 - Older session history (pre-Phase 3, including the Windows audit remediation) is archived at `.agents/memory/archive/state-2026-10-24-pre-phase-3.md`. Do not re-derive it from this summary.
@@ -29,7 +29,10 @@ Phase 3:
 - `839d82f` K audio reactivity (WASAPI / PipeWire monitor, 3-band DSP)
 - `8e4db6d` L OBS overlay (`127.0.0.1:43110`) + Discord Rich Presence
 - `fb2689b` N Crate Wrapped (bounded history + monthly aggregation)
-- O tests/docs/packaging: committed with the Phase 3 close-out.
+- `f9656f2` O Linux docs/bundles, frontend coverage, state archive
+
+Post-roadmap:
+- Linux `deb`/`appimage` packaging verified; Tauri npm packages aligned to 2.12.4 (see the release-packaging commit in `git log`).
 
 ## Phase 3 Implementation Notes
 
@@ -49,6 +52,8 @@ Last full local run:
 - `git diff --check` clean.
 - Overlay runtime: real paused MPRIS session returned `/state` JSON and `/overlay` 200 (4191 bytes) from `./target/debug/vinyldeck`.
 - Linux monitor capture verified streaming (~328 KB / 2 s); WASAPI loopback and Discord presence are compile/unit verified only (no Discord client/runtime test here).
+- Linux packages: `deb` (7.0 MiB) and AppImage (88.2 MiB) built with `tauri` 2.12.5 and npm packages 2.12.4, without `--ignore-version-mismatches`. `dpkg-deb --info/--contents` and the AppImage runtime check passed. Not launched interactively.
+- After package alignment: `npm run lint`, `npm run test:frontend` (125 tests / 22 files), and `npm run build` clean.
 
 ## Caveats / Not Manually Verified
 
@@ -57,7 +62,7 @@ Last full local run:
 - Windows runtime build/audio/presence are CI/typecheck only (no Windows host here).
 - Wrapped has backend unit coverage but no live UI click-through; history begins collecting with this version, so older listens are absent.
 - Phase 2 caveats stand: MPRIS/SMTC event behavior and artwork scheme timing verified by build/unit tests and a live snapshot, not a player matrix.
-- Linux packaging targets are configured but `deb`/`appimage` bundles were not produced locally in this phase.
+- Linux packaging targets are configured and both bundles build. AppImage bundling on this machine's local sysroot requires clearing `PKG_CONFIG_SYSROOT_DIR` for the linuxdeploy GTK plugin and `APPIMAGE_EXTRACT_AND_RUN=1` without FUSE; documented in `docs/DEVELOPMENT.md`.
 
 ## Locks / Invariants
 
@@ -71,7 +76,7 @@ Last full local run:
 ## Environment
 
 - Node.js v24.12.0, npm 11.6.2
-- rustc/cargo 1.96.0, tauri-cli 2.11.2
+- rustc/cargo 1.96.0, tauri-cli 2.12.4
 - Windows typecheck recipe from `src-tauri`:
   `PATH="/snap/kf6-core24/64/usr/lib/llvm-19/bin:$PATH" LD_LIBRARY_PATH="/snap/mesa-2404/1839/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH" cargo check --target x86_64-pc-windows-msvc --all-targets`
   (prints a harmless GNU-compiler warning)

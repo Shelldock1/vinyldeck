@@ -1,12 +1,12 @@
 # VinylDeck 0.1.1 Release Notes
 
-VinylDeck `0.1.1` is the current Windows desktop release. Ready-to-use MSI and NSIS installers are available on the GitHub Releases page.
+VinylDeck `0.1.1` is the current desktop release. Ready-to-use MSI and NSIS installers are available on the GitHub Releases page; Linux users can build DEB and AppImage packages from source.
 
 ## Included
 
-- Tauri v2 Windows desktop shell
+- Tauri v2 desktop shell for Windows and Linux
 - React 19 visual engine
-- Real Windows SMTC media snapshots
+- Real Windows SMTC and Linux MPRIS media snapshots
 - In-app play/pause, previous, next, and seek commands when supported
 - Main, fullscreen, and resizable mini-player windows
 - Tray lifecycle with explicit quit
@@ -27,7 +27,7 @@ VinylDeck `0.1.1` is the current Windows desktop release. Ready-to-use MSI and N
 | Package name | `vinyldeck` |
 | Product name | `VinylDeck` |
 | Tauri identifier | `com.vinyldeck.app` |
-| Bundle targets | MSI, NSIS |
+| Bundle targets | MSI, NSIS, DEB, AppImage |
 
 ## 0.1.1 Highlights
 
