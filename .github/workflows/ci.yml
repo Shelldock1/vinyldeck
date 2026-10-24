@@ -58,6 +58,12 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm run test:frontend
+      - name: Check shell and release scripts
+        run: |
+          bash -n install.sh
+          bash -n scripts/install-linux.sh
+          node --check scripts/collect-release.mjs
+          node --check scripts/changelog-section.mjs
       - run: cargo fmt --manifest-path $MANIFEST -- --check
       - run: cargo clippy --manifest-path $MANIFEST --all-targets -- -D warnings
       - run: cargo test --manifest-path $MANIFEST
@@ -82,6 +88,19 @@ jobs:
           workspaces: src-tauri
 
       - run: npm ci
+      - name: Parse PowerShell installers
+        shell: pwsh
+        run: |
+          $failed = $false
+          foreach ($file in @("install.ps1", "scripts/install-windows.ps1")) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) {
+              $errors | ForEach-Object { Write-Error "$file`: $_" }
+              $failed = $true
+            }
+          }
+          if ($failed) { exit 1 }
       - run: cargo clippy --manifest-path ${{ env.MANIFEST }} --all-targets -- -D warnings
       - run: cargo check --manifest-path ${{ env.MANIFEST }} --all-targets
       - run: cargo test --manifest-path ${{ env.MANIFEST }}
