@@ -6,7 +6,7 @@ export { WINDOW_MODES };
 export type { WindowMode };
 
 export interface PersistedSettings {
-  version: 3;
+  version: 4;
   theme: ThemeId;
   /** Colour scheme over the shell. "dark" = shell tokens untouched. */
   scheme: SchemeId;
@@ -34,10 +34,15 @@ export interface PersistedSettings {
   playerSourceId: string;
   /** Display fallback for the chosen session, even while it is not running. */
   playerSourceName: string;
+  /**
+   * Numeric Discord application id for Rich Presence. Empty disables the
+   * feature; Discord requires an id owned by the user, so none is shipped.
+   */
+  discordClientId: string;
 }
 
 export const DEFAULT_SETTINGS: PersistedSettings = {
-  version: 3,
+  version: 4,
   theme: "noir",
   scheme: "dark",
   ambientMode: "off",
@@ -55,4 +60,5 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   miniTransparentMode: false,
   playerSourceId: "",
   playerSourceName: "",
+  discordClientId: "",
 };

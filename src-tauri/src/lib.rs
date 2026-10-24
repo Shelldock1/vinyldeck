@@ -1,6 +1,8 @@
 mod app_lifecycle;
 mod collection;
 mod media;
+mod overlay;
+mod presence;
 mod reactivity;
 mod settings;
 mod shortcuts;
@@ -78,6 +80,8 @@ pub fn run() {
             }
             media::poller::start_smtc_poller(app.handle().clone());
             reactivity::start(app.handle().clone());
+            overlay::start(app.handle().clone());
+            presence::start(app.handle().clone());
             shortcuts::register(app.handle());
             tray::setup_tray(app)?;
             Ok(())

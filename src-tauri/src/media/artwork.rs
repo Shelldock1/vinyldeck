@@ -169,18 +169,28 @@ fn request_hash(path: &str) -> Option<u64> {
     u64::from_str_radix(hash, 16).ok()
 }
 
+fn cached_artwork(hash: u64) -> Option<(Vec<u8>, &'static str)> {
+    let mut cache = cache()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if let Some(position) = cache.order.iter().position(|entry| *entry == hash) {
+        cache.order.remove(position);
+        cache.order.push_back(hash);
+    }
+    let entry = cache.entries.get(&hash)?;
+    Some((entry.bytes.clone(), entry.mime))
+}
+
+/// Resolves the internal artwork URI carried by snapshots. Used by the OBS
+/// overlay, which cannot load the `vinyldeck:` scheme in its own webview.
+pub(crate) fn bytes_for_uri(uri: &str) -> Option<(Vec<u8>, &'static str)> {
+    let hash = uri.strip_prefix(URI_PREFIX)?;
+    let hash = u64::from_str_radix(hash, 16).ok()?;
+    cached_artwork(hash)
+}
+
 fn artwork_response(hash: u64) -> Option<tauri::http::Response<Vec<u8>>> {
-    let (bytes, mime) = {
-        let mut cache = cache()
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        if let Some(position) = cache.order.iter().position(|entry| *entry == hash) {
-            cache.order.remove(position);
-            cache.order.push_back(hash);
-        }
-        let entry = cache.entries.get(&hash)?;
-        (entry.bytes.clone(), entry.mime)
-    };
+    let (bytes, mime) = cached_artwork(hash)?;
 
     tauri::http::Response::builder()
         .status(200)

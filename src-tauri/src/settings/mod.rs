@@ -12,8 +12,9 @@ pub const SETTINGS_CHANGED_EVENT: &str = "settings-changed";
 
 const STORE_FILE: &str = "settings.json";
 const STORE_KEY: &str = "settings";
-const VERSION: u8 = 3;
+const VERSION: u8 = 4;
 const MAX_SOURCE_TEXT_CHARS: usize = 256;
+const MAX_DISCORD_CLIENT_ID_CHARS: usize = 32;
 
 const SHELL_THEMES: &[&str] = &["noir", "glass"];
 const SCHEMES: &[&str] = &["light", "dark", "halloween"];
@@ -50,6 +51,9 @@ pub struct PersistedSettings {
     /// Display fallback for the selected session (kept even when it is not
     /// currently running).
     pub player_source_name: String,
+    /// Discord application id for Rich Presence. Empty disables the feature;
+    /// there is no generic id that can be shipped, so the user supplies one.
+    pub discord_client_id: String,
 }
 
 impl Default for PersistedSettings {
@@ -73,6 +77,7 @@ impl Default for PersistedSettings {
             mini_transparent_mode: false,
             player_source_id: String::new(),
             player_source_name: String::new(),
+            discord_client_id: String::new(),
         }
     }
 }
@@ -97,6 +102,7 @@ pub struct SettingsPatch {
     pub mini_transparent_mode: Option<bool>,
     pub player_source_id: Option<String>,
     pub player_source_name: Option<String>,
+    pub discord_client_id: Option<String>,
 }
 
 pub struct SettingsState {
@@ -282,6 +288,7 @@ fn validate_settings(value: Option<Value>) -> PersistedSettings {
         ),
         player_source_id: read_source_text(raw.get("playerSourceId")),
         player_source_name: read_source_text(raw.get("playerSourceName")),
+        discord_client_id: read_discord_client_id(raw.get("discordClientId")),
     }
 }
 
@@ -352,6 +359,9 @@ fn apply_patch(current: &PersistedSettings, patch: SettingsPatch) -> PersistedSe
     if let Some(value) = patch.player_source_name {
         next.player_source_name = normalize_source_text(&value);
     }
+    if let Some(value) = patch.discord_client_id {
+        next.discord_client_id = normalize_discord_client_id(&value);
+    }
 
     next.art_ambient = next.ambient_mode != "off";
     next.version = VERSION;
@@ -419,6 +429,24 @@ fn read_source_text(value: Option<&Value>) -> String {
         .unwrap_or_default()
 }
 
+fn read_discord_client_id(value: Option<&Value>) -> String {
+    value
+        .and_then(Value::as_str)
+        .map(normalize_discord_client_id)
+        .unwrap_or_default()
+}
+
+/// Discord application ids are numeric snowflakes. Dropping anything else here
+/// keeps a pasted URL or a stray keypress from producing an invalid handshake.
+fn normalize_discord_client_id(value: &str) -> String {
+    value
+        .trim()
+        .chars()
+        .filter(char::is_ascii_digit)
+        .take(MAX_DISCORD_CLIENT_ID_CHARS)
+        .collect()
+}
+
 fn normalize_source_text(value: &str) -> String {
     value.trim().chars().take(MAX_SOURCE_TEXT_CHARS).collect()
 }
@@ -463,7 +491,8 @@ mod tests {
         assert!(!settings.mini_transparent_mode);
         assert_eq!(settings.player_source_id, "");
         assert_eq!(settings.player_source_name, "");
-        assert_eq!(settings.version, 3);
+        assert_eq!(settings.discord_client_id, "");
+        assert_eq!(settings.version, 4);
     }
 
     #[test]
@@ -564,6 +593,23 @@ mod tests {
     }
 
     #[test]
+    fn discord_client_id_keeps_digits_only() {
+        let settings = validate_settings(Some(json!({
+            "discordClientId": " 1234-5678-9012 "
+        })));
+        assert_eq!(settings.discord_client_id, "123456789012");
+
+        let patched = apply_patch(
+            &PersistedSettings::default(),
+            SettingsPatch {
+                discord_client_id: Some("abc 42 99".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+        assert_eq!(patched.discord_client_id, "4299");
+    }
+
+    #[test]
     fn patch_scheme_accepts_only_known_values() {
         let current = PersistedSettings::default();
         let halloween = apply_patch(
@@ -634,7 +680,7 @@ mod tests {
 
         assert_eq!(settings.player_source_id, "org.mpris.MediaPlayer2.spotify");
         assert_eq!(settings.player_source_name, "Spotify");
-        assert_eq!(settings.version, 3);
+        assert_eq!(settings.version, 4);
 
         let long = "x".repeat(400);
         let clamped = validate_settings(Some(json!({

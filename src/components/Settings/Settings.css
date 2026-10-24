@@ -2027,3 +2027,75 @@
     transform: none;
   }
 }
+
+/* ── Text fields (Discord client id, OBS overlay URL) ───────── */
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 8px;
+}
+
+.settings-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.62));
+}
+
+.settings-field__description {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.4));
+}
+
+.settings-field__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-field__input {
+  width: min(100%, 340px);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-border, rgba(255, 255, 255, 0.14));
+  background: var(--ui-bg, rgba(255, 255, 255, 0.06));
+  color: var(--text-primary, #f1efea);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  outline: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.settings-field__input:focus {
+  border-color: var(--ui-accent, #d9b45c);
+  background: var(--ui-bg-hover, rgba(255, 255, 255, 0.09));
+}
+
+.settings-field__input::placeholder {
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.32));
+}
+
+.settings-field__saved {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-accent, #d9b45c);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.settings-field__saved--visible {
+  opacity: 1;
+}
+
+[data-theme="glass"] .settings-field__input {
+  border-color: rgba(55, 67, 80, 0.16);
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(30, 37, 45, 0.86);
+}

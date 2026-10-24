@@ -10,7 +10,7 @@ import {
 } from "../../lib/themes/applier";
 import type { ThemeId } from "../../lib/themes/applier";
 import { selectSettings, useVinylDeckStore } from "../../lib/playback/store";
-import { commitSettings } from "../../lib/settings";
+import { commitSettings, normalizeDiscordClientId } from "../../lib/settings";
 import { listMediaPlayers } from "../../lib/media/players";
 import type { MediaPlayer } from "../../lib/media/players";
 import {
@@ -61,6 +61,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
   const [sleepTimer, setSleepTimer] = useState<SleepTimerSnapshot | null>(null);
   const [sleepNow, setSleepNow] = useState(() => Date.now());
   const [sleepError, setSleepError] = useState<string | null>(null);
+  const [discordIdDraft, setDiscordIdDraft] = useState("");
+  const [discordIdSaved, setDiscordIdSaved] = useState(false);
   const settings = useVinylDeckStore(selectSettings);
   const currentTheme = useVinylDeckStore((s) => s.theme);
   const ambientMode = useVinylDeckStore((s) => s.ambientMode);
@@ -74,6 +76,10 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
   useEffect(() => {
     if (open) setActiveTab(initialTab);
   }, [open, initialTab]);
+
+  useEffect(() => {
+    setDiscordIdDraft(settings.discordClientId);
+  }, [settings.discordClientId]);
 
   // Refresh the session list on open and while Settings stays open.
   useEffect(() => {
@@ -149,6 +155,15 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
       .catch((error) => {
         logger.warn("[Settings] Update failed:", error);
       });
+  }
+
+  function commitDiscordId() {
+    const next = normalizeDiscordClientId(discordIdDraft);
+    setDiscordIdDraft(next);
+    if (next === settings.discordClientId) return;
+    updateBackendSettings({ discordClientId: next });
+    setDiscordIdSaved(true);
+    window.setTimeout(() => setDiscordIdSaved(false), 1600);
   }
 
   function handleThemeSelect(theme: ThemeId) {
@@ -596,6 +611,70 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       })
                     }
                   />
+
+                  <div className="settings-field">
+                    <label
+                      className="settings-field__label"
+                      htmlFor="settings-discord-id"
+                    >
+                      Discord Rich Presence
+                    </label>
+                    <p className="settings-field__description">
+                      Paste the Application ID from your own Discord developer
+                      app. Presence stays off while this is empty, and the app
+                      id never leaves your machine except to Discord.
+                    </p>
+                    <div className="settings-field__row">
+                      <input
+                        id="settings-discord-id"
+                        className="settings-field__input"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        spellCheck={false}
+                        maxLength={32}
+                        placeholder="Discord application ID"
+                        value={discordIdDraft}
+                        onChange={(event) =>
+                          setDiscordIdDraft(event.currentTarget.value)
+                        }
+                        onBlur={commitDiscordId}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.currentTarget.blur();
+                          }
+                        }}
+                      />
+                      <span
+                        className={`settings-field__saved${discordIdSaved ? " settings-field__saved--visible" : ""}`}
+                        aria-live="polite"
+                      >
+                        Saved
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="settings-field">
+                    <label
+                      className="settings-field__label"
+                      htmlFor="settings-overlay-url"
+                    >
+                      OBS Overlay
+                    </label>
+                    <p className="settings-field__description">
+                      Add a Browser Source in OBS and point it at this address.
+                      The page is transparent and refreshes itself.
+                    </p>
+                    <input
+                      id="settings-overlay-url"
+                      className="settings-field__input"
+                      type="text"
+                      readOnly
+                      value="http://127.0.0.1:43110/overlay"
+                      aria-label="OBS overlay URL"
+                      onFocus={(event) => event.currentTarget.select()}
+                    />
+                  </div>
 
                   <div className="settings-sleep">
                     <div className="settings-look__header">

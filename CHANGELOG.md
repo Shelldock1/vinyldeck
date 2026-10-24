@@ -4,6 +4,8 @@
 
 ### Added
 
+- OBS overlay: a local read-only HTTP server on `127.0.0.1:43110` serves a transparent, self-refreshing Browser Source at `/overlay` with cover art, track, artist, album, and interpolated progress. `/state` exposes the same snapshot as JSON for custom scenes, and `/artwork` serves the cached cover because a browser source cannot resolve the `vinyldeck:` scheme. The URL is listed in Settings -> Other.
+- Discord Rich Presence: paste your own Discord application client ID in Settings -> Other and VinylDeck mirrors the current track, artist, album, and elapsed time through the local Discord IPC socket. Presence stays completely off while the field is empty, and the worker only sends on track or play-state changes.
 - System-audio reactivity: a slim VU meter under the transport, a bass-driven tonearm/headshell jitter, and a groove/glow pulse follow what is actually playing. Windows captures the default render endpoint with WASAPI loopback; Linux reads the PipeWire/Pulse monitor source through `parec`. Capture starts and stops with playback, failures leave the deck still, and the analysis is a lightweight three-band envelope (no FFT) emitted at ~30 Hz. No microphone is opened.
 - Global shortcuts: `Ctrl+Alt+M` toggles the Mini player and `Ctrl+Alt+Space` toggles playback even while another app has focus. Registration is best-effort when the desktop already owns a combination, and both appear in the `?` cheat sheet.
 - Keyboard cheat sheet: press `?` in Main or Fullscreen to open a small glass overlay listing every shortcut, grouped Playback / Window / App. `Escape`, the scrim, or the close button dismisses it, and focus returns to the control that opened it. The sheet is rendered from one shared definition list and is not available in Mini.

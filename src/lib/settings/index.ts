@@ -45,7 +45,7 @@ export function validateSettings(value: unknown): PersistedSettings {
     : DEFAULT_SETTINGS.windowMode;
 
   return {
-    version: 3,
+    version: 4,
     theme,
     scheme: isSchemeId(raw.scheme) ? raw.scheme : DEFAULT_SETTINGS.scheme,
     ambientMode,
@@ -72,6 +72,7 @@ export function validateSettings(value: unknown): PersistedSettings {
     ),
     playerSourceId: readSourceText(raw.playerSourceId),
     playerSourceName: readSourceText(raw.playerSourceName),
+    discordClientId: readDiscordClientId(raw.discordClientId),
   };
 }
 
@@ -144,7 +145,21 @@ function normalizePatch(patch: SettingsPatch): SettingsPatch {
     next.ambientMode = normalizeAmbientMode(patch.ambientMode);
     next.artAmbient = next.ambientMode !== "off";
   }
+  if (patch.discordClientId !== undefined) {
+    next.discordClientId = normalizeDiscordClientId(patch.discordClientId);
+  }
   return next;
+}
+
+/** Numeric snowflake only; mirrors the backend sanitizer. */
+export function normalizeDiscordClientId(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 32);
+}
+
+function readDiscordClientId(value: unknown): string {
+  return typeof value === "string"
+    ? normalizeDiscordClientId(value)
+    : DEFAULT_SETTINGS.discordClientId;
 }
 
 function clearLegacySettingsHandoff(): void {
