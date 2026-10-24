@@ -95,6 +95,7 @@ const IDLE_CENTERPIECE_TRANSITION =
 interface PlaybackProgressRingProps {
   duration: number;
   isPlaying: boolean;
+  suspended: boolean;
   size: number;
   canSeek: boolean;
   onSeek: (positionSeconds: number) => void;
@@ -109,6 +110,7 @@ function getLivePosition(): number {
 function PlaybackProgressRing({
   duration,
   isPlaying,
+  suspended,
   size,
   canSeek,
   onSeek,
@@ -117,12 +119,17 @@ function PlaybackProgressRing({
   const [position, setPosition] = useState(0);
 
   useEffect(() => {
+    // Sync once on play/pause or visibility change, then only tick while the
+    // record is actually spinning on a visible window.
+    setPosition(getLivePosition());
+    if (!isPlaying || suspended) return;
+
     const id = setInterval(() => {
       setPosition(getLivePosition());
     }, 500);
 
     return () => clearInterval(id);
-  }, []);
+  }, [isPlaying, suspended]);
 
   function handleSeek(positionSeconds: number) {
     setPosition(positionSeconds);
@@ -502,6 +509,7 @@ export function MainView() {
                 <PlaybackProgressRing
                   duration={effectivePlayback.duration}
                   isPlaying={isPlaying}
+                  suspended={isSuspended}
                   size={RING_SIZE}
                   canSeek={canUseSeekControl(effectivePlayback)}
                   onSeek={handleSeek}
