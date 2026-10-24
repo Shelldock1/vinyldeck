@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest an improvement for VinylDeck.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        VinylDeck is a visual player for the system media session, not a streaming service.
+        Features that read local media metadata or improve the deck are the best fit.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the workflow or limitation, not only the proposed UI.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Both Windows and Linux
+        - Windows only
+        - Linux only
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and the documentation.
+          required: true
+        - label: This does not require bundling copyrighted media or streaming content.
+          required: true

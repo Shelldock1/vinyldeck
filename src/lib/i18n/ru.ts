@@ -325,5 +325,17 @@ export const ru: Dict = {
     visualsValue: "Noir, Glass, подсветка обложки",
     testEmpty: "Тест пустого состояния",
     testEmptyDescription: "Принудительно показать вид «ничего не играет».",
+    updates: "Обновления",
+    updateCopy:
+      "Проверка последнего опубликованного релиза на GitHub. Ничего не скачивается и не устанавливается автоматически.",
+    checkForUpdates: "Проверить обновления",
+    checkingForUpdates: "Проверка…",
+    updateAvailable: (version: string) => `Доступна версия ${version}.`,
+    updateCurrent: "У вас последняя версия.",
+    updateError: "Не удалось проверить обновления. Проверьте соединение и попробуйте снова.",
+    updateBrowserOnly: "Проверка обновлений доступна в настольном приложении.",
+    viewRelease: "Открыть релиз",
+    releasePublished: (date: string) => `Опубликовано ${date}`,
+    openReleaseError: "Не удалось открыть страницу релиза. Откройте её на GitHub.",
   },
 };

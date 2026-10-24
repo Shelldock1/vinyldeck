@@ -129,7 +129,7 @@ Both installers understand `VINYLDECK_VERSION` (for example `v0.2.0`) to pin a r
 - **OBS overlay** - a transparent, self-refreshing browser source at `http://127.0.0.1:43110/overlay`, plus `/state` JSON and `/artwork`. The server is localhost-only and rejects foreign `Host` headers.
 - **Discord Rich Presence** - opt-in: paste your own Discord application client ID in Settings and VinylDeck mirrors the track and elapsed time over the local IPC socket.
 - **English and Russian** - every screen, tooltip, screen-reader label and tray menu, with correct plurals and locale-aware dates. Auto follows the OS.
-- **Desktop citizenship** - tray lifecycle, quit-to-tray, start-at-login, single-instance focus, persistent settings and a strict CSP.
+- **Desktop citizenship** - tray lifecycle, quit-to-tray, start-at-login, single-instance focus, persistent settings, a manual update check and a strict CSP.
 
 ## Usage
 
@@ -137,25 +137,27 @@ Both installers understand `VINYLDECK_VERSION` (for example `v0.2.0`) to pin a r
 2. Open VinylDeck. The active system session appears on the deck.
 3. Use the in-app controls, the tonearm, or the shortcuts below. The tray menu and global hotkeys work while another app has focus.
 
+Shortcuts can be disabled in Settings; `Escape` remains available for closing the topmost surface. See the [User Guide](./docs/USER_GUIDE.md) for the Crate, Wrapped, overlay, Discord, sleep timer and settings.
+
+## Controls
+
 | Action | Shortcut |
 | --- | --- |
 | Play / pause | `Space` |
 | Play / pause (global) | `Ctrl+Alt+Space` |
 | Previous / next | `Left` / `Right` |
-| Seek -5 s / +5 s | `Shift+Left` / `Shift+Right` |
+| Seek -5s / +5s | `Shift+Left` / `Shift+Right` (or arrows with the progress ring focused) |
 | Fullscreen | `F` |
 | Mini player | `M` |
 | Mini player (global) | `Ctrl+Alt+M` |
 | Cycle shell | `T` |
 | Settings | `S` |
-| Art ambient | `A` |
-| The Crate | `C` |
-| Switch language | `L` |
-| Shortcut cheat sheet | `?` |
+| Art Ambient | `A` |
+| The Crate (your collection) | `C` |
+| Switch language (English / Русский) | `L` |
+| Show keyboard shortcuts | `?` |
 | Close the topmost surface | `Escape` |
 | Quit | `Ctrl+Q` |
-
-Shortcuts can be disabled in Settings; `Escape` remains available for closing the topmost surface. See the [User Guide](./docs/USER_GUIDE.md) for the Crate, Wrapped, overlay, Discord, sleep timer and settings.
 
 ## Build from source
 

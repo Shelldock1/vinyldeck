@@ -709,6 +709,104 @@
   font-weight: 500;
 }
 
+.settings-about__update {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 52%, transparent);
+}
+
+.settings-about__update-copy {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.settings-about__update-status {
+  max-width: 420px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ui-text-secondary);
+}
+
+.settings-about__update-status--available {
+  color: color-mix(in srgb, var(--ui-accent) 82%, var(--ui-text-primary));
+}
+
+.settings-about__update-status--error {
+  color: #ff9c9c;
+}
+
+.settings-about__update-date {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: var(--mono-tracking);
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ui-text-secondary) 72%, transparent);
+}
+
+.settings-about__update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-about__update-button {
+  padding: 9px 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: var(--mono-tracking);
+  text-transform: uppercase;
+  color: var(--ui-text-primary);
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 52%, transparent);
+  border-radius: 999px;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms var(--spring-curve, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.settings-about__update-button:hover:not(:disabled),
+.settings-about__update-button:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--ui-accent) 24%, transparent);
+  border-color: color-mix(in srgb, var(--ui-accent) 72%, transparent);
+}
+
+.settings-about__update-button:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+.settings-about__update-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.settings-about__update-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.settings-about__update-button--ghost {
+  color: var(--ui-text-secondary);
+  background: transparent;
+  border-color: color-mix(in srgb, var(--ui-border) 52%, transparent);
+}
+
+.settings-about__update-button--ghost:hover:not(:disabled),
+.settings-about__update-button--ghost:focus-visible:not(:disabled) {
+  color: var(--ui-text-primary);
+  background: color-mix(in srgb, var(--ui-bg) 34%, transparent);
+  border-color: color-mix(in srgb, var(--ui-accent) 38%, transparent);
+}
+
 .settings-about__qa {
   display: none;
   margin-top: 22px;

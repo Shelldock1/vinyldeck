@@ -9,6 +9,7 @@ mod settings;
 mod shortcuts;
 mod sleep;
 mod tray;
+mod update;
 mod window;
 
 /// VinylDeck is a dark, cinematic surface. On Linux the native window chrome
@@ -74,6 +75,8 @@ pub fn run() {
             app_lifecycle::cmd_quit,
             window::cmd_set_always_on_top,
             window::cmd_set_window_mode,
+            update::cmd_update_check,
+            update::cmd_open_release,
         ])
         .setup(|app| {
             window::fit_main_to_monitor(app.handle());

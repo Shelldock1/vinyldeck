@@ -151,6 +151,15 @@ Toggle the setting off and on after moving or reinstalling the binary, because t
 
 Language **Auto** follows the OS locale. Pick English or Russian explicitly in Settings -> Look, with the EN/RU button, or with `L`. The tray follows the same setting.
 
+## Update check fails
+
+- **"Couldn't check for updates":** the About tab reads `https://api.github.com` from Rust. Check the connection, VPN, proxy or firewall; the request times out after 10 seconds.
+- **Repeated failures while the network works:** unauthenticated GitHub API calls are limited to 60 per hour per IP. Wait, or open `https://github.com/Shelldock1/vinyldeck/releases` manually.
+- **Browser development mode:** `npm run dev` has no Tauri backend, so About reports that update checks are desktop-only. Use `npm run tauri dev` or a bundled build.
+- **A newer release exists but the page will not open:** `cmd_open_release` needs a desktop session with `xdg-open` (Linux) or a default browser (Windows). Open the release URL manually.
+
+Automatic installation is not implemented. Download the current installer or AppImage from the release page, or rerun the one-line install command.
+
 ## Reset settings or the collection
 
 Settings and the Crate live in the Tauri app data directory:

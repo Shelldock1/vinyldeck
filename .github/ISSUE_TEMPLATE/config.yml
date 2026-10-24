@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/Shelldock1/vinyldeck#readme
+    about: Install, usage and build instructions.
+  - name: Troubleshooting
+    url: https://github.com/Shelldock1/vinyldeck/blob/main/docs/TROUBLESHOOTING.md
+    about: Common media, installer, overlay and platform issues.
+  - name: Security report
+    url: https://github.com/Shelldock1/vinyldeck/security/policy
+    about: Please report vulnerabilities privately instead of opening an issue.

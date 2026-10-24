@@ -113,7 +113,11 @@ Settings persist across Main, Mini and restarts. The Rust backend validates and 
 | Display | Window mode, always on top, lean-back, cursor hide, idle timeout, Mini transparency |
 | Source | Auto or a specific media session |
 | Other | Keyboard shortcuts, quit to tray, start at login, sleep timer, OBS overlay URL, Discord application ID |
-| About | Version and app details, empty-state test |
+| About | Version and app details, update check, empty-state test |
+
+### Updates
+
+Settings -> About -> **Check for updates** asks GitHub for the newest published release. If one is newer than the running build, **View release** opens its page in your browser. VinylDeck never downloads or installs an update on its own: use the one-line installer again, or download the current installer/AppImage from the release page. The check needs `api.github.com`; it is available in the desktop app, not in browser development mode.
 
 ### Language
 

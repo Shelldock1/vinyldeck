@@ -175,6 +175,15 @@ Close-button behavior is handled by Rust window events and hides app windows to 
 
 `SleepTimerSnapshot` is `{ mode, endsAt: number \| null, track: string \| null }`. Minute timers accept 5-240 minutes; the UI offers 15/30/45/60. Timers are intentionally not persisted across launches.
 
+## Updates
+
+| Command | Args | Return |
+| --- | --- | --- |
+| `cmd_update_check` | none | `UpdateStatus` |
+| `cmd_open_release` | `{ url: string }` | `null` |
+
+`UpdateStatus` is `{ currentVersion, latestVersion, updateAvailable, releaseUrl, publishedAt }`. The check reads `https://api.github.com/repos/Shelldock1/vinyldeck/releases/latest` in Rust with a 10-second timeout and a 256 KiB response cap, then compares the numeric version cores. `cmd_open_release` accepts only URLs under `https://github.com/Shelldock1/vinyldeck/releases` and hands them to the system browser. Nothing is downloaded or installed by either command.
+
 ## Artwork scheme
 
 Covers are stored in a bounded in-process cache and served at `vinyldeck://art/<hash>`. The frontend converts that to the platform URL (`http://vinyldeck.localhost/...` on Windows) at the edge. The scheme handler returns `Content-Type`, a one-year immutable cache header and a 404 for unknown hashes.

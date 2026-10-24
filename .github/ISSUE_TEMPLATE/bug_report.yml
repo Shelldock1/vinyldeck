@@ -1,0 +1,98 @@
+name: Bug report
+description: Report a reproducible problem with VinylDeck.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please search existing issues first.
+        For security problems, do not open a public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start playback in ...
+        2. Open VinylDeck
+        3. Press ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: VinylDeck version
+      description: Settings -> About, or the release tag.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux (X11)
+        - Linux (Wayland)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: desktop
+    attributes:
+      label: Linux desktop / display server (if applicable)
+      placeholder: "GNOME 47, Wayland"
+  - type: input
+    id: player
+    attributes:
+      label: Media player
+      placeholder: "Spotify 1.x, Firefox, VLC, mpv ..."
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it?
+      options:
+        - One-line installer
+        - NSIS setup (.exe)
+        - MSI
+        - AppImage
+        - .deb
+        - Built from source
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or console output
+      description: Remove personal paths, tokens and track names you do not want to share.
+      render: shell
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Drag files here if the problem is visual.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I am running the latest release or a build from main.
+          required: true
+        - label: I searched existing issues.
+          required: true
+        - label: I removed secrets and personal paths from the logs I pasted.
+          required: true

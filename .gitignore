@@ -75,6 +75,9 @@ bgs-3.md
 bgs-2.md
 bgs-1.md
 *.tsbuildinfo
+# Local tooling / agent state
+.claude/
+
 # Local Netlify folder
 .netlify
 

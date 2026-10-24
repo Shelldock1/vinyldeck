@@ -27,11 +27,12 @@ anyhow = "1"
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
 sys-locale = "0.3"
+# Shared HTTP client: MPRIS artwork on Linux and the manual release check.
+ureq = { version = "2", default-features = false, features = ["tls"] }
 
 # Linux: MPRIS over the session D-Bus (Spotify, browsers, VLC, ...)
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = { version = "5", features = ["blocking-api"] }
-ureq = { version = "2", default-features = false, features = ["tls"] }
 
 # Windows-specific WinRT bindings for SMTC
 [target.'cfg(windows)'.dependencies]

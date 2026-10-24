@@ -34,6 +34,7 @@ full documentation pass.
 - **OBS overlay.** A local HTTP server on `127.0.0.1:43110` serves a transparent, self-refreshing `/overlay` browser source, `/state` JSON and `/artwork` for the cached cover. The URL is listed in Settings -> Other.
 - **Discord Rich Presence.** Opt-in local IPC presence using a user-supplied Discord application client ID, validated as a snowflake and disabled while empty.
 - **Russian localization.** English and Russian dictionaries cover every screen, tooltip, screen-reader label and the tray menu, with Russian plural rules and locale-aware dates. `L`, a round EN/RU button, the context menu and Settings switch it; Auto follows the OS.
+- **Manual update check.** Settings -> About asks GitHub for the newest published release, shows the version and publish date, and opens the release page in the system browser. The request runs in Rust so the webview CSP stays closed; nothing is downloaded or installed automatically.
 - **Light, Dark and Halloween schemes** layered over Noir and Glass, with interpolated color tokens and a CSS-gated seasonal layer.
 - **Single instance.** Launching again focuses the running window instead of starting a second copy.
 - **Frontend coverage** for the pressing engine, artwork palette extraction, theme applier and canvas texture baker, plus an ESLint gate with `react-hooks` and `jsx-a11y`.
@@ -84,7 +85,7 @@ full documentation pass.
 ### Deferred
 
 - Code signing for Windows (SmartScreen still shows an unknown publisher).
-- Automatic in-app updates; the release pipeline publishes checksums and a manual update check is planned.
+- Automatic in-app updates. The About tab now offers a manual check that opens the release page; downloading and installing still goes through the installers, and updater signing keys are not part of the pipeline.
 - ARM64 Windows/Linux artifacts (x64 only for now).
 
 ## [0.1.1] - 2026-07-03

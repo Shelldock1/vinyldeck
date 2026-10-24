@@ -322,5 +322,17 @@ export const en = {
     visualsValue: "Noir, Glass, Art Ambient",
     testEmpty: "Test Empty State",
     testEmptyDescription: "Force the no-media visual state for inspection.",
+    updates: "Updates",
+    updateCopy:
+      "Check GitHub for the latest published release. Nothing is downloaded or installed automatically.",
+    checkForUpdates: "Check for updates",
+    checkingForUpdates: "Checking…",
+    updateAvailable: (version: string) => `${version} is available.`,
+    updateCurrent: "You're on the latest release.",
+    updateError: "Couldn't check for updates. Check your connection and try again.",
+    updateBrowserOnly: "Update checks are available in the desktop app.",
+    viewRelease: "View release",
+    releasePublished: (date: string) => `Published ${date}`,
+    openReleaseError: "Couldn't open the release page. Open it from GitHub instead.",
   },
 };

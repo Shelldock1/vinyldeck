@@ -14,7 +14,7 @@ Mini mode theme/customization syncing was broken because the `mini` WebView had 
 - User observed main localStorage showing selected theme `paper`.
 - Mini localStorage showed stale/default theme `noir` with a newer `writtenAt`.
 - After main reload, main localStorage also became `noir`, matching the mini timestamp.
-- Real Tauri Store file at `C:\Users\rudra\AppData\Roaming\com.vinyldeck.app\settings.json` was inspected and contained `theme: "noir"`, confirming the persisted store had been overwritten by stale/default state.
+- Real Tauri Store file at `%APPDATA%\com.vinyldeck.app\settings.json` was inspected and contained `theme: "noir"`, confirming the persisted store had been overwritten by stale/default state.
 - Console/Tauri logs showed no frontend errors.
 
 ## Fixes Tried Before Root Fix

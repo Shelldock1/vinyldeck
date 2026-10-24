@@ -202,6 +202,16 @@ Outputs land under `src-tauri/target/release/bundle/`. `node scripts/collect-rel
 - Mini is a separate frameless, always-on-top WebView capped at 280x280 with a 140x140 floor. Keep transparency scoped to `miniTransparentMode`.
 - Do not remove the custom background theme.
 
+## Update check
+
+The About tab exposes a manual update check. It is intentionally not the Tauri updater plugin: the release pipeline does not hold update signing keys yet, and an unsigned auto-updater would be worse than a clear manual path.
+
+- `src-tauri/src/update.rs` calls the GitHub Releases API with `ureq` (10-second timeout, 256 KiB cap), compares the tag's numeric core with `CARGO_PKG_VERSION`, and returns `UpdateStatus`.
+- `src/lib/update/index.ts` validates that payload before React sees it and invokes `cmd_open_release` for the release page. Browser mode reports that checks are desktop-only.
+- The HTTP request lives in Rust so `connect-src` stays closed to `api.github.com`.
+- The check is read-only. Do not add download or install behaviour without adding updater signing keys and documenting the trust model.
+- `cmd_open_release` rejects URLs outside `https://github.com/Shelldock1/vinyldeck/releases`.
+
 ## Content Security Policy
 
 `src-tauri/tauri.conf.json` sets:

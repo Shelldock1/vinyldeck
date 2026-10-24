@@ -27,8 +27,14 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { WindowMode } from "../../lib/window/types";
 import "./Settings.css";
 import { logger } from "../../lib/logger";
-import { LANGUAGE_SETTINGS, useT } from "../../lib/i18n";
+import { LANGUAGE_SETTINGS, localeFor, useLanguage, useT } from "../../lib/i18n";
 import { setLanguage } from "../../lib/i18n/switch";
+import {
+  UpdateCheckUnavailableError,
+  checkForUpdate,
+  openReleasePage,
+} from "../../lib/update";
+import type { UpdateStatus } from "../../lib/update";
 import { version as APP_VERSION } from "../../../package.json";
 
 interface SettingsProps {
@@ -45,8 +51,16 @@ const SHELL_CARD_META: Record<ThemeId, { bg: string; accent: string }> = {
   glass: { bg: "#f5f2ea", accent: "#0070d9" },
 };
 
+type UpdateCheckState =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "current"; status: UpdateStatus }
+  | { kind: "available"; status: UpdateStatus }
+  | { kind: "error"; browserOnly: boolean };
+
 export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) {
   const t = useT();
+  const language = useLanguage();
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [players, setPlayers] = useState<MediaPlayer[]>([]);
   const [sleepTimer, setSleepTimer] = useState<SleepTimerSnapshot | null>(null);
@@ -54,6 +68,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
   const [sleepError, setSleepError] = useState<string | null>(null);
   const [discordIdDraft, setDiscordIdDraft] = useState("");
   const [discordIdSaved, setDiscordIdSaved] = useState(false);
+  const [updateState, setUpdateState] = useState<UpdateCheckState>({ kind: "idle" });
+  const [updateOpenFailed, setUpdateOpenFailed] = useState(false);
   const settings = useVinylDeckStore(selectSettings);
   const currentTheme = useVinylDeckStore((s) => s.theme);
   const ambientMode = useVinylDeckStore((s) => s.ambientMode);
@@ -227,11 +243,52 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
       });
   }
 
+  function handleCheckForUpdates() {
+    setUpdateOpenFailed(false);
+    setUpdateState({ kind: "checking" });
+    void checkForUpdate()
+      .then((status) => {
+        setUpdateState(
+          status.updateAvailable
+            ? { kind: "available", status }
+            : { kind: "current", status },
+        );
+      })
+      .catch((error) => {
+        const browserOnly = error instanceof UpdateCheckUnavailableError;
+        if (!browserOnly) {
+          logger.warn("[Settings] Update check failed:", error);
+        }
+        setUpdateState({ kind: "error", browserOnly });
+      });
+  }
+
+  function handleOpenRelease(url: string) {
+    setUpdateOpenFailed(false);
+    void openReleasePage(url).catch((error) => {
+      logger.warn("[Settings] Opening the release page failed:", error);
+      setUpdateOpenFailed(true);
+    });
+  }
+
   const selectedPlayer = players.find(
     (player) => player.id === settings.playerSourceId,
   );
   const savedPlayerMissing =
     settings.playerSourceId.length > 0 && !selectedPlayer;
+
+  const updateMessage =
+    updateState.kind === "checking"
+      ? t.settings.checkingForUpdates
+      : updateState.kind === "available"
+        ? t.settings.updateAvailable(updateState.status.latestVersion)
+        : updateState.kind === "current"
+          ? t.settings.updateCurrent
+          : updateState.kind === "error"
+            ? updateState.browserOnly
+              ? t.settings.updateBrowserOnly
+              : t.settings.updateError
+            : t.settings.updateCopy;
 
   return (
     <AnimatePresence>
@@ -765,6 +822,51 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                     <strong>{t.settings.windowsValue}</strong>
                     <span>{t.settings.visuals}</span>
                     <strong>{t.settings.visualsValue}</strong>
+                  </div>
+                  <div className="settings-about__update">
+                    <div className="settings-about__update-copy">
+                      <span className="settings-about__kicker">{t.settings.updates}</span>
+                      <p
+                        className={`settings-about__update-status${updateState.kind === "available" ? " settings-about__update-status--available" : ""}`}
+                        aria-live="polite"
+                      >
+                        {updateMessage}
+                      </p>
+                      {updateOpenFailed ? (
+                        <p className="settings-about__update-status settings-about__update-status--error">
+                          {t.settings.openReleaseError}
+                        </p>
+                      ) : null}
+                      {updateState.kind === "available" && updateState.status.publishedAt ? (
+                        <p className="settings-about__update-date">
+                          {t.settings.releasePublished(
+                            new Date(updateState.status.publishedAt).toLocaleDateString(
+                              localeFor(language),
+                              { year: "numeric", month: "short", day: "numeric" },
+                            ),
+                          )}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="settings-about__update-actions">
+                      {updateState.kind === "available" ? (
+                        <button
+                          type="button"
+                          className="settings-about__update-button"
+                          onClick={() => handleOpenRelease(updateState.status.releaseUrl)}
+                        >
+                          {t.settings.viewRelease}
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className={`settings-about__update-button${updateState.kind === "available" ? " settings-about__update-button--ghost" : ""}`}
+                        onClick={handleCheckForUpdates}
+                        disabled={updateState.kind === "checking"}
+                      >
+                        {t.settings.checkForUpdates}
+                      </button>
+                    </div>
                   </div>
                   <div className="settings-about__qa">
                     <SettingsToggle
