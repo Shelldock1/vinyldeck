@@ -4,6 +4,17 @@
 
 ### Added
 
+- The Crate separates sources: every record and listen is tagged as a music app (Spotify, VLC, mpv, ...) or a browser (YouTube and other sites). A Music / Browser / All switch at the top of The Crate filters the shelf, the stats strip, and Wrapped; Music is the default and the choice is remembered. The record card shows which player it came from. Older records are classified from their play history (browser listens report no album); records with no history stay under All.
+- The main deck scales down to fit the window instead of clipping at the top and bottom, and the main window opens at 1000x860, shrunk to fit the monitor working area on smaller screens.
+
+### Changed
+
+- Window controls now read minimize, maximize, close, with close at the far end.
+
+### Removed
+
+- The dormant `VaporGrid` component and the unused Vite/Tauri template icons; the page favicon is now the app icon.
+
 - Crate Wrapped: the backend now keeps a bounded play history alongside the collection, and a Wrapped card in The Crate folds the selected month into total listens, unique records/artists/tracks, the five most played records, top track, top artist, the rarest pressing played, and the busiest day. Months are UTC and older months can be stepped through from the picker.
 - OBS overlay: a local read-only HTTP server on `127.0.0.1:43110` serves a transparent, self-refreshing Browser Source at `/overlay` with cover art, track, artist, album, and interpolated progress. `/state` exposes the same snapshot as JSON for custom scenes, and `/artwork` serves the cached cover because a browser source cannot resolve the `vinyldeck:` scheme. The URL is listed in Settings -> Other.
 - Discord Rich Presence: paste your own Discord application client ID in Settings -> Other and VinylDeck mirrors the current track, artist, album, and elapsed time through the local Discord IPC socket. Presence stays completely off while the field is empty, and the worker only sends on track or play-state changes.

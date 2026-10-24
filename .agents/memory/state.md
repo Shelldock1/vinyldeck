@@ -34,6 +34,14 @@ Phase 3:
 Post-roadmap:
 - Linux `deb`/`appimage` packaging verified; Tauri npm packages aligned to 2.12.4 (see the release-packaging commit in `git log`).
 
+## Post-roadmap UX pass (2026-10-24, uncommitted until user approves)
+
+- Title bar order: minimize, maximize/exit-fullscreen, close (close last).
+- `useFitScale` scales the main deck (natural ~500x728) to fit the window minus `DECK_RESERVE`; ProgressRing seek math now measures the rendered rect. `tauri.conf.json` main window 1000x860; `window::fit_main_to_monitor` clamps to 92% of the work area at launch.
+- Source split: `media::model::source_kind` (mirrored by `sourceKindFor` in `records.ts`) buckets players into `app` / `browser`. Records carry `sourceKind`/`sourceName` (music app tag is sticky); `PlayEvent.sourceKind`; legacy rows backfilled from history (empty album = browser). Crate Music/Browser/All filter (localStorage `vinyldeck:crate:source`, default `app`) drives shelf, stats, and `cmd_collection_wrapped { source }`.
+- Removed dormant `VaporGrid`, `public/vite.svg`, `public/tauri.svg`.
+- Verified: lint, build, 130 frontend tests, 93 Rust tests, clippy, fmt. Not launched as a native window (layout verified in headless Chromium at 700x560, 900x700, 1000x860, 1366x668).
+
 ## Phase 3 Implementation Notes
 
 - **K — reactivity:** `src-tauri/src/reactivity/{mod,dsp,linux,windows}.rs`. Linux captures `parec --device=@DEFAULT_MONITOR@`; Windows uses WASAPI loopback behind `windows-rs` features. Capture runs only while playing, emits `audio-reactivity` `{level,bass,mid,treble}` at ~30 Hz, retries after 30 s on failure. Frontend `useAudioReactivity` writes `--audio-level/bass/mid/treble`; `AudioMeter`, needle/headshell jitter, and groove glow read them. No microphone is opened; no FFT dependency.
