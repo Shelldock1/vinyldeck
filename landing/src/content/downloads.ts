@@ -1,5 +1,5 @@
 export const release = {
-  version: "0.2.0",
+  version: "0.2.1",
   windows: "Windows 10 / 11 (x64)",
   linux: "Linux x64 (AppImage / deb)",
   requirement:

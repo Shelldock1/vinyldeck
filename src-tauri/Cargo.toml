@@ -1,6 +1,6 @@
 [package]
 name = "vinyldeck"
-version = "0.2.0"
+version = "0.2.1"
 description = "A cinematic vinyl experience for everything playing on your computer."
 authors = ["VinylDeck"]
 license = "MIT"
