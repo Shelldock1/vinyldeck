@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- Security: the OBS overlay server no longer sends `Access-Control-Allow-Origin: *`, so other websites open in a browser can no longer read the current track from `127.0.0.1:43110/state`. Requests with a `Host` other than `127.0.0.1:43110` or `localhost:43110` get 403, which blocks DNS-rebinding. OBS keeps working unchanged.
 - The Crate's listening streak counted only each record's latest day, so one album played every day showed a one-day streak. It now uses the full play history.
 - Crate Wrapped bucketed months and busiest days in UTC while the streak used local time; Wrapped now uses the viewer's clock too.
 

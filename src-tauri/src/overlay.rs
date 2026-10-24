@@ -5,9 +5,12 @@
 //! custom integrations, and `/artwork` serves the cached cover bytes because a
 //! browser source cannot resolve the `vinyldeck:` scheme.
 //!
-//! There are no write endpoints and the socket is bound to 127.0.0.1, so the
-//! only thing a page on the machine can do is read what is already public on
-//! the user's screen.
+//! There are no write endpoints and the socket is bound to 127.0.0.1. The
+//! overlay page reads `/state` same-origin, so responses carry no CORS header:
+//! other websites open in a browser cannot read what is playing. Requests
+//! whose `Host` is not this server are refused, which also defeats DNS
+//! rebinding (an attacker domain resolving to 127.0.0.1 still sends its own
+//! name as `Host`).
 
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -18,6 +21,8 @@ use tauri::{AppHandle, Manager};
 use crate::media::{artwork, authority::PlaybackAuthority};
 
 pub const OVERLAY_ADDR: &str = "127.0.0.1:43110";
+/// `Host` header values the server answers to.
+const ALLOWED_HOSTS: &[&str] = &[OVERLAY_ADDR, "localhost:43110"];
 const MAX_REQUEST_BYTES: usize = 8 * 1024;
 
 pub fn start(app: AppHandle) {
@@ -62,6 +67,11 @@ fn serve(app: &AppHandle, mut stream: TcpStream) {
         .unwrap_or("/");
 
     let (status, content_type, body) = match path {
+        _ if !has_allowed_host(&request) => (
+            "403 Forbidden",
+            "text/plain; charset=utf-8",
+            b"forbidden".to_vec(),
+        ),
         "/" | "/overlay" => (
             "200 OK",
             "text/html; charset=utf-8",
@@ -86,12 +96,29 @@ fn serve(app: &AppHandle, mut stream: TcpStream) {
 
     let header = format!(
         "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\n\
-         Cache-Control: no-store\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n",
+         Cache-Control: no-store\r\nConnection: close\r\n\r\n",
         body.len()
     );
     let _ = stream.write_all(header.as_bytes());
     let _ = stream.write_all(&body);
     let _ = stream.flush();
+}
+
+/// True when the request's `Host` header names this server. A missing header
+/// is refused: every browser and OBS send one.
+fn has_allowed_host(request: &str) -> bool {
+    request
+        .lines()
+        .skip(1)
+        .take_while(|line| !line.is_empty())
+        .filter_map(|line| line.split_once(':'))
+        .find(|(name, _)| name.trim().eq_ignore_ascii_case("host"))
+        .is_some_and(|(_, value)| {
+            let value = value.trim();
+            ALLOWED_HOSTS
+                .iter()
+                .any(|allowed| value.eq_ignore_ascii_case(allowed))
+        })
 }
 
 fn state_json(app: &AppHandle) -> serde_json::Value {
@@ -253,7 +280,35 @@ const OVERLAY_HTML: &str = r#"<!doctype html>
 
 #[cfg(test)]
 mod tests {
-    use super::now_millis;
+    use super::{has_allowed_host, now_millis};
+
+    fn request(host: Option<&str>) -> String {
+        let host = host
+            .map(|value| format!("Host: {value}\r\n"))
+            .unwrap_or_default();
+        format!("GET /state HTTP/1.1\r\n{host}Accept: */*\r\n\r\n")
+    }
+
+    #[test]
+    fn answers_only_to_its_own_host() {
+        assert!(has_allowed_host(&request(Some("127.0.0.1:43110"))));
+        assert!(has_allowed_host(&request(Some("localhost:43110"))));
+        assert!(has_allowed_host(
+            "GET / HTTP/1.1\r\nhOsT:  LOCALHOST:43110 \r\n\r\n"
+        ));
+
+        // DNS rebinding: attacker domain resolved to 127.0.0.1.
+        assert!(!has_allowed_host(&request(Some("evil.example:43110"))));
+        assert!(!has_allowed_host(&request(Some("127.0.0.1"))));
+        assert!(!has_allowed_host(&request(Some(
+            "127.0.0.1:43110.evil.example"
+        ))));
+        assert!(!has_allowed_host(&request(None)));
+        // A Host-looking line in the body does not count.
+        assert!(!has_allowed_host(
+            "GET / HTTP/1.1\r\n\r\nHost: 127.0.0.1:43110"
+        ));
+    }
 
     #[test]
     fn clock_source_is_sane() {
