@@ -51,7 +51,7 @@ jobs:
       - name: Build DEB and AppImage
         env:
           APPIMAGE_EXTRACT_AND_RUN: "1"
-        run: npm run tauri build -- --bundles deb,appimage
+        run: npm run tauri build -- --bundles "deb,appimage"
 
       - name: Collect stable artifact names
         run: node scripts/collect-release.mjs linux
@@ -82,7 +82,7 @@ jobs:
       - run: npm ci
 
       - name: Build NSIS and MSI
-        run: npm run tauri build -- --bundles nsis,msi
+        run: npm run tauri build -- --bundles "nsis,msi"
 
       - name: Collect stable artifact names
         run: node scripts/collect-release.mjs windows
