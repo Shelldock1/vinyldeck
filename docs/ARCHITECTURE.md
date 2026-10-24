@@ -1,112 +1,148 @@
 # VinylDeck Architecture
 
-VinylDeck is split into a platform-neutral React visual engine and a Windows-specific Tauri backend. The central rule is simple: React renders; Rust owns native integration, durable settings, and real system media access.
+VinylDeck is one React visual engine over one Rust backend with thin platform adapters. Windows talks to SMTC (WinRT), Linux talks to MPRIS over D-Bus, and unsupported targets get explicit "nothing playing" stubs. The UI never branches on the operating system.
 
-## System Overview
+The central rule: **React renders; Rust owns native integration, durable state and real media access.**
+
+## System overview
 
 ```mermaid
 flowchart TB
-  subgraph Windows["Windows Runtime"]
-    Player["Spotify / Browser / VLC"]
-    SMTC["GlobalSystemMediaTransportControls"]
+  subgraph Players["Media players"]
+    Spotify["Spotify / VLC / mpv / browser"]
   end
 
-  subgraph Backend["Tauri Rust Backend"]
-    Poller["SMTC poller\n500ms light poll"]
-    Cache["Metadata/artwork cache"]
-    Commands["cmd_smtc_* commands"]
+  subgraph Platform["Platform bridge"]
+    SMTC["Windows SMTC (WinRT)"]
+    MPRIS["Linux MPRIS (D-Bus)"]
+  end
+
+  subgraph Backend["Tauri Rust backend"]
+    PlatformMedia["media::platform\ncfg-selected adapter"]
+    Poller["Media poller\n1s fallback + events"]
+    Artwork["Artwork cache\nvinyldeck://art/<hash>"]
+    Authority["PlaybackAuthority\ntray + commands"]
     Settings["Settings authority"]
-    Window["Window/tray lifecycle"]
+    Collection["Crate + play history"]
+    Services["Overlay / Discord / sleep / shortcuts / reactivity"]
+    Window["Window + tray lifecycle"]
   end
 
-  subgraph Frontend["React Frontend"]
+  subgraph Frontend["React frontend"]
     Source["PlaybackSource\nMockSource or TauriSource"]
     Store["Zustand cache"]
     Views["MainView / MiniView"]
-    Components["Vinyl, controls, settings, shells"]
+    Components["Deck, controls, Crate, Settings"]
   end
 
-  Player --> SMTC
-  SMTC --> Poller
-  Poller --> Cache
+  Spotify --> SMTC
+  Spotify --> MPRIS
+  SMTC --> PlatformMedia
+  MPRIS --> PlatformMedia
+  PlatformMedia --> Poller
+  Poller --> Artwork
+  Poller --> Authority
   Poller -->|"media-state-changed"| Source
-  Commands --> SMTC
+  Authority --> PlatformMedia
   Source --> Store
   Store --> Views
   Views --> Components
   Components -->|"control intent"| Source
-  Source --> Commands
+  Source -->|"cmd_media_*"| PlatformMedia
   Components -->|"settings intent"| Settings
   Settings -->|"settings-changed"| Store
+  Collection -->|"collection-changed"| Components
+  Services --> Components
   Window --> Views
 ```
 
-## Playback Flow
+## Platform adapters
+
+| Concern | Windows | Linux | Shared code |
+| --- | --- | --- | --- |
+| Media sessions | `media/smtc.rs` (WinRT, AUMID) | `media/linux.rs` (`zbus`, bus names) | `media/model.rs`, `poller.rs`, `authority.rs`, `commands.rs` |
+| Session picker | `cmd_media_players` | `cmd_media_players` | `src/lib/media/players.ts` |
+| Artwork | WinRT thumbnail stream | MPRIS `mpris:artUrl`, `data:` URLs | `artwork.rs` cache + URI scheme |
+| Audio reactivity | `reactivity/windows.rs` (WASAPI loopback) | `reactivity/linux.rs` (`parec`) | `reactivity/dsp.rs` three-band envelope |
+| Discord IPC | named pipe | Unix socket (`XDG_RUNTIME_DIR`, `TMPDIR`, Flatpak path) | `presence.rs` worker |
+| Autostart | registry Run key | XDG autostart entry | `tauri-plugin-autostart` |
+| Tray | native tray | native tray | `tray.rs` |
+| Other targets | - | - | `media/unsupported.rs` |
+
+`media/platform.rs` re-exports the right adapter, so the poller and commands stay platform-neutral.
+
+## Playback flow
 
 ```mermaid
 sequenceDiagram
   participant App as App.tsx
   participant Source as TauriSource
   participant Rust as Rust media commands
-  participant Poller as SMTC poller
+  participant Poller as Media poller
+  participant Bridge as SMTC / MPRIS
   participant UI as React views
-  participant SMTC as Windows SMTC
 
   App->>Source: createPlaybackSource().start()
   Source->>Rust: cmd_smtc_snapshot()
-  Rust->>SMTC: read current session
+  Rust->>Bridge: read active session
   Rust-->>Source: MediaSnapshot or null
   Source-->>UI: PlaybackState
-  loop every 500ms
-    Poller->>SMTC: read lightweight timeline/capabilities
-    Poller->>SMTC: read metadata/artwork on semantic change
-    alt semantic or artwork change
+  loop every 1s fallback
+    Poller->>Bridge: read timeline/capabilities (event-driven when possible)
+    Poller->>Bridge: read metadata/artwork on semantic change
+    alt semantic change
       Poller-->>Source: media-state-changed (full snapshot)
-    else 2s position resync
-      Poller-->>Source: media-position-changed (position only)
+    else position only
+      Poller-->>Source: media-position-changed (2s resync)
     end
-    Source-->>UI: PlaybackState
   end
   UI->>Source: play/pause/next/previous/seek intent
-  Source->>Rust: cmd_smtc_* command
-  Rust->>SMTC: request action
+  Source->>Rust: cmd_smtc_* / cmd_media_set_*
+  Rust->>Bridge: request action
 ```
 
-The poller emits semantic changes immediately and position resyncs periodically. Artwork is cached by source, track, artist, album, and duration so it is not decoded every poll.
+- Linux subscribes to MPRIS `PropertiesChanged` and D-Bus `NameOwnerChanged`; Windows subscribes to SMTC session/media/timeline events.
+- Transport commands wake the poller immediately instead of waiting for the next tick.
+- The poll interval is a fallback for position and play counting, not the primary update path.
+- Artwork is read off the polling thread. A new track's metadata and controls appear first; the cover follows.
+- Covers are cached and exposed as `vinyldeck://art/<hash>`; the frontend converts that to the platform URL form at the edge.
+- Play counts are emitted by the poller after half the track or 120 seconds of playing time, whichever comes first. Tracks under 30 seconds never count.
 
-## State Ownership
+## State ownership
 
 | State | Authority | Frontend role |
 | --- | --- | --- |
 | Playback in browser dev | `MockSource` | Visual development only |
-| Playback in Tauri | Windows SMTC through Rust | Render cache and command intent |
-| Persisted settings | Rust settings authority | Optimistic UI plus backend-approved snapshots |
+| Playback in Tauri | Platform bridge through Rust | Render cache and command intent |
+| Persisted settings | Rust settings authority (`tauri-plugin-store`) | Optimistic UI plus approved snapshots |
+| The Crate | Rust collection state (`collection.json`) | Render and press intent |
+| Play history / Wrapped | Rust collection state | Query by month and source |
+| Sleep timer | Rust (`sleep.rs`) | Start/cancel and render status |
 | Runtime QA flags | Zustand | Local only |
 | Window mode and lifecycle | Rust window/tray modules | Request mode changes |
-| Theme application | CSS custom properties | Apply backend-approved setting |
+| Theme application | CSS custom properties | Apply approved settings |
 
-## Current Visual Surface
+Settings updates are validated, clamped and persisted by Rust. `cmd_settings_update` holds the lock across the whole read-modify-write, so Main and Mini cannot overwrite each other. WebViews are views and controllers, never durable storage authorities.
 
-The current app exposes two active shells: Noir and Glass. Older Aurora, Vapor, and Paper values remain migration inputs only. Album art still drives the vinyl pressing material and optional Art Ambient glow.
+## Persistence
 
-The active vinyl renderer is the CSS/DOM renderer. WebGL vinyl code remains in the repo as a dormant experiment with its feature flag hardcoded off. The center spindle hole is intentionally absent so album artwork remains unobscured.
+| File | Location | Owner |
+| --- | --- | --- |
+| `settings.json` | Tauri app data directory | Settings authority |
+| `collection.json` | Tauri app data directory | Collection state |
 
-## Settings Flow
+Schema versions migrate forward. Unknown or legacy theme values are normalized rather than rejected.
 
-```mermaid
-flowchart LR
-  UI["Settings UI"] --> Adapter["frontend settings adapter"]
-  Adapter --> Invoke["cmd_settings_update/reset"]
-  Invoke --> Rust["Rust validation + migration"]
-  Rust --> Store["tauri-plugin-store"]
-  Rust --> Event["settings-changed"]
-  Event --> Zustand["Zustand settings cache"]
-  Zustand --> Theme["CSS theme application"]
-```
+## Services
 
-Rust clamps and normalizes settings before persistence. Frontend validation is defensive only; WebViews are views/controllers, not durable storage authorities. Mini Transparency is part of the same Rust-owned settings contract: changing `miniTransparentMode` persists the value and, if Mini is open, immediately applies or clears the native Acrylic window effect.
+- **Overlay** (`overlay.rs`): a localhost HTTP server on `127.0.0.1:43110` serving `/overlay`, `/state` and `/artwork`. It rejects foreign `Host` headers and sends no wildcard CORS header.
+- **Discord presence** (`presence.rs`): a worker that mirrors playback over the local IPC socket, only when a user-supplied application ID is configured and the track or play state changes.
+- **Audio reactivity** (`reactivity/`): a supervised capture thread that starts and stops with playback, emits three-band levels at roughly 30 Hz and falls back to silence on failure. No microphone is opened.
+- **Sleep timer** (`sleep.rs`): Rust-owned timers that pause through the normal media bridge and emit `sleep-timer-changed` / `sleep-timer-fired`.
+- **Global shortcuts** (`shortcuts.rs`): best-effort registration of Mini and play/pause hotkeys; a conflict is logged, not fatal.
+- **Single instance**: `tauri-plugin-single-instance` is registered first; a second launch focuses the existing window and exits.
 
-## Window And Lifecycle Model
+## Window and lifecycle model
 
 ```mermaid
 stateDiagram-v2
@@ -123,14 +159,25 @@ stateDiagram-v2
   HiddenTray --> [*]: tray quit / Ctrl+Q
 ```
 
-Main and fullscreen reuse the `main` window. Mini is a separate frameless, transparent-capable, always-on-top WebView window. It starts at `280x280`, can shrink down to a small `140x140` floor, cannot expand beyond the original square, can opt into native Windows Acrylic blur-through through `miniTransparentMode`, and is destroyed when returning to main/fullscreen. Close requests hide to tray; explicit quit destroys windows and exits.
+- Main and fullscreen reuse the `main` window.
+- Main is fitted to at most 92% of the monitor working area at launch; the React deck scales to the resulting viewport.
+- Mini is a separate frameless, always-on-top WebView, docked to the bottom-right working area, capped at 280x280 with a 140x140 floor.
+- Mini Transparency is applied only to that window. Windows uses Acrylic; Linux relies on compositor transparency.
+- Close requests hide to tray when `quitToTray` is on; otherwise they request an explicit quit.
+- A second launch unminimizes and focuses main, or follows the tray Open path from Mini/tray.
 
-Only one instance runs at a time (`tauri-plugin-single-instance`, registered first in the builder). A second launch exits and asks the running instance to come forward: a visible main or fullscreen window is unminimized and focused in place; from mini or tray it follows the tray Open path to main.
+## Security
 
-## Implementation Boundaries
+- Bundled builds use a Content Security Policy: `default-src 'self'`; images from `self`, `data:`, `blob:` and the artwork scheme; inline styles only; scripts from `self`; IPC through `connect-src`.
+- Tauri capabilities in `src-tauri/capabilities/default.json` scope plugin permissions.
+- The overlay server is loopback-only and host-allowlisted; it is read-only.
+- Discord presence is opt-in and disabled while the client ID is empty.
+- No telemetry, analytics or remote code is bundled.
 
-- Real in-app playback uses SMTC through `cmd_smtc_*`.
-- Browser mode remains mock-only by design.
-- Shortcut editing UI and splash screen are not implemented.
-- Public installer validation is tracked separately from architecture work.
-- Tray playback menu code still uses the older backend media command path and should be unified with SMTC before distribution-grade release validation.
+## Implementation boundaries
+
+- Real in-app playback uses the platform bridge commands; browser mode remains mock-only by design.
+- The CSS/DOM vinyl renderer is active. WebGL code remains a dormant experiment behind a hardcoded-off flag.
+- Shortcut editing, a splash screen and code signing are not implemented.
+- Only x64 Windows and Linux artifacts are published.
+- `.agents/memory/` is internal and is not part of the product contract.

@@ -1,40 +1,51 @@
 # VinylDeck
-> Windows desktop app that renders the active system media session as a cinematic vinyl deck.
+> Cross-platform desktop app that renders the active system media session as a cinematic vinyl deck on Windows (SMTC) and Linux (MPRIS).
 
 ## Primary Docs
-- `README.md`: public project overview, quick start, features, links
-- `docs/USER_GUIDE.md`: user controls, settings, window modes
-- `docs/ARCHITECTURE.md`: system design and state ownership
+- `README.md`: install, features, usage, build from source, troubleshooting
+- `CONTRIBUTING.md`: setup, conventions, verification, pull requests
+- `docs/USER_GUIDE.md`: controls, window modes, Crate, Wrapped, settings, overlay, presence
+- `docs/ARCHITECTURE.md`: platform adapters, state ownership, services, lifecycle
 - `docs/API.md`: Tauri command/event contracts
-- `docs/DEVELOPMENT.md`: contributor setup and verification
-- `docs/TROUBLESHOOTING.md`: common runtime issues
-- `docs/RELEASE_V1.md`: version notes and distribution checklist
-- `CHANGELOG.md`: notable changes
+- `docs/DEVELOPMENT.md`: setup, commands, rootless sysroot, packaging
+- `docs/TROUBLESHOOTING.md`: runtime, installer and platform issues
+- `docs/RELEASING.md`: tag workflow, stable artifact names, manual validation
+- `CHANGELOG.md`: release history in Keep a Changelog format
+
+## Install
+- Windows: `irm https://github.com/Shelldock1/vinyldeck/releases/latest/download/install.ps1 | iex`
+- Linux: `curl -fsSL https://github.com/Shelldock1/vinyldeck/releases/latest/download/install.sh | bash`
+- Artifacts: `vinyldeck-setup-windows-x64.exe`, `vinyldeck-windows-x64.msi`, `vinyldeck-linux-x64.AppImage`, `vinyldeck-linux-x64.deb`
 
 ## Core Concepts
-- Browser mode uses `MockSource`.
-- Tauri mode uses `TauriSource` over Rust SMTC commands and events.
-- React consumes `PlaybackState`; Rust owns Windows media integration.
-- Rust owns persisted settings and emits backend-approved settings snapshots.
-- Start With Windows is a Rust-owned persisted setting backed by Tauri autostart.
-- Mini Transparency is a Rust-owned persisted setting; it applies native Acrylic only to the Mini window.
-- Active visual shells are Noir and Glass.
-- CSS vinyl renderer is active.
-- Album art drives ambient color and vinyl material styling.
+- One React engine; Rust owns native integration and durable state.
+- `media/platform.rs` selects SMTC on Windows and MPRIS on Linux; unsupported targets use neutral stubs.
+- Browser mode uses `MockSource`; Tauri mode uses `TauriSource` over Rust commands and events.
+- Rust owns settings (`settings.json`), the Crate and play history (`collection.json`), sleep timers and the media poller.
+- Start At Login uses the Tauri autostart plugin: registry Run key on Windows, XDG autostart on Linux.
+- Mini Transparency is Mini-only; Windows uses Acrylic, Linux depends on the compositor.
+- Active shells are Noir and Glass; Light/Dark/Halloween are schemes. Legacy Aurora/Vapor/Paper values are migration inputs only.
+- CSS vinyl renderer is active; the center spindle hole is intentionally absent.
+- Album art drives ambient color, vinyl material and wear.
+- CI and releases build both Ubuntu and Windows; tags publish stable, version-free asset names.
 
 ## Important Paths
-- `src/App.tsx`: app boot and render-mode routing
-- `src/views/`: main and mini views
+- `src/App.tsx`: app boot, settings hydration, mode routing
+- `src/views/`: Main and Mini views
 - `src/components/`: visual and interaction components
-- `src/lib/playback/`: playback contracts, store, mock source, Tauri source
-- `src/lib/settings/`: frontend settings adapter/cache
-- `src-tauri/src/media/`: SMTC integration
+- `src/lib/playback/`: playback contracts, store, mock and Tauri sources
+- `src/lib/collection/`: Crate records, stats, Wrapped
+- `src/lib/i18n/`: English/Russian dictionaries
+- `src-tauri/src/media/`: SMTC/MPRIS adapters, poller, artwork
 - `src-tauri/src/settings/`: settings authority
-- `src-tauri/src/window/`: window modes
-- `src-tauri/src/tray.rs`: tray lifecycle
+- `src-tauri/src/collection/`: Crate persistence and history
+- `src-tauri/src/window/`: window modes and Mini behavior
+- `scripts/`: local installers, release collection, changelog extraction
+- `.github/workflows/`: CI and tag-driven release
 
 ## Verification
-```powershell
+```bash
+npm run lint
 npm run build
 npm run test:frontend
 npm run fmt:rust

@@ -1,182 +1,274 @@
 <h1 align="center">
-  <img src="./app-screenshots/icon.png" width="100" alt="VinylDeck Icon" /><br>
+  <img src="./app-screenshots/icon.png" width="96" alt="VinylDeck icon" /><br>
   VinylDeck
 </h1>
 
 <p align="center">
-  <strong>A cinematic vinyl experience for everything playing on your Windows or Linux desktop.</strong>
+  <strong>Turn whatever is playing on your desktop into a living turntable.</strong><br>
+  A cinematic vinyl player for Windows and Linux, built with Tauri, Rust, React and native system-media APIs.
 </p>
 
 <p align="center">
-  <a href="./docs/USER_GUIDE.md">User Guide</a>
+  <a href="https://github.com/Shelldock1/vinyldeck/releases/latest">
+    <img alt="Latest release" src="https://img.shields.io/github/v/release/Shelldock1/vinyldeck?style=flat-square">
+  </a>
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=flat-square&logo=windows">
+  <img alt="Linux" src="https://img.shields.io/badge/platform-Linux%20x64-FCC624?style=flat-square&logo=linux&logoColor=black">
+  <img alt="Tauri 2" src="https://img.shields.io/badge/shell-Tauri%202-24C8DB?style=flat-square">
+  <img alt="React 19" src="https://img.shields.io/badge/frontend-React%2019-61DAFB?style=flat-square&logo=react&logoColor=black">
+  <img alt="Rust" src="https://img.shields.io/badge/backend-Rust-B7410E?style=flat-square&logo=rust">
+  <img alt="MIT" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Shelldock1/vinyldeck/releases/latest/download/vinyldeck-setup-windows-x64.exe">
+    <img alt="Download for Windows" src="https://img.shields.io/badge/Download%20for%20Windows-x64-0078D4?style=for-the-badge&logo=windows">
+  </a>
+  <a href="https://github.com/Shelldock1/vinyldeck/releases/latest/download/vinyldeck-linux-x64.AppImage">
+    <img alt="Download for Linux" src="https://img.shields.io/badge/Download%20for%20Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black">
+  </a>
+</p>
+
+<p align="center">
+  <a href="./docs/USER_GUIDE.md">User guide</a>
   ·
   <a href="./docs/ARCHITECTURE.md">Architecture</a>
   ·
   <a href="./docs/DEVELOPMENT.md">Development</a>
   ·
+  <a href="./CONTRIBUTING.md">Contributing</a>
+  ·
   <a href="./CHANGELOG.md">Changelog</a>
 </p>
 
-<p align="center">
-  <img alt="Windows" src="https://img.shields.io/badge/platform-Windows-1f6feb">
-  <img alt="Linux" src="https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black">
-  <img alt="Tauri" src="https://img.shields.io/badge/shell-Tauri-24c8db">
-  <img alt="React" src="https://img.shields.io/badge/frontend-React-61dafb">
-  <img alt="Rust" src="https://img.shields.io/badge/backend-Rust-b7410e">
-</p>
-
-VinylDeck turns the track already playing on your system into a living turntable. Album art becomes the record label, extracted colors bloom through the scene, the needle breathes with the music state, and every control feels like part of a physical deck.
-
-Built with Tauri, Rust, React, and native system-media integration (Windows SMTC, Linux MPRIS), VinylDeck is designed to feel native, lightweight, and quietly dramatic.
-
-## Highlights
-
-- **Works with system media** - reads Windows SMTC or Linux MPRIS sessions from apps such as Spotify, browsers, and VLC.
-- **Cinematic vinyl rendering** - animated record motion, album-art label, physical tonearm, ambient bloom, film grain, and glass/noir shells.
-- **Native desktop feel** - main, fullscreen, and resizable mini-player modes with tray lifecycle on Windows and Linux.
-- **Mini transparency** - optional Mini-only Windows Acrylic mode lets the desktop blur through behind the vinyl and controls.
-- **Opt-in startup** - launch with Windows when you want VinylDeck ready as a quiet companion.
-- **Real media controls** - play, pause, previous, next, and seek flow through SMTC or MPRIS when supported by the active source.
-- **Persistent settings** - visual and behavior preferences sync across app windows through the Rust backend.
-- **The Crate** - every album you play is pressed into a personal collection as a one-of-a-kind record that wears with every listen, with monthly Wrapped stats for what you actually played.
-- **Reactive deck** - a VU meter, needle vibration, and groove glow follow the system audio through WASAPI loopback or the PipeWire/Pulse monitor, without opening a microphone.
-- **Stream and status extras** - a transparent OBS browser-source overlay on `127.0.0.1:43110`, plus opt-in Discord Rich Presence.
-- **Global shortcuts** - `Ctrl+Alt+M` toggles Mini and `Ctrl+Alt+Space` toggles playback even when another app has focus.
-- **Needle Drop** - grab the tonearm and drop it anywhere on the grooves to seek, or lift it off to pause.
-- **Keyboard-first polish** - focused shortcuts, keycap hints, custom tooltips, and a right-click command menu.
-
-## Preview
-
-VinylDeck is a desktop-first visual player, not a streaming service. Start music in your usual app, open VinylDeck, and the active system session becomes the deck.
+VinylDeck does not stream music and does not need your library. Start a track in Spotify, a browser, VLC, mpv or anything else that talks to Windows SMTC or Linux MPRIS, open VinylDeck, and the active session becomes the deck. Album art is pressed into the record label, its palette lights the room, the tonearm follows the song, and every control acts on the real player.
 
 <p align="center">
-  <img src="./app-screenshots/05-glass-main-playing-full-ui.png" width="800" alt="VinylDeck Glass Theme" />
+  <img src="./app-screenshots/05-glass-main-playing-full-ui.png" width="800" alt="VinylDeck Glass shell">
 </p>
 <p align="center">
-  <img src="./app-screenshots/11-noir-main-playing-full-ui.png" width="800" alt="VinylDeck Noir Theme" />
+  <img src="./app-screenshots/11-noir-main-playing-full-ui.png" width="800" alt="VinylDeck Noir shell">
 </p>
 <p align="center">
-  <img src="./app-screenshots/03-mini-glass-playing.png" width="400" alt="VinylDeck Mini Player" />
-  <img src="./app-screenshots/17-spotify-source-playing.png" width="400" alt="Spotify Integration" />
+  <img src="./app-screenshots/03-mini-glass-playing.png" width="380" alt="VinylDeck Mini player">
+  <img src="./app-screenshots/16-glass-fullscreen-track2-idle.png" width="380" alt="VinylDeck Fullscreen mode">
 </p>
 
-```mermaid
-flowchart LR
-  Music["Spotify / Browser / VLC"] --> Media["Windows SMTC / Linux MPRIS"]
-  Media --> VinylDeck["VinylDeck"]
-  VinylDeck --> Scene["Animated vinyl deck"]
+## Install
+
+### Windows 10/11 (x64)
+
+One line in PowerShell:
+
+```powershell
+irm https://github.com/Shelldock1/vinyldeck/releases/latest/download/install.ps1 | iex
 ```
 
-## Quick Start
+The script downloads the NSIS setup, verifies its SHA-256 when the release publishes one, installs for the current user (no admin prompt), adds the app folder to your user `PATH`, and keeps a Start Menu shortcut.
 
-Requirements:
+Prefer a manual download? Use the **Download for Windows** badge above, or pick an asset on the [latest release](https://github.com/Shelldock1/vinyldeck/releases/latest):
 
-- Windows 10 or 11 with the Microsoft WebView2 runtime, or a Linux desktop with GTK 3 / WebKitGTK 4.1
-- Node.js + npm
-- Rust toolchain
+| File | What it is |
+| --- | --- |
+| `vinyldeck-setup-windows-x64.exe` | NSIS installer, current user |
+| `vinyldeck-windows-x64.msi` | MSI for machine-wide deployment |
 
-Run the desktop app:
+Windows needs the [WebView2 runtime](https://developer.microsoft.com/microsoft-edge/webview2/). Windows 10/11 already ship it; the installer bootstraps it when it is missing.
+
+### Linux (x64)
+
+One line in a terminal:
 
 ```bash
-npm install
-npm run tauri dev
+curl -fsSL https://github.com/Shelldock1/vinyldeck/releases/latest/download/install.sh | bash
 ```
 
-Run browser-only visual development with mock playback:
+This installs the AppImage to `~/.local/bin/vinyldeck`, adds a desktop entry and icon, and puts the directory on `PATH` for future login shells. No sudo is used. Set `VINYLDECK_INSTALL_DIR` to choose another location.
+
+Manual options from the [latest release](https://github.com/Shelldock1/vinyldeck/releases/latest):
+
+| File | What it is |
+| --- | --- |
+| `vinyldeck-linux-x64.AppImage` | Portable single file (`chmod +x` and run) |
+| `vinyldeck-linux-x64.deb` | Debian/Ubuntu package (`sudo apt install ./vinyldeck-linux-x64.deb`) |
+
+The Linux build needs GTK 3, WebKitGTK 4.1 and an AppIndicator host. On Debian/Ubuntu:
 
 ```bash
-npm run dev
+sudo apt install libwebkit2gtk-4.1-0 libayatana-appindicator3-1 librsvg2-2
 ```
 
-On Linux, Tauri also needs the usual WebKitGTK build dependencies, for example on Debian/Ubuntu:
+System-audio reactivity additionally reads the PipeWire/Pulse monitor through `parec`; install `pulseaudio-utils` (or the PipeWire Pulse compatibility package) if it is missing.
 
-```bash
-sudo apt install build-essential curl wget file libssl-dev libxdo-dev \
-  libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
-```
+Both installers understand `VINYLDECK_VERSION` (for example `v0.2.0`) to pin a release, and both print an actionable error on unsupported architectures. Only x64 builds are published today.
 
-Audio reactivity reads the default PipeWire/Pulse monitor through `parec`; install `pulseaudio-utils` (or PipeWire's Pulse compatibility package) if it is missing. To install a user-level launcher into `~/.local/bin`, run:
+## Features
 
-```bash
-npm run install:linux
-```
+### Playback
 
-Release bundles build for Windows (`msi`, `nsis`) and Linux (`deb`, `appimage`):
+- **Native system media** - Windows SMTC and Linux MPRIS, with artwork, metadata, timeline, capabilities and transport commands.
+- **Player picker** - follow the active session automatically or pin a specific app (Spotify, a browser, VLC, mpv, ...); the choice survives restarts.
+- **Real controls** - play/pause, previous/next and seek when the source supports them, plus shuffle and repeat (`Off -> All -> One`) where exposed.
+- **Needle Drop** - drag the tonearm across the grooves to seek with a live time preview, or lift it off the record to pause.
+- **Sleep timer** - pause after 15/30/45/60 minutes or at the end of the current track. The timer lives in Rust, so switching modes does not reset it.
+- **Global shortcuts** - `Ctrl+Alt+M` toggles Mini and `Ctrl+Alt+Space` toggles playback from any app.
 
-```bash
-npm run tauri build -- --bundles deb,appimage
-```
+### The deck
 
-## Controls
+- **Two shells, three schemes** - Noir and Glass, each layered with Light, Dark or Halloween tokens.
+- **Pressed records** - album art drives a deterministic vinyl pressing (marble, splatter, clear, smoke, galaxy and more), with wear that grows across listens.
+- **Cinematic motion** - tonearm cueing, directional track changes, film grain, vinyl wobble and optional album-art ambient bloom.
+- **Three window modes** - Main (scales to fit the window), Fullscreen, and a shrinkable always-on-top Mini player.
+- **Mini transparency** - native Acrylic blur on Windows (desktop transparency on Linux compositors that support it).
+- **Reactive deck** - a three-band VU meter, tonearm jitter and groove glow fed by WASAPI loopback on Windows or the PipeWire/Pulse monitor on Linux. No microphone is opened.
+
+### Collection and extras
+
+- **The Crate** - every album you play becomes a numbered pressing with rarity, play count and visible wear. Search, sort (recent, plays, rare, pressing, A-Z), filter music apps vs browsers, and see totals, top album and listening streak.
+- **Crate Wrapped** - a monthly recap with total listens, unique records/artists/tracks, top five records, top track/artist, rarest pressing and busiest day.
+- **OBS overlay** - a transparent, self-refreshing browser source at `http://127.0.0.1:43110/overlay`, plus `/state` JSON and `/artwork`. The server is localhost-only and rejects foreign `Host` headers.
+- **Discord Rich Presence** - opt-in: paste your own Discord application client ID in Settings and VinylDeck mirrors the track and elapsed time over the local IPC socket.
+- **English and Russian** - every screen, tooltip, screen-reader label and tray menu, with correct plurals and locale-aware dates. Auto follows the OS.
+- **Desktop citizenship** - tray lifecycle, quit-to-tray, start-at-login, single-instance focus, persistent settings and a strict CSP.
+
+## Usage
+
+1. Start playback in your player.
+2. Open VinylDeck. The active system session appears on the deck.
+3. Use the in-app controls, the tonearm, or the shortcuts below. The tray menu and global hotkeys work while another app has focus.
 
 | Action | Shortcut |
 | --- | --- |
 | Play / pause | `Space` |
 | Play / pause (global) | `Ctrl+Alt+Space` |
 | Previous / next | `Left` / `Right` |
-| Seek -5s / +5s | `Shift+Left` / `Shift+Right` (or arrows with the progress ring focused) |
+| Seek -5 s / +5 s | `Shift+Left` / `Shift+Right` |
 | Fullscreen | `F` |
 | Mini player | `M` |
 | Mini player (global) | `Ctrl+Alt+M` |
 | Cycle shell | `T` |
 | Settings | `S` |
-| Art Ambient | `A` |
-| The Crate (your collection) | `C` |
-| Switch language (English / Русский) | `L` |
-| Show keyboard shortcuts | `?` |
+| Art ambient | `A` |
+| The Crate | `C` |
+| Switch language | `L` |
+| Shortcut cheat sheet | `?` |
 | Close the topmost surface | `Escape` |
 | Quit | `Ctrl+Q` |
 
-Shortcuts can be turned off in Settings. Escape stays available and closes the topmost surface: keyboard shortcuts, then the context menu, then The Crate, then Settings, then fullscreen. Press `?` to open the same list as a glass cheat sheet; it is not available in Mini. Mini player accepts only `Space` and `Ctrl+Q`.
+Shortcuts can be disabled in Settings; `Escape` remains available for closing the topmost surface. See the [User Guide](./docs/USER_GUIDE.md) for the Crate, Wrapped, overlay, Discord, sleep timer and settings.
 
-## Documentation
+## Build from source
 
-- [User Guide](./docs/USER_GUIDE.md) - controls, window modes, settings, and daily use.
-- [Development Guide](./docs/DEVELOPMENT.md) - setup, commands, verification, and contribution workflow.
-- [Architecture](./docs/ARCHITECTURE.md) - React visual engine, Rust backend, SMTC flow, and state ownership.
-- [Tauri API Reference](./docs/API.md) - command and event contracts between frontend and backend.
-- [Troubleshooting](./docs/TROUBLESHOOTING.md) - common runtime and media-session issues.
-- [Release Notes](./docs/RELEASE_V1.md) - version notes and distribution checklist.
-- [Changelog](./CHANGELOG.md) - notable project changes.
+Requirements:
 
-## Development Commands
+- [Node.js](https://nodejs.org/) 20 or newer (CI uses 24) and npm
+- [Rust](https://rustup.rs/) stable
+- Platform toolchain:
+  - **Windows**: Visual Studio Build Tools with the "Desktop development with C++" workload, plus WebView2 (present on Windows 10/11).
+  - **Linux**: GTK 3 / WebKitGTK 4.1 development packages.
 
-| Command | Purpose |
+Clone and run:
+
+```bash
+git clone https://github.com/Shelldock1/vinyldeck.git
+cd vinyldeck
+npm ci
+npm run tauri dev
+```
+
+Browser-only visual development uses the mock playback source (no native APIs):
+
+```bash
+npm run dev
+```
+
+### Windows
+
+```powershell
+npm run tauri dev
+npm run tauri build -- --bundles nsis,msi
+npm run install:windows   # build + install for the current user
+```
+
+Outputs land in `src-tauri\target\release\bundle\nsis\` and `...\msi\`. `install:windows` copies the binary to `%LOCALAPPDATA%\Programs\VinylDeck` and writes a Start Menu shortcut; add `-SkipBuild` after a build to reuse it.
+
+### Linux
+
+Install the Tauri dependencies (Debian/Ubuntu):
+
+```bash
+sudo apt install build-essential curl wget file libssl-dev libxdo-dev \
+  libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev pkg-config
+```
+
+Then:
+
+```bash
+npm run tauri dev
+npm run tauri build -- --bundles deb,appimage
+npm run install:linux    # build + install into ~/.local/bin
+```
+
+Outputs land in `src-tauri/target/release/bundle/deb/` and `.../appimage/`. If FUSE is unavailable, run the AppImage with `APPIMAGE_EXTRACT_AND_RUN=1`. Rootless or container setups can point `pkg-config` at a local sysroot; see the [Development Guide](./docs/DEVELOPMENT.md).
+
+### Release packaging
+
+`node scripts/collect-release.mjs <windows|linux>` maps the bundle output to the version-free names used by `releases/latest/download`:
+
+```text
+vinyldeck-setup-windows-x64.exe
+vinyldeck-windows-x64.msi
+vinyldeck-linux-x64.AppImage
+vinyldeck-linux-x64.deb
+```
+
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](./.github/workflows/release.yml), builds both platforms, writes `SHA256SUMS.txt` and publishes the release. See [docs/RELEASING.md](./docs/RELEASING.md) for the full process.
+
+## Verification
+
+```bash
+npm run lint
+npm run build
+npm run test:frontend
+npm run fmt:rust
+npm run clippy:rust
+npm run test:rust
+```
+
+CI runs the frontend, Rust and bundle checks on Ubuntu and Windows for every push and pull request.
+
+## Project layout
+
+| Path | Purpose |
 | --- | --- |
-| `npm run dev` | Start Vite with mock playback |
-| `npm run build` | Type-check and build frontend |
-| `npm run test:frontend` | Run Vitest frontend tests |
-| `npm run tauri dev` | Start desktop app with Tauri |
-| `npm run check:rust` | Check Rust backend |
-| `npm run fmt:rust` | Check Rust formatting |
-| `npm run clippy:rust` | Run Rust lint gate |
-| `npm run test:rust` | Run Rust tests |
+| `src/` | React 19 visual engine, views, hooks and stores |
+| `src-tauri/src/media/` | SMTC / MPRIS adapters, poller, artwork cache |
+| `src-tauri/src/` | Settings, tray, window, collection, overlay, presence, reactivity, sleep, shortcuts |
+| `src-tauri/tauri.conf.json` | Window, CSP and bundle configuration |
+| `scripts/` | Local installers and release packaging |
+| `docs/` | User, development, architecture, API and release documentation |
+| `landing/` | Optional marketing site (Netlify) |
 
-## Tech Stack
+## Troubleshooting
 
-- Tauri v2 desktop shell
-- Rust backend for Windows SMTC / Linux MPRIS media, settings, tray, and window lifecycle
-- React 19 + TypeScript visual engine
-- Zustand v5 state cache
-- `motion/react` v12 animation
-- `fast-average-color` album-art color extraction
-- Pure CSS theme system with custom properties
+- **Nothing on the deck** - start playback after VinylDeck opens and confirm the player appears in the OS media controls. Browser mode (`npm run dev`) intentionally shows mock tracks.
+- **Controls greyed out** - the active player does not expose that capability. Try the same action in the player itself or switch sources in Settings -> Source.
+- **No audio reactivity** - install `pulseaudio-utils` on Linux; on Windows confirm the app is playing through the default output device. Failures leave the deck still rather than opening a microphone.
+- **Mini transparency does nothing** - it is Mini-only. Blur requires Windows Acrylic; on Linux it depends on the compositor.
+- **App hides instead of exiting** - disable Settings -> Other -> Quit To Tray, use tray -> Quit, or press `Ctrl+Q`.
+- **SmartScreen or "Unknown publisher"** - release binaries are not code-signed yet. Verify the SHA-256 from the release page if you want to confirm the download.
+- **AppImage will not start** - install FUSE/libfuse2 or run with `APPIMAGE_EXTRACT_AND_RUN=1`.
 
-## Project Status
+More in [Troubleshooting](./docs/TROUBLESHOOTING.md).
 
-VinylDeck is actively developed for Windows and Linux. The current version is `0.1.1`. Windows installers are available on the GitHub Releases page; Linux users can run `npm run install:linux` for a user-level install or build `deb`/`appimage` bundles with the Tauri CLI.
+## Privacy
+
+VinylDeck has no telemetry and no account. Media metadata is read locally. The OBS overlay listens on `127.0.0.1:43110` only. Discord Rich Presence is off until you supply your own application client ID.
 
 ## Credits
 
-VinylDeck is based on the original [VinylDeck](https://github.com/ItsRudraksh/vinyldeck) by [ItsRudraksh](https://github.com/ItsRudraksh), who built the Tauri foundation, the vinyl engine and the Noir/Glass shells. This repository is maintained by [Shelldock1](https://github.com/Shelldock1) and continues that work with the audit fixes, playback and crate features, Linux support and the Light/Dark/Halloween themes.
+VinylDeck is based on the original [VinylDeck](https://github.com/ItsRudraksh/vinyldeck) by [ItsRudraksh](https://github.com/ItsRudraksh), who built the Tauri foundation, the vinyl engine and the Noir/Glass shells. This repository is maintained by [Shelldock1](https://github.com/Shelldock1) and continues that work with cross-platform media, the Crate, localization, accessibility and the Windows/Linux distribution pipeline.
 
 ## License
 
-VinylDeck is released under the [MIT License](./LICENSE).
-
-Third-party content keeps its own license:
-
-- Brand fonts (Sora, Inter, JetBrains Mono, Hanken Grotesk, Geist) are self-hosted under `public/fonts/`; each family ships with its SIL Open Font License file next to the woff2.
-- npm and Cargo dependencies are covered by their own licenses, listed in their package metadata.
-- The sample album art in `public/art-1.jpg` and `public/art-2.jpg` is demo media for the browser mock source; its origin and license are unverified and it is not covered by the MIT License.
-- Album artwork shown at runtime comes from your media player and belongs to its respective rights holders.
+[MIT](./LICENSE). Fonts under `public/fonts/` ship with their own SIL Open Font License files. Runtime album artwork belongs to its rights holders. The demo art in `public/art-1.jpg` and `public/art-2.jpg` is sample media and is not covered by the MIT license.

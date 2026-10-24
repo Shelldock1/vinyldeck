@@ -1,74 +1,170 @@
 # Troubleshooting
 
-## No Track Appears
+## Nothing appears on the deck
 
-- Use desktop mode: `npm run tauri dev`.
-- Start playback in a media app after VinylDeck opens.
-- Try Spotify first because it exposes Windows media sessions reliably.
-- Check that the media app appears in Windows media controls.
-- Browser mode (`npm run dev`) always uses mock playback.
+VinylDeck reads the operating system's current media session. It does not scan your music library.
 
-## Controls Are Disabled
+1. Start playback **after** VinylDeck opens.
+2. Confirm the player appears in the system media controls:
+   - **Windows:** open the Quick Settings media flyout (or the media keys overlay).
+   - **Linux:** run `playerctl -l` (if installed) or `busctl --user list | grep org.mpris.MediaPlayer2`.
+3. Open Settings -> Source. If the player is listed, select it explicitly; if it is missing, the app does not publish a media session.
+4. Try Spotify, a browser tab playing audio, VLC or mpv as a comparison.
 
-VinylDeck follows the capabilities reported by Windows SMTC. Some sources support play/pause but not previous, next, or seek.
+Browser development mode (`npm run dev`) always shows mock tracks. Use `npm run tauri dev` or an installed build for real media.
 
-Try:
+Some players only publish a session while they are actually playing. Pausing before opening VinylDeck can hide the session.
 
-- changing tracks inside the source app
-- switching to Spotify for comparison
-- restarting VinylDeck after media starts
+## Controls are greyed out
 
-## Progress Or Artwork Looks Stale
+VinylDeck follows the capabilities reported by the session. A player can support play/pause but not previous, next or seek.
 
-VinylDeck caches artwork and reads timeline state through the Rust SMTC poller. If stale metadata appears:
+- Perform the action in the source app to confirm it is possible.
+- Try another player.
+- Restart playback in the source after VinylDeck is open.
 
-1. Confirm the source app itself shows the correct track in Windows media controls.
-2. Restart playback in the source app.
-3. Restart VinylDeck.
-4. For development debugging, inspect `src-tauri/src/media/poller.rs` and `src/lib/playback/tauriSource.ts`.
+The shuffle and repeat levers are hidden when the player reports no support. On Linux this maps to MPRIS `Shuffle` and `LoopStatus`; on Windows to SMTC shuffle and auto-repeat.
 
-## App Closes To Tray Instead Of Exiting
+## Artwork or metadata is stale
 
-Quit To Tray is enabled. Turn it off in Settings -> Other if the close button should exit the app.
+Covers are cached by source, track, artist, album and duration, and read off the polling thread. If the wrong cover appears:
 
-Explicit exit options:
+1. Confirm the source app shows the correct metadata in the system media controls.
+2. Skip to another track and back.
+3. Restart the source app, then VinylDeck.
+4. For development, inspect `src-tauri/src/media/poller.rs`, `artwork.rs` and `src/lib/playback/tauriSource.ts`.
 
-- tray Quit
-- `Ctrl+Q` when shortcuts are enabled
-- Settings -> Other -> disable Quit To Tray, then close the window
+Files with DRM, local `file://` covers outside the allowed size, or unsupported image formats fall back to no artwork.
 
-## Keyboard Shortcuts Do Nothing
+## The window opens but the WebView is blank (Linux)
 
-Check Settings -> Other -> Keyboard Shortcuts.
+WebKitGTK may fail to initialize DMA-BUF on some GPUs, VMs and remote desktops. Try:
 
-When shortcuts are disabled, VinylDeck still allows Escape for closing Settings or leaving fullscreen.
-
-## Mini Transparency Does Not Blur The Desktop
-
-Mini Transparency only affects Mini mode and relies on the native Windows Acrylic effect. Check Settings -> Display -> Mini Transparency, then reopen Mini if needed. On systems or Windows builds where Acrylic is unavailable or disabled, the Mini window still works as a normal shrink-resizable player.
-
-## Browser Mode Shows Mock Tracks
-
-Expected. Browser mode cannot access Windows SMTC, so it uses `MockSource`.
-
-Use desktop mode for real media:
-
-```powershell
-npm run tauri dev
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 vinyldeck
 ```
 
-## WebView2 Issue
+For a source checkout, `linux-env.sh` already exports this. Also confirm the GTK/WebKit runtime packages are installed:
 
-VinylDeck needs Microsoft WebView2 on Windows. If the Tauri window does not open or shows a WebView-related failure, install or repair the WebView2 runtime from Microsoft, then restart the app.
+```bash
+sudo apt install libwebkit2gtk-4.1-0 libayatana-appindicator3-1 librsvg2-2
+```
 
-## Debug Bundle Warning
+## The AppImage will not start
 
-Debug bundle builds may warn that the current bundle identifier ends with `.app`. This does not block local development, but identifier naming should be reviewed before a public packaged release.
+AppImages need FUSE:
 
-## Installer Shows Unknown Publisher
+```bash
+sudo apt install libfuse2      # Debian/Ubuntu
+./vinyldeck-linux-x64.AppImage
+```
 
-Expected for unsigned local builds. Windows UAC shows `Publisher: Unknown` until VinylDeck is code-signed with a trusted certificate. This does not mean the local build is broken; it means Windows cannot verify a publisher identity.
+If FUSE is unavailable (containers, locked-down systems):
 
-## Tray Playback Menu Differs From Main Controls
+```bash
+APPIMAGE_EXTRACT_AND_RUN=1 ./vinyldeck-linux-x64.AppImage
+```
 
-The main in-app controls use the current SMTC command path. Tray playback controls should be revalidated before treating tray playback as release-grade.
+The one-line installer warns when no `fusermount` binary is found.
+
+## The app is not on PATH after installation
+
+The Linux installer adds `~/.local/bin` to `~/.profile` for future login shells. Apply it now with:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+The Windows installer appends the app folder to the **user** `PATH`. Open a new terminal after installation. The Start Menu shortcut works regardless of `PATH`.
+
+## "Windows protected your PC" or "Unknown publisher"
+
+Release binaries are not code-signed yet. SmartScreen and UAC therefore show an unknown publisher. This is expected.
+
+To check the download, compare its SHA-256 with the release page:
+
+```powershell
+Get-FileHash .\vinyldeck-setup-windows-x64.exe -Algorithm SHA256
+```
+
+```bash
+sha256sum vinyldeck-linux-x64.AppImage
+```
+
+The one-line installers verify `SHA256SUMS.txt` automatically when it is published.
+
+## Audio reactivity is flat
+
+Reactivity needs the system output, not a microphone.
+
+- **Windows:** playback must go to the default output device; WASAPI loopback captures it. Exclusive-mode output may bypass capture.
+- **Linux:** install `pulseaudio-utils` or the PipeWire Pulse compatibility package so `parec` exists. Check with `command -v parec` and `pactl list short sources`.
+- Playback must be active. Capture starts and stops with playback, and a failure leaves the meter still rather than opening a microphone.
+- Very quiet tracks produce low levels by design.
+
+## Mini Transparency does nothing
+
+It is Mini-only and must be enabled in Settings -> Display before or while Mini is open.
+
+- **Windows:** requires a Windows build and GPU driver that supports Acrylic. Remote sessions and some VMs disable it.
+- **Linux:** the window becomes transparent only where the compositor supports it; blur is desktop-dependent.
+
+Main and fullscreen never use this effect.
+
+## The app hides instead of exiting
+
+**Quit To Tray** is on by default. Use tray -> **Quit**, press `Ctrl+Q`, or turn off Settings -> Other -> Quit To Tray. Closing then exits normally.
+
+## The tray icon or menu is missing (Linux)
+
+The tray needs an AppIndicator host (GNOME needs an extension such as AppIndicator Support; KDE and most other desktops include one). Install `libayatana-appindicator3-1`. Without a host the app still runs; only the tray is unavailable.
+
+## Global shortcuts do not work
+
+`Ctrl+Alt+M` and `Ctrl+Alt+Space` are registered on a best-effort basis. A desktop environment or another app may already own them; registration is then skipped and logged. In-app shortcuts still work while VinylDeck is focused, and can be disabled in Settings -> Other.
+
+Wayland compositors may restrict global shortcut registration; use the in-app controls or your desktop's own shortcut binding.
+
+## Start At Login does not start the app
+
+- **Windows:** the autostart entry is a registry `Run` value written for the current user.
+- **Linux:** an XDG autostart entry is written under `~/.config/autostart/`.
+
+Toggle the setting off and on after moving or reinstalling the binary, because the registration points at the executable path. Sandboxed/Flatpak builds may not be allowed to register autostart.
+
+## The OBS overlay is blank or blocked
+
+- Use `http://127.0.0.1:43110/overlay` exactly. The server binds to loopback only.
+- Do not proxy the URL through another hostname: the server rejects foreign `Host` headers by design.
+- OBS must run on the same machine.
+- If another process owns port 43110, the overlay logs a bind error and the rest of the app keeps working. Stop the other process and restart VinylDeck.
+- Custom scenes can read `http://127.0.0.1:43110/state` and the cover at `/artwork`.
+
+## Discord Rich Presence does not show
+
+- Rich Presence is off while the Discord application ID field is empty. Paste the **Application ID** from your own app at <https://discord.com/developers/applications>.
+- Discord must be running on the same machine. Flatpak Discord is detected through its runtime socket.
+- The ID must be numeric. Invalid values are rejected.
+- Presence only updates when the track or play state changes.
+
+## Language or dates look wrong
+
+Language **Auto** follows the OS locale. Pick English or Russian explicitly in Settings -> Look, with the EN/RU button, or with `L`. The tray follows the same setting.
+
+## Reset settings or the collection
+
+Settings and the Crate live in the Tauri app data directory:
+
+| Platform | Typical location |
+| --- | --- |
+| Windows | `%APPDATA%\com.vinyldeck.app\settings.json`, `collection.json` |
+| Linux | `~/.local/share/com.vinyldeck.app/settings.json`, `collection.json` |
+
+Close VinylDeck, move the file aside, and reopen the app. Deleting `collection.json` removes the Crate and Wrapped history; deleting `settings.json` restores defaults.
+
+## Installer or build failures
+
+- **Windows build:** install Visual Studio Build Tools with the C++ workload and make sure the Rust MSVC toolchain is selected. WebView2 is required at runtime.
+- **Linux build:** install the `-dev` packages from [DEVELOPMENT.md](./DEVELOPMENT.md). A rootless sysroot needs `PKG_CONFIG_SYSROOT_DIR` for cargo and different handling for the AppImage bundler; the development guide shows both commands.
+- **`npm run tauri build` fails after a dependency bump:** delete `node_modules/`, run `npm ci`, and update `@tauri-apps/cli` together with the Rust `tauri` crate.
+- **Bundle warnings about `com.vinyldeck.app`:** the identifier ends in `.app`, which conflicts with macOS bundle conventions. It is harmless for the Windows/Linux targets and is kept for update continuity.

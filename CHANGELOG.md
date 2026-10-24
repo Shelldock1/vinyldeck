@@ -1,106 +1,130 @@
 # Changelog
 
-## Unreleased
+All notable changes to VinylDeck are documented here.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+Nothing yet.
+
+## [0.2.0] - 2026-10-24
+
+The cross-platform release: Windows and Linux reach feature parity, both ship
+signed-shaped artifacts from one tag-driven pipeline, and the product gains the
+Crate, Wrapped, localization, system-audio reactivity, streaming extras and a
+full documentation pass.
 
 ### Added
 
-- Russian localization. Every screen, tooltip, screen-reader label, and the tray menu are available in English and Russian, with correct Russian plurals and localized dates. The language follows the system by default; a round EN/RU button in the top-left row, the `L` key, the right-click menu, and Settings -> Look -> Language switch it. The choice is stored by the Rust settings authority, so Main, Mini, and the tray stay in step.
-
-- The Crate separates sources: every record and listen is tagged as a music app (Spotify, VLC, mpv, ...) or a browser (YouTube and other sites). A Music / Browser / All switch at the top of The Crate filters the shelf, the stats strip, and Wrapped; Music is the default and the choice is remembered. The record card shows which player it came from. Older records are classified from their play history (browser listens report no album); records with no history stay under All.
-- The main deck scales down to fit the window instead of clipping at the top and bottom, and the main window opens at 1000x860, shrunk to fit the monitor working area on smaller screens.
+- **Linux desktop support.** MPRIS media sessions over the session D-Bus (`zbus`), PipeWire/Pulse monitor capture for reactivity, DEB and AppImage bundles, and a user-level installer (`npm run install:linux`) that writes `~/.local/bin/vinyldeck`, a hicolor icon and a `.desktop` entry.
+- **One-line installers.** `install.sh` installs the latest AppImage for the current user, verifies the release SHA-256 when available, registers the desktop entry and updates `PATH`. `install.ps1` downloads the NSIS setup, verifies its checksum, installs silently for the current user, repairs the Start Menu shortcut and updates the user `PATH`.
+- **Tag-driven releases.** `.github/workflows/release.yml` builds NSIS/MSI on `windows-2022` and DEB/AppImage on `ubuntu-24.04`, renames the output to version-free names (`vinyldeck-setup-windows-x64.exe`, `vinyldeck-linux-x64.AppImage`, ...) and publishes the assets plus `SHA256SUMS.txt` on every `v*` tag.
+- **Windows developer install.** `npm run install:windows` builds the release binary, copies it to `%LOCALAPPDATA%\Programs\VinylDeck`, creates a Start Menu shortcut and adds the folder to the user `PATH`. `-SkipBuild` reuses an existing build.
+- **The Crate.** Each played album becomes a numbered pressing with a deterministic recipe, rarity, first-played date, play count, label thumbnail and visible wear. The Crate adds search, recent/plays/rare/pressing/A-Z sorting, totals, top album and a listening streak. Stored in `collection.json` by the Rust backend.
+- **Crate Wrapped.** A monthly recap with total listens, unique records/artists/tracks, the five most played records, top track, top artist, rarest pressing and busiest day, bucketed in the viewer's local time.
+- **Music vs browser sources.** Records and listens are tagged as a music app or a browser; a Music / Browser / All switch drives the shelf, stats and Wrapped, and the record card names the player.
+- **Player picker.** Settings -> Source follows the active MPRIS/SMTC session automatically or pins a specific player; the choice is persisted by the Rust settings authority and mirrored in the context menu.
+- **Shuffle and repeat.** Hardware-style levers next to the transport, backed by MPRIS `LoopStatus`/`Shuffle` and SMTC auto-repeat/shuffle; the tray mirrors both.
+- **Sleep timer.** Off, 15/30/45/60 minutes or end of track, started from Settings or the context menu and owned by Rust so it survives mode switches. Firing pauses playback and parks the tonearm.
+- **Needle Drop.** The tonearm tracks progress and can be dragged across the grooves to seek with a time preview, or lifted off the record to pause.
+- **Global shortcuts.** `Ctrl+Alt+M` toggles Mini and `Ctrl+Alt+Space` toggles playback while another app has focus. Registration is best-effort when the desktop already owns the combination.
+- **Shortcut cheat sheet.** `?` opens a glass sheet of every shortcut, grouped Playback / Window / App, with focus trapping and a single Escape owner.
+- **System-audio reactivity.** A VU meter, tonearm jitter and groove glow fed by WASAPI loopback on Windows or the PipeWire/Pulse monitor through `parec` on Linux. Three-band envelope at roughly 30 Hz; no microphone is opened.
+- **OBS overlay.** A local HTTP server on `127.0.0.1:43110` serves a transparent, self-refreshing `/overlay` browser source, `/state` JSON and `/artwork` for the cached cover. The URL is listed in Settings -> Other.
+- **Discord Rich Presence.** Opt-in local IPC presence using a user-supplied Discord application client ID, validated as a snowflake and disabled while empty.
+- **Russian localization.** English and Russian dictionaries cover every screen, tooltip, screen-reader label and the tray menu, with Russian plural rules and locale-aware dates. `L`, a round EN/RU button, the context menu and Settings switch it; Auto follows the OS.
+- **Light, Dark and Halloween schemes** layered over Noir and Glass, with interpolated color tokens and a CSS-gated seasonal layer.
+- **Single instance.** Launching again focuses the running window instead of starting a second copy.
+- **Frontend coverage** for the pressing engine, artwork palette extraction, theme applier and canvas texture baker, plus an ESLint gate with `react-hooks` and `jsx-a11y`.
 
 ### Changed
 
-- Settings -> About shows the real app version instead of a hard-coded `0.1.0`, and "Start With Windows" is now "Start At Login" since it works on Linux too.
+- **Windows and Linux share one code path.** Platform differences live behind `cfg` adapters for media, audio capture and Discord IPC; the React UI, settings, tray and window logic are common.
+- **Native window chrome.** Window controls sit at the top-right with close last; Settings, Crate and Mini triggers share a top-left row; the title bar no longer double-toggles maximize.
+- **Responsive deck.** The main deck is laid out at its natural size and scaled to fit the viewport, so it no longer clips at 900x700 or the 700x560 minimum. The window opens at 1000x860 and is clamped to 92% of the monitor working area.
+- **Artwork transport.** Covers travel as short `vinyldeck://art/<hash>` URLs backed by a bounded cache and a Tauri URI scheme instead of multi-megabyte base64 payloads on every event.
+- **Event-driven polling.** Linux watches MPRIS `PropertiesChanged` and D-Bus name changes, Windows watches SMTC events, and transport commands wake the poller. The slow interval remains for position and play counting.
+- **Off-thread artwork.** Reading and decoding covers no longer blocks the playback poll; metadata appears first and the cover follows.
+- **Settings writes are serialized.** `cmd_settings_update` holds the lock across the whole read-modify-write, so Main and Mini cannot overwrite each other.
+- **Play counting** now starts after half the track or 120 seconds of real listening, whichever comes first (was half the track capped at 4 minutes).
+- **Start At Login** replaces "Start With Windows" because autostart works on Linux too. The backend uses the Tauri autostart plugin (registry Run key on Windows, XDG autostart entry on Linux).
+- **Settings -> About** shows the real app version instead of a hard-coded value.
+- **Self-hosted fonts.** Sora, Inter, JetBrains Mono, Hanken Grotesk and Geist live under `public/fonts/` with their OFL files, so bundled builds keep the intended typefaces under the CSP.
+- **CI** runs on Node 24, lints Windows with `clippy -D warnings`, runs ESLint, retries stalled apt downloads and builds the landing site.
+- **Tauri packages** are aligned at 2.12 so release builds no longer need the version-mismatch bypass.
 
 ### Fixed
 
-- Security: the OBS overlay server no longer sends `Access-Control-Allow-Origin: *`, so other websites open in a browser can no longer read the current track from `127.0.0.1:43110/state`. Requests with a `Host` other than `127.0.0.1:43110` or `localhost:43110` get 403, which blocks DNS-rebinding. OBS keeps working unchanged.
-- The Crate's listening streak counted only each record's latest day, so one album played every day showed a one-day streak. It now uses the full play history.
-- Crate Wrapped bucketed months and busiest days in UTC while the streak used local time; Wrapped now uses the viewer's clock too.
+- The Crate streak now uses the full play history instead of each record's latest day, and Wrapped buckets months and busiest days in local time instead of UTC.
+- Arrow keys no longer skip tracks while the context menu is open; the menu owns Up/Down/Enter/Space and Escape stays with the topmost-surface handler.
+- Double-clicking the custom title bar no longer maximizes and immediately snaps back.
+- The progress ring stops its 500 ms ticker while paused, hidden or minimized.
+- SMTC snapshots match the shared bridge signature, and same-duration track changes no longer reuse stale metadata or artwork.
+- Tauri source teardown removes event listeners and avoids duplicate subscriptions.
+- The Mini window no longer re-applies stale transparency or resize bounds after a settings change.
+- Artwork accepts WebP and GIF, rejects oversized HTTP covers instead of truncating them, and decodes MPRIS `data:` covers into the same cache.
+- Focus stays inside Settings, the Crate and the cheat sheet, and returns to the triggering control on close.
+- The progress ring is a keyboard slider with `Left`/`Right`/`Home` support and measures its rendered box so scaling cannot skew the scrub angle.
+- Unsupported platform capture leaves the deck still instead of retrying forever.
 
-- Window controls now read minimize, maximize, close, with close at the far end.
+### Security
+
+- Bundled builds ship a Content Security Policy (`default-src 'self'`, image sources limited to `self`/`data:`/`blob:`/the artwork scheme) and explicitly allow Tauri IPC through `connect-src`.
+- The overlay server no longer sends `Access-Control-Allow-Origin: *`. It rejects requests whose `Host` is not `127.0.0.1:43110` or `localhost:43110`, which blocks DNS rebinding while OBS keeps working.
+- Settings updates are validated and clamped by Rust before persistence; WebViews are controllers, not storage authorities.
+- Audit remediation covered single-instance enforcement, focus trapping, one Escape owner and Windows-only SMTC compilation with an explicit fallback.
 
 ### Removed
 
-- The dormant `VaporGrid` component and the unused Vite/Tauri template icons; the page favicon is now the app icon.
+- The dormant `VaporGrid` component, unused Vite/Tauri template icons and dead SMTC/artwork code.
+- The legacy mock-backed `cmd_media_*` commands; the tray and UI now use the real platform bridge.
+- The "Nothing Playing" sentinel that `TrackInfo` had to special-case.
 
-- Crate Wrapped: the backend now keeps a bounded play history alongside the collection, and a Wrapped card in The Crate folds the selected month into total listens, unique records/artists/tracks, the five most played records, top track, top artist, the rarest pressing played, and the busiest day. Months are UTC and older months can be stepped through from the picker.
-- OBS overlay: a local read-only HTTP server on `127.0.0.1:43110` serves a transparent, self-refreshing Browser Source at `/overlay` with cover art, track, artist, album, and interpolated progress. `/state` exposes the same snapshot as JSON for custom scenes, and `/artwork` serves the cached cover because a browser source cannot resolve the `vinyldeck:` scheme. The URL is listed in Settings -> Other.
-- Discord Rich Presence: paste your own Discord application client ID in Settings -> Other and VinylDeck mirrors the current track, artist, album, and elapsed time through the local Discord IPC socket. Presence stays completely off while the field is empty, and the worker only sends on track or play-state changes.
-- System-audio reactivity: a slim VU meter under the transport, a bass-driven tonearm/headshell jitter, and a groove/glow pulse follow what is actually playing. Windows captures the default render endpoint with WASAPI loopback; Linux reads the PipeWire/Pulse monitor source through `parec`. Capture starts and stops with playback, failures leave the deck still, and the analysis is a lightweight three-band envelope (no FFT) emitted at ~30 Hz. No microphone is opened.
-- Global shortcuts: `Ctrl+Alt+M` toggles the Mini player and `Ctrl+Alt+Space` toggles playback even while another app has focus. Registration is best-effort when the desktop already owns a combination, and both appear in the `?` cheat sheet.
-- Keyboard cheat sheet: press `?` in Main or Fullscreen to open a small glass overlay listing every shortcut, grouped Playback / Window / App. `Escape`, the scrim, or the close button dismisses it, and focus returns to the control that opened it. The sheet is rendered from one shared definition list and is not available in Mini.
-- Sleep timer: pause after 15/30/45/60 minutes or at the end of the current track from the right-click menu or Settings -> Other. The timer runs in Rust so it survives Mini/Main switches and window hiding; when it fires, playback pauses through the normal media bridge and the tonearm lifts and returns to its rest. It is not persisted across launches.
-- Shuffle and repeat hardware levers now sit beside the transport pill when the active source supports them. Repeat cycles Off -> All -> One, and the tray menu mirrors both toggles. Linux reads and writes MPRIS `LoopStatus`/`Shuffle`; Windows reads and writes SMTC auto-repeat and shuffle.
-- The Crate gains a search field (artist, album, or pressing name), an A–Z sort alongside recent/plays/rare/press order, and a metadata strip showing total records, total plays, top album, and the current listening streak.
-- Player picker: when several MPRIS players (Linux) or SMTC sessions (Windows) are open, Settings -> Source chooses which one VinylDeck follows. Auto (the default) follows whichever session is playing, then the last playing session, then a paused one. The choice is persisted by the Rust settings authority and also appears in the right-click menu as Player source.
-- The Crate: every album played is pressed into a persistent collection (`collection.json`, backend-owned) with a pressing number, first-pressed date, play count, rarity tier, and label thumbnail. Plays are counted by the backend poller after half the track or 2 minutes of real listening, whichever comes first. Records visibly wear with plays. New bottom-left pressing stamp, crate overlay (`C`, top-left button, context menu), and `cmd_collection_snapshot` / `cmd_collection_press` / `collection-changed` API.
-- Needle Drop: the tonearm tracks playback progress across the grooves. Drag the headshell onto the record to seek (and resume if paused) with a live time preview on the progress ring, or off the record to pause.
-- Single instance: launching VinylDeck while it is already running focuses the existing window instead of starting a second copy.
-- Settings now shows a visible close button at the top-right of the panel; Escape and clicking outside still close it too.
+### Deferred
 
-### Changed
+- Code signing for Windows (SmartScreen still shows an unknown publisher).
+- Automatic in-app updates; the release pipeline publishes checksums and a manual update check is planned.
+- ARM64 Windows/Linux artifacts (x64 only for now).
 
-- Security: bundled builds now ship a Content Security Policy (`default-src 'self'`, images from `self`/`data:`/`blob:`/the artwork scheme) instead of none. Tauri IPC is explicitly allowed through `connect-src 'self' ipc: http://ipc.localhost`, so release builds no longer fall back to postMessage.
-- Brand typography is now self-hosted under `public/fonts/` (Sora, Inter, JetBrains Mono, Hanken Grotesk, Geist), so release builds load the intended typefaces under the CSP instead of falling back to system fonts. Each family ships with its OFL license.
-- Linux can install VinylDeck for the current user with `npm run install:linux`: it builds the release binary, installs it to `~/.local/bin/vinyldeck`, registers the icon, and writes a `.desktop` entry that keeps pointing at the installed copy when the build tree is rebuilt.
-- Linux release bundles (`deb`, `appimage`) are configured next to the Windows `msi`/`nsis` targets, and the README now documents Linux requirements, install steps, MPRIS support, reactivity capture, the overlay, and Wrapped. Both bundles were built and structure-checked locally; AppImage builds on the local sysroot need `PKG_CONFIG_SYSROOT_DIR=` cleared for the bundling step.
-- The Tauri npm packages now match the Rust `tauri` 2.12 crate, so `npm run tauri build` no longer needs the version-mismatch bypass flag.
-- Frontend coverage now includes the deterministic pressing engine, artwork palette/ambient extraction, the theme applier, and the canvas texture baker.
-- Crate play counting: a play now counts after half the track or 120 s of listening, whichever comes first (was half the track, capped at 4 minutes).
-- Window controls: close, minimize, and maximize/restore now sit at the top-right, and the floating Settings, Crate, and Mini triggers moved to a single top-left row. This reverses the earlier top-left placement; the 40px titlebar strip was re-measured at 700x560, 900x700, and maximized so neither the controls nor the triggers intersect the tonearm pivot or counterweight (narrow windows stack the controls down the right edge instead of crossing the arm). Fullscreen keeps the hover-revealed top-edge bar with the controls on the same side, and Mini shows its hover controls top-right with the return control top-left.
-- Pausing lifts the tonearm in place instead of swinging it to a fixed angle; track skips re-cue the arm to the start groove.
-- Artwork no longer blocks the playback poll. A new track's metadata and controls appear immediately, and the cover follows as a separate update once the image is read.
-- The player poll is now event-driven. Linux watches MPRIS `PropertiesChanged` and D-Bus name changes, Windows watches SMTC session/media/timeline events, and transport commands wake the poller immediately instead of waiting for the next tick. The poll itself continues at a slow fallback interval for position and play counting.
-- Platform handles are reused instead of recreated. Linux keeps one session-bus connection and caches player identities (invalidated when a player exits); Windows requests the SMTC manager once and reuses it.
-- Artwork travels as a short `vinyldeck://art/<hash>` URL backed by a bounded in-process cache and a Tauri URI scheme, instead of a 6-7 MB base64 string on every playback event.
-- Artwork supports WebP and GIF. `file://` covers are size-checked before being read, oversized HTTP covers are rejected instead of truncated, and MPRIS `data:` covers are decoded into the same cache.
-- CI runs on Node 24 (Node 20 is end-of-life), lints Windows with `clippy -D warnings`, and now runs ESLint (react-hooks + jsx-a11y) on every push.
-- Frontend logging goes through `src/lib/logger.ts`; `console.debug` chatter is stripped from production builds while warnings and errors stay.
-
-### Fixed
-
-- Arrow keys no longer skip tracks or seek while the context menu is open. The focused menu container let Left/Right leak to the global shortcuts; the menu now owns the keyboard (Escape still routes through the single topmost-surface handler), so Up/Down, Enter and Space act only on the menu item.
-- Double-clicking the custom title bar no longer maximizes and immediately snaps back; the bar kept a React double-click handler on top of Tauri's built-in drag-region maximize, so both toggled the window. Double-click maximize now runs through Tauri's script alone.
-- Concurrent settings writes from the Main and Mini windows can no longer overwrite each other; `cmd_settings_update` now holds the lock across the whole read-modify-write.
-- The progress ring stops its 500 ms ticker while playback is paused or the window is hidden or minimized, instead of polling forever.
-- Theme menu, tooltip triggers, and the mini-player surface now satisfy the new jsx-a11y checks, and dead SMTC/artwork code no longer needs `#[allow(dead_code)]`.
-
-## 0.1.1 - 2026-07-03
-
-### Changed
-
-- Reframed public documentation so `README.md` and user-facing docs describe VinylDeck as a product instead of an internal progress report.
-- Moved implementation status language into maintainer and release documentation where it belongs.
-- Mini player is now shrink-resizable from `280x280` down to `140x140`, with proportional vinyl/control scaling and compact track text fade-out.
+## [0.1.1] - 2026-07-03
 
 ### Added
 
 - Opt-in Start With Windows setting backed by Tauri autostart.
 - Resizable Mini player window with optional Mini Transparency backed by native Windows Acrylic.
+- Mini player shrink range from `280x280` down to `140x140`, with proportional vinyl/control scaling and compact track text fade-out.
+
+### Changed
+
+- Public documentation describes VinylDeck as a product instead of an internal progress report; implementation status moved to maintainer and release docs.
 
 ### Verified
 
-- Built release MSI and NSIS installers.
-- Installed MSI successfully on Windows.
-- Confirmed Control Panel entry and custom install location.
+- Built the release MSI and NSIS installers.
+- Installed the MSI successfully on Windows, including a custom install location and the Control Panel entry.
 
-## 0.1.0 - 2026-06-14
+## [0.1.0] - 2026-06-14
 
 ### Added
 
 - Windows Tauri shell for VinylDeck.
-- Real SMTC media snapshots, artwork, capabilities, and in-app controls.
+- Real SMTC media snapshots, artwork, capabilities and in-app controls.
 - Cached SMTC polling bridge with semantic-change events and position resyncs.
 - Backend-owned settings authority with cross-window sync.
-- Main, fullscreen, and mini window modes.
+- Main, fullscreen and mini window modes.
 - Tray lifecycle and focused keyboard shortcuts.
 - Noir and Glass visual shells.
 - Album-art ambient color extraction.
-- CSS vinyl deck renderer with animated record, tonearm, progress, and controls.
-- Tooltips, keycap hints, context menu, directional track text, and in-place vinyl skip impulse.
-- Standard documentation set: README, architecture, API, development guide, user guide, troubleshooting, release notes, changelog, and `llms.txt`.
+- CSS vinyl deck renderer with animated record, tonearm, progress and controls.
+- Tooltips, keycap hints, context menu, directional track text and in-place vinyl skip impulse.
+- Standard documentation set: README, architecture, API, development guide, user guide, troubleshooting, release notes, changelog and `llms.txt`.
+
+### Changed
+
+- Active visual shells are Noir and Glass.
+- Persisted legacy shell values migrate into the current shell model.
+- CSS vinyl renderer is the active renderer.
 
 ### Fixed
 
@@ -108,12 +132,6 @@
 - Tauri source lifecycle cleans event listeners and avoids duplicate source subscriptions.
 - Controls and shortcuts respect source capabilities.
 - Settings sync correctly across main and mini windows through the Rust backend.
-
-### Changed
-
-- Active visual shells are Noir and Glass.
-- Persisted legacy shell values migrate into the current shell model.
-- CSS vinyl renderer is the active renderer.
 
 ### Deferred
 
@@ -123,3 +141,8 @@
 - Start-with-Windows/autostart.
 - Splash screen.
 - Active WebGL vinyl renderer.
+
+[Unreleased]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Shelldock1/vinyldeck/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/Shelldock1/vinyldeck/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/Shelldock1/vinyldeck/releases/tag/v0.1.0

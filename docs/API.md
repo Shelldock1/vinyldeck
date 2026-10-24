@@ -1,39 +1,59 @@
 # Tauri API Reference
 
-This is the internal command/event contract between the React app and the Tauri backend.
+This is the command and event contract between the React frontend and the Rust backend. The `cmd_smtc_*` names are kept for compatibility on every platform; on Linux they drive MPRIS, on Windows they drive SMTC.
 
-## Playback Snapshot
+All payloads use `camelCase` keys. Timestamps are Unix milliseconds. Positions and durations are seconds (floating point).
+
+## Media snapshot
 
 `MediaSnapshot` maps to the frontend `PlaybackState`.
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `track` | `string` | Empty when no media or metadata missing |
+| `track` | `string` | Empty when no media or metadata is missing |
 | `artist` | `string` | Empty when unavailable |
 | `album` | `string` | Empty when unavailable |
-| `artworkDataUrl` | `string \| null` | PNG/JPEG data URL, bounded by backend artwork guard |
+| `artworkDataUrl` | `string \| null` | `vinyldeck://art/<hash>` reference, not base64 image data |
 | `duration` | `number` | Seconds; may be `0` when unknown |
 | `position` | `number` | Seconds |
 | `isPlaying` | `boolean` | Current playback state |
-| `sourceName` | `string` | Friendly source label when known |
-| `sourceId` | `string` | Raw session/source identity |
-| `canSeek` | `boolean` | Enables seek UI and shortcut paths |
+| `sourceName` | `string` | Friendly source label |
+| `sourceId` | `string` | Stable platform handle: MPRIS bus name or SMTC AUMID |
+| `canSeek` | `boolean` | Enables seek UI and shortcuts |
 | `canSkip` | `boolean` | Enables previous/next |
-| `canControl` | `boolean` | Enables play/pause/control surface |
+| `canControl` | `boolean` | Enables play/pause |
+| `canRepeat` | `boolean` | Shows the repeat lever |
+| `canShuffle` | `boolean` | Shows the shuffle lever |
+| `repeatMode` | `"off" \| "all" \| "one"` | Current repeat state |
+| `shuffle` | `boolean` | Current shuffle state |
 
-## Playback Events
+`MediaPlayer` (player picker):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `string` | Same value as `MediaSnapshot.sourceId` |
+| `name` | `string` | Display fallback |
+| `isPlaying` | `boolean` | Used to order the list |
+
+## Events
 
 | Event | Payload | Meaning |
 | --- | --- | --- |
-| `media-state-changed` | `MediaSnapshot` | Track, metadata, artwork (content hash), play state, or controls changed, or clean empty state. Carries `artworkDataUrl`. |
-| `media-position-changed` | `{ position: number }` | Periodic position resync (every 2s) while nothing else changed. No metadata or artwork; `TauriSource` merges it onto the last full snapshot and the store updates only `lastKnownPosition`/`lastSyncTime`, keeping the `playback` object identity. |
+| `media-state-changed` | `MediaSnapshot` | Track, metadata, artwork hash, play state, repeat/shuffle or capabilities changed, or the clean empty state |
+| `media-position-changed` | `{ position: number }` | Periodic position resync (about every 2 s) without metadata; the store merges it onto the last snapshot |
+| `settings-changed` | `PersistedSettings` | Backend-approved settings after an update or reset |
+| `collection-changed` | `CollectedRecord` | A record was pressed or a counted play landed |
+| `sleep-timer-changed` | `SleepTimerSnapshot \| null` | Timer started, replaced or cancelled |
+| `sleep-timer-fired` | `{ mode: string }` | Timer elapsed; playback was paused and the tonearm parked |
+| `audio-reactivity` | `{ level, bass, mid, treble }` | Smoothed three-band levels at roughly 30 Hz |
 
-## SMTC Commands
+Command responses are not the UI source of truth. The frontend sends intent, then accepts poller events as canonical state.
 
-These commands are used by `TauriSource` in desktop mode.
+## Media commands
 
 | Command | Args | Return |
 | --- | --- | --- |
+| `cmd_media_players` | none | `MediaPlayer[]` |
 | `cmd_smtc_snapshot` | none | `MediaSnapshot \| null` |
 | `cmd_smtc_play` | none | `MediaSnapshot \| null` |
 | `cmd_smtc_pause` | none | `MediaSnapshot \| null` |
@@ -41,50 +61,136 @@ These commands are used by `TauriSource` in desktop mode.
 | `cmd_smtc_next` | none | `MediaSnapshot \| null` |
 | `cmd_smtc_previous` | none | `MediaSnapshot \| null` |
 | `cmd_smtc_seek` | `seconds: number` | `MediaSnapshot \| null` |
+| `cmd_media_set_repeat` | `mode: "off" \| "all" \| "one"` | `MediaSnapshot \| null` |
+| `cmd_media_set_shuffle` | `enabled: boolean` | `MediaSnapshot \| null` |
 
-Command responses are not the UI source of truth. The frontend sends intent, then accepts poller events as canonical state.
+Transport commands wake the poller immediately. The returned snapshot is a convenience; the next event is authoritative.
 
-## Backend Playback Authority
+## Playback authority
 
-`PlaybackAuthority` (Rust managed state) holds the last real platform snapshot written by the poller. The tray subscribes to it for its tooltip and Play/Pause/Previous/Next state, and dispatches controls through the same platform bridge as `cmd_smtc_*`. The legacy mock-backed `cmd_media_*` commands were removed.
+`PlaybackAuthority` is managed Rust state holding the last platform snapshot written by the poller. The tray subscribes to it for its tooltip, Play/Pause/Previous/Next labels and the selected source, and dispatches through the same platform bridge as `cmd_smtc_*`. The legacy mock-backed `cmd_media_*` command set was removed.
 
-## Settings Commands And Events
+## Settings
 
-| Command/Event | Args/Payload | Meaning |
+| Command | Args | Return |
 | --- | --- | --- |
-| `cmd_settings_snapshot` | none | Load sanitized persisted settings |
-| `cmd_settings_update` | partial settings | Validate, persist, and emit settings |
-| `cmd_settings_reset` | none | Reset to defaults |
-| `settings-changed` | persisted settings | Backend-approved settings snapshot |
+| `cmd_settings_snapshot` | none | `PersistedSettings` |
+| `cmd_settings_update` | `patch: SettingsPatch` | `PersistedSettings` |
+| `cmd_settings_reset` | none | `PersistedSettings` (defaults) |
 
-Current persisted settings fields include `theme`, `ambientMode`, `artAmbient`, `vinylWobble`, `filmGrain`, `leanBackMode`, `cursorHide`, `idleTimeoutSeconds`, `alwaysOnTop`, `keyboardShortcutsEnabled`, `quitToTray`, `startWithWindows`, `windowMode`, and `miniTransparentMode`.
+`SettingsPatch` contains only the fields being changed. Unknown values are clamped or normalized by Rust before persistence.
 
-`miniTransparentMode` is Mini-only. When enabled, the Rust window service applies Tauri's native Acrylic window effect to the live Mini window and the Mini WebView removes its opaque background layers so the desktop blurs through behind the vinyl and controls. Main and fullscreen ignore this setting.
+Persisted fields:
 
-The active shell choices are `noir` and `glass`. Legacy theme values `aurora`, `vapor`, and `paper` are migrated into the current shell/ambient model rather than exposed as live choices.
+`theme` (`noir \| glass`), `scheme` (`light \| dark \| halloween`), `ambientMode`, `artAmbient` (legacy mirror), `vinylWobble`, `filmGrain`, `leanBackMode`, `cursorHide`, `idleTimeoutSeconds`, `alwaysOnTop`, `keyboardShortcutsEnabled`, `quitToTray`, `startWithWindows`, `windowMode` (`main \| fullscreen \| mini`), `miniTransparentMode`, `playerSourceId`, `playerSourceName`, `discordClientId`, `language` (`auto \| en \| ru`), and the schema `version`.
 
-## Collection (The Crate) Commands And Events
+Notes:
 
-| Command/Event | Args/Payload | Meaning |
+- Changing `startWithWindows` synchronizes the OS autostart registration (registry Run key on Windows, XDG autostart on Linux).
+- Changing `miniTransparentMode` applies or clears the effect on a live Mini window.
+- `playerSourceId` is empty for Auto. Unknown saved IDs stay in settings so the picker can show "Saved source - not running".
+- Legacy `theme` values (`aurora`, `vapor`, `paper`) migrate into the current shell/scheme model.
+
+## Collection (The Crate)
+
+| Command | Args | Return |
 | --- | --- | --- |
-| `cmd_collection_snapshot` | none | All collected records |
-| `cmd_collection_press` | `{ input: PressInput }` | Upsert the album's pressing; returns `{ record, newlyPressed }` |
-| `collection-changed` | one `CollectedRecord` | A record was pressed or played |
+| `cmd_collection_snapshot` | none | `CollectedRecord[]` |
+| `cmd_collection_press` | `{ input: PressInput }` | `{ record, newlyPressed }` |
+| `cmd_collection_wrapped` | `{ month?, source?, utcOffsetMinutes? }` | `WrappedStats` |
+| `cmd_collection_play_times` | `{ source? }` | `number[]` (Unix ms) |
 
-`PressInput` is `{ artist, album, recipe, pressingType, pressingName, colors: { primary, secondary, accent }, thumbnail }`. `album` falls back to the track title for singles; the record key is `lowercase(artist) + "|" + lowercase(album)`. Pressing is idempotent: the first press assigns `pressingNumber` and `firstPressedAt`, later presses only fill a missing thumbnail. `thumbnail` must be a `data:image/` URL of at most 48 KB.
+`PressInput`:
 
-`CollectedRecord` adds `key`, `pressingNumber`, `firstPressedAt`, `lastPlayedAt` (epoch ms), and `playCount`. Play counts are owned by the backend media poller (half the track or 120 s, whichever comes first, of playing wall-clock time; tracks under 30 s never count). A play can arrive before the pressing; that record has `recipe: null` until the frontend presses it, and then `newlyPressed` is still `true`.
+```ts
+{
+  artist: string;
+  album: string;
+  recipe: string;
+  pressingType: string;
+  pressingName: string;
+  colors: { primary: string; secondary: string; accent: string };
+  thumbnail?: string | null;
+  sourceId?: string;
+  sourceName?: string;
+}
+```
 
-## Window And Lifecycle Commands
+- `album` falls back to the track title for singles.
+- The record key is `lowercase(artist) + "|" + lowercase(album or track)`.
+- Pressing is idempotent: the first press assigns `pressingNumber`, `firstPressedAt` and the pressing recipe; later presses only fill missing fields (for example a late thumbnail).
+- `thumbnail` must be a `data:image/` URL of at most 48 KB.
+- A play can be counted before the artwork/pressing exists. Such a record has `recipe: null` until the frontend presses it, and `newlyPressed` is still `true`.
+
+`CollectedRecord`:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `key` | `string` | Stable identity |
+| `artist`, `album` | `string` | Display metadata |
+| `pressingNumber` | `number` | Collection order |
+| `firstPressedAt` | `number` | Unix ms |
+| `lastPlayedAt` | `number \| null` | Unix ms |
+| `playCount` | `number` | Counted listens |
+| `recipe`, `pressingType`, `pressingName` | `string \| null` | Visual pressing data |
+| `colors` | `{ primary, secondary, accent } \| null` | Extracted palette |
+| `thumbnail` | `string \| null` | Small data URL |
+| `sourceKind` | `"app" \| "browser" \| null` | Music app vs browser; null for old records with no history |
+| `sourceName` | `string \| null` | Last player that fed the record |
+
+Play counting is owned by the media poller: half the track or 120 seconds of playing wall-clock time, whichever comes first; tracks under 30 seconds never count. The play history is bounded to 10,000 events.
+
+`WrappedStats`:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `month` | `string` | `YYYY-MM` in the viewer's local time |
+| `label` | `string` | Display label, e.g. `October 2026` |
+| `totalPlays` | `number` | Counted listens |
+| `uniqueAlbums`, `uniqueArtists`, `uniqueTracks` | `number` | Distinct counts |
+| `topRecords` | `WrappedAlbum[]` | Up to five |
+| `topTrack`, `topArtist`, `rarest` | object \| null | May be empty |
+| `busiestDay` | `{ date, plays } \| null` | `YYYY-MM-DD`, local time |
+| `availableMonths` | `string[]` | Months with listens, newest first, max 24 |
+
+`cmd_collection_play_times` returns every counted listen's timestamp for the selected source bucket, used for the local-calendar streak.
+
+## Window and lifecycle
 
 | Command | Args | Meaning |
 | --- | --- | --- |
 | `cmd_set_window_mode` | `mode: "main" \| "fullscreen" \| "mini"` | Switch render/window mode |
 | `cmd_set_always_on_top` | `enabled: boolean` | Apply native always-on-top |
-| `cmd_get_current_window_mode` | none | Return current render mode |
-| `cmd_quit_app` | none | Explicit process quit |
+| `cmd_quit` | none | Explicit process quit |
 
-Close button behavior is handled by Rust window events and hides app windows to tray.
-When `quitToTray` is `false`, closing main/mini requests explicit app quit instead.
-When `startWithWindows` changes, the backend syncs the desired state to the Tauri autostart plugin.
-Mini mode creates a separate transparent-capable, frameless, always-on-top WebView window. It starts at `280x280`, can shrink down to `140x140`, and cannot expand beyond the original `280x280` square; entering main/fullscreen destroys the Mini window.
+Close-button behavior is handled by Rust window events and hides app windows to the tray when `quitToTray` is on. When it is off, closing requests an explicit quit. Mini creates a separate transparent-capable, frameless, always-on-top WebView capped at 280x280 with a 140x140 floor; entering main/fullscreen destroys it.
+
+## Sleep timer
+
+| Command | Args | Return |
+| --- | --- | --- |
+| `cmd_sleep_timer_start` | `{ mode: "minutes" \| "endOfTrack", minutes?: number }` | `SleepTimerSnapshot` |
+| `cmd_sleep_timer_cancel` | none | `null` |
+| `cmd_sleep_timer_snapshot` | none | `SleepTimerSnapshot \| null` |
+
+`SleepTimerSnapshot` is `{ mode, endsAt: number \| null, track: string \| null }`. Minute timers accept 5-240 minutes; the UI offers 15/30/45/60. Timers are intentionally not persisted across launches.
+
+## Artwork scheme
+
+Covers are stored in a bounded in-process cache and served at `vinyldeck://art/<hash>`. The frontend converts that to the platform URL (`http://vinyldeck.localhost/...` on Windows) at the edge. The scheme handler returns `Content-Type`, a one-year immutable cache header and a 404 for unknown hashes.
+
+## Overlay HTTP API
+
+The overlay is a separate loopback HTTP server, not a Tauri command surface:
+
+| Path | Response |
+| --- | --- |
+| `/overlay` | Transparent HTML browser source |
+| `/state` | Current playback snapshot as JSON |
+| `/artwork` | Cached cover bytes |
+
+Only `Host: 127.0.0.1:43110` and `Host: localhost:43110` are accepted. Requests are capped at 8 KiB.
+
+## Capabilities
+
+Permissions are declared in `src-tauri/capabilities/default.json`. Adding a plugin command requires the matching capability entry; bundled builds enforce the CSP described in [DEVELOPMENT.md](./DEVELOPMENT.md#content-security-policy).

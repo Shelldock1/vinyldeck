@@ -1,6 +1,6 @@
 # VinylDeck Landing Page
 
-Static Vite + React + TypeScript landing page for VinylDeck.
+Static Vite + React + TypeScript marketing page for VinylDeck. It is optional: the desktop app and its docs do not depend on it.
 
 ## Run locally
 
@@ -19,32 +19,29 @@ The production output is generated in `dist/`.
 
 ## Deploy
 
-This project is static-host ready. Netlify can deploy directly from the repo using:
+Static-host ready. Netlify can deploy directly from the repository using the root `netlify.toml`:
 
 ```txt
+Base: landing
 Build command: npm run build
 Publish directory: dist
 ```
 
-`netlify.toml` is included.
-
 ## Download links
 
-Update installer links in:
+All download URLs live in `src/content/downloads.ts` and point at the stable release asset names:
 
 ```txt
-src/content/downloads.ts
+vinyldeck-setup-windows-x64.exe
+vinyldeck-windows-x64.msi
+vinyldeck-linux-x64.AppImage
+vinyldeck-linux-x64.deb
 ```
 
-The current URLs intentionally use `YOUR_USERNAME` placeholders until the GitHub Releases path is finalized.
+Keep them version-free so `releases/latest/download/...` always resolves to the newest build. Bump `release.version` when a new tag is published.
 
-## V5 polish notes
+## Visual notes
 
-V5 is the final fit-and-responsive pass over V4:
+The V5 polish pass fixed desktop hero crowding, hardened responsive layouts at narrow desktop, tablet and phone widths, and made the system-flow strip, shell comparison, mode cards, native panel, download block and footer adapt predictably.
 
-- fixed the desktop hero horizontal crowding between headline and product mockup
-- preserved the V4 navigation sizing and behavior
-- hardened responsive layouts at narrow desktop, tablet, and phone widths
-- improved hero object staging without letting mockups collide with copy
-- made the system-flow strip, shell comparison, mode cards, native panel, download block, and footer adapt more predictably
-- kept compatibility wording safe around compatible Windows media sessions
+Wording stays safe: VinylDeck works with any app that exposes a Windows SMTC or Linux MPRIS session, not with a fixed list of players.

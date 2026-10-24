@@ -14,7 +14,7 @@
 - Visual rules: `.agents/memory/design-guidelines.md`
 - Motion rules: `.agents/memory/animation-physics.md`
 - UI review index: `.agents/memory/ui-review-map.md`
-- User-facing docs: `README.md`, `docs/`, `CHANGELOG.md`, `llms.txt`
+- User-facing docs: `README.md`, `CONTRIBUTING.md`, `docs/`, `CHANGELOG.md`, `llms.txt`
 - Deprecated: `raw/`, chat exports, root prompt files, root task lists, and `task.md`
 
 ## Package Manager
@@ -36,12 +36,14 @@ npm run tauri build
 | Whitespace | `git diff --check` |
 
 ## Current Locks
+- Windows and Linux are both first-class; platform differences live in `#[cfg]` adapters, not in React.
 - Active shells: Noir and Glass only.
 - Legacy Aurora/Vapor/Paper values migrate into current shells; do not describe them as live UI choices.
 - Active vinyl renderer: CSS only. Keep `ENABLE_WEBGL_VINYL=false` unless future proof says otherwise.
 - No vinyl center spindle hole; do not restore `.vinyl-hole`.
-- Settings and playback are Rust-owned authorities; WebViews act as readers/controllers.
-- Phase 11 installer/distribution work remains deferred.
+- Settings, the Crate, sleep timers and playback are Rust-owned authorities; WebViews act as readers/controllers.
+- Mini stays a separate frameless, always-on-top window capped at 280x280 with a 140x140 floor.
+- CI runs on Ubuntu and Windows for every push/PR; tags publish stable, version-free artifacts.
 
 ## Repo Hygiene
 - Keep `.agents/memory/` updated before finishing implementation sessions.

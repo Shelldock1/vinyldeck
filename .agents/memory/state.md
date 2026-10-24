@@ -1,7 +1,7 @@
 # VinylDeck: Current State
 
-**Current Phase:** Optimization roadmap complete — Phases 1–3 verified and confirmed. Linux release packaging verified.
-**Current Stage:** Windows + Linux desktop app at `0.1.1`; no further roadmap phase is defined.
+**Current Phase:** Cross-platform distribution complete — Windows/Linux parity, tag-driven releases, one-line installers and docs overhaul.
+**Current Stage:** Windows + Linux desktop app at `0.2.0`; CI and release pipelines cover both hosts.
 
 ## Active Work
 
@@ -50,6 +50,16 @@ Post-roadmap:
 - Pressing names (e.g. "Blue/Bone White Merge") are generated and persisted in English; not translated.
 - Streak: `cmd_collection_play_times(source)` feeds `collectionStreak(records, now, playTimes)`. Wrapped takes `utcOffsetMinutes` and buckets on the local clock.
 - Verified: lint, build, 139 frontend tests, 98 Rust tests, clippy, fmt, Windows `cargo check`. Russian UI checked in headless Chromium (main, Crate, Settings, shortcut sheet, L toggle).
+
+## Cross-platform release + docs (2026-10-24)
+
+- Windows parity: `scripts/install-windows.ps1` (build + `%LOCALAPPDATA%\Programs\VinylDeck`, Start Menu shortcut, user PATH), `scripts/collect-release.mjs` (one cross-platform artifact namer), `.gitattributes` (LF source, CRLF PowerShell/NSIS), `.gitignore` (`release/`, `.claude/` still untracked).
+- Installers: `install.sh` (AppImage, checksum, desktop entry, PATH) and `install.ps1` (NSIS `/S`, checksum, shortcut, PATH). Both support `VINYLDECK_VERSION`, `VINYLDECK_RELEASE_BASE`; Linux also `VINYLDECK_INSTALL_DIR`, `VINYLDECK_SKIP_DESKTOP`, `VINYLDECK_NO_PATH_UPDATE`.
+- CI: `.github/workflows/release.yml` on `v*` tags (NSIS/MSI + DEB/AppImage, stable names, `SHA256SUMS.txt`, CHANGELOG body via `scripts/changelog-section.mjs`); `ci.yml` validates shell/Node/PowerShell scripts.
+- NSIS `installMode: currentUser`; stable names `vinyldeck-setup-windows-x64.exe`, `vinyldeck-windows-x64.msi`, `vinyldeck-linux-x64.AppImage`, `vinyldeck-linux-x64.deb`.
+- Docs rewritten: `README.md`, `CHANGELOG.md` (0.2.0 + tagged history), new `CONTRIBUTING.md`, `docs/{USER_GUIDE,DEVELOPMENT,ARCHITECTURE,API,TROUBLESHOOTING,RELEASING}.md`, `llms.txt`; `docs/RELEASE_V1.md` renamed to `docs/RELEASING.md`. Landing download links moved to Shelldock1 stable assets and now include Linux.
+- Local verification: Linux release binary, `deb` and AppImage built; `collect-release.mjs` produced stable names; `install.sh` installed from a local HTTP mirror with checksum verification; AppImage `--appimage-extract` clean. AppImage bundling needs `PKG_CONFIG_PATH` set but `PKG_CONFIG_SYSROOT_DIR` unset (updated docs); DEB needs the sysroot visible.
+- Not verified here: Windows runtime/installer, PowerShell execution, GitHub Actions run, live downloads, code signing. CI logs and a Windows host are the remaining gates.
 
 ## Phase 3 Implementation Notes
 

@@ -1,140 +1,208 @@
 # User Guide
 
-This guide covers using VinylDeck as a desktop companion for music already playing on Windows.
+VinylDeck is a desktop companion for music that is already playing on your computer. It does not stream, download or own your library. Start a track in Spotify, a browser, VLC, mpv or another app that exposes a system media session, and VinylDeck turns that session into a vinyl deck you can control.
 
-## Starting The App
+The app runs on **Windows 10/11** (SMTC) and **Linux** (MPRIS) with the same interface.
 
-Run VinylDeck in desktop mode:
+## Install and start
 
-```powershell
-npm run tauri dev
-```
+- **Windows:** run `vinyldeck-setup-windows-x64.exe`, or use the one-line installer in the [README](../README.md#install). The setup installs for the current user and creates a Start Menu shortcut.
+- **Linux:** run `vinyldeck-linux-x64.AppImage` after `chmod +x`, install the `.deb`, or use the one-line installer.
 
-Start playback in a Windows media app such as Spotify, a browser, or VLC. VinylDeck listens to the active system media session and renders the current track as a vinyl deck.
+When VinylDeck starts it shows the active media session. If nothing is playing yet, start a track and the deck fills in.
 
-Browser development mode is available with mock playback:
+Browser development mode (`npm run dev` from a source checkout) shows mock tracks by design; it cannot read native media sessions.
 
-```powershell
-npm run dev
-```
-
-## Main Player
+## Main player
 
 The main view combines:
 
-- animated vinyl record with album art
-- physical tonearm
-- track title, artist, and album
-- progress ring and seek support when the source allows it
-- play/pause, previous, and next controls
-- shuffle and repeat levers when the source supports them
-- shell picker
-- source badge
+- the pressing, with album art as the record label
+- a physical tonearm that follows progress
+- track, artist and album
+- a progress ring with seeking when the source allows it
+- play/pause, previous and next
+- shuffle and repeat levers when the source exposes them
+- the shell and scheme pickers
+- the active source badge
 
-Controls automatically disable when the active media source does not support that action.
+Controls disable when the current player does not support an action. Capabilities come from the system session, not from VinylDeck.
 
-### Shuffle and Repeat
+### Shuffle and repeat
 
-Two small metal levers sit beside the transport pill. Shuffle flips on and off. Repeat cycles Off -> All -> One -> Off, and the tiny `1` engraved on the lever marks repeat-one. If the active source does not report shuffle or repeat support, its lever is hidden. The same states are available from the tray menu while VinylDeck is minimized to the tray.
+Two metal levers sit beside the transport:
+
+- **Shuffle** toggles on and off.
+- **Repeat** cycles `Off -> All -> One`. The engraved `1` marks repeat-one.
+
+Linux writes MPRIS `Shuffle`/`LoopStatus`; Windows writes SMTC shuffle and auto-repeat. If the player reports no support, the lever is hidden. The tray mirrors both while the window is hidden.
 
 ### Needle Drop
 
-The tonearm follows the track: it starts at the outer groove and creeps toward the label as the song plays. Grab the headshell to cue it yourself:
+The tonearm creeps toward the label as a track plays. Grab the headshell:
 
-- drop it anywhere on the grooves to jump there (playback starts if it was paused); the progress ring previews the landing time while you drag
-- drop it beyond the record's rim to lift it onto its rest and pause
+- drop it anywhere on the grooves to seek there; playback resumes if it was paused, and the progress ring previews the landing time while you drag
+- drop it beyond the rim to lift it onto its rest and pause
 
-Pausing from the controls lifts the arm in place, like a cue lever. Sources with unknown duration keep the arm at a fixed playing position.
+Pausing from the controls lifts the arm in place rather than swinging it away. Tracks with an unknown duration keep the arm at a fixed playing position.
 
-## Window Modes
+### Progress ring
+
+The ring is also a keyboard slider. `Tab` to it, then:
+
+- `Left` / `Right` seek 5 seconds
+- `Shift+Left` / `Shift+Right` seek 5 seconds
+- `Home` returns to the start
+
+## Window modes
 
 | Mode | What it does |
 | --- | --- |
-| Main | Standard VinylDeck desktop window |
-| Fullscreen | Immersive full-window player |
-| Mini | Resizable always-on-top player |
+| Main | Standard window, scales to fit small screens |
+| Fullscreen | Immersive player with a hover-revealed top bar |
+| Mini | Frameless, always-on-top companion at the bottom-right |
 
-<p align="center">
-  <img src="../app-screenshots/16-glass-fullscreen-track2-idle.png" width="400" alt="Fullscreen Mode" />
-  <img src="../app-screenshots/01-mini-noir-playing-controls-visible.png" width="400" alt="Mini Player Mode" />
-</p>
+Main opens at 1000x860 and shrinks to at most 92% of the monitor working area. The deck scales with it, so the record and controls do not clip at the 700x560 minimum.
 
-Mini starts as a `280x280` always-on-top player. You can shrink it down to a compact size, but it will not expand beyond the original square. As Mini gets smaller, the vinyl and hover controls scale down with the window and track text fades away to keep the record clear. Turn on Mini Transparency in Settings -> Display to let Windows Acrylic blur your desktop through the Mini player while the vinyl and controls stay readable.
+Mini starts as a 280x280 square, can shrink to 140x140, and cannot grow past the original square. Track text fades away at compact sizes. Turn on **Mini Transparency** in Settings -> Display:
 
-Window controls sit at the top-right; the Settings, Crate, and Mini triggers sit in a row at the top-left.
+- **Windows:** native Acrylic blurs the desktop behind the Mini window.
+- **Linux:** the window becomes transparent where the compositor supports it; blur depends on the desktop.
 
-Closing app windows can keep VinylDeck in the tray when Quit To Tray is enabled. Use tray Quit or `Ctrl+Q` for explicit exit.
+Main and fullscreen never become transparent.
+
+Window controls are at the top-right (minimize, maximize/restore, close). Settings, Crate and Mini triggers are in the top-left row.
+
+Closing a window hides VinylDeck to the tray while **Quit To Tray** is on. Use tray -> Quit, `Ctrl+Q`, or turn Quit To Tray off for a normal exit. Starting VinylDeck again focuses the running copy instead of opening a second one.
 
 ## The Crate
 
-Every album you play is pressed into your collection as its own record, with the same one-of-a-kind pressing you see on the deck (marble, splatter, clear, smoke, galaxy...). The stamp in the bottom-left corner shows the record's pressing number, its name, and how many times you have played it. A brand-new album flashes **New pressing**.
+Every album you play is pressed into your personal collection. Each pressing is deterministic: the same album gets the same material (marble, splatter, clear, smoke, galaxy, ...) and its own pressing number.
 
-- A play counts once you have heard half the track or 2 minutes, whichever comes first. Paused time does not count.
-- Records wear with use: favorites slowly gather dust, hairline scuffs, and a pale ring on the label.
-- Rarer pressings are graded Uncommon, Rare, or Legendary.
+Open the Crate with `C`, the crate button in the top-left row, the right-click menu, or the pressing stamp.
 
-Open the crate with `C`, the crate button in the top-left trigger row, the right-click menu, or by clicking the stamp. Sort by recent, most played, rarest, or pressing order, and pick a record to read its pressing card. Your collection is stored locally next to your settings (`collection.json`).
+- **Play counting:** a listen counts after half the track or 2 minutes of playing time, whichever comes first. Tracks under 30 seconds never count, and paused time is ignored.
+- **Wear:** records gather dust, hairline scuffs and a pale label ring as you play them.
+- **Rarity:** pressings are graded Uncommon, Rare or Legendary.
+- **Search and sort:** search artist, album or pressing name; sort by recent, plays, rare, pressing order or A-Z.
+- **Sources:** switch between **Music**, **Browser** and **All**. Records and listens are tagged automatically, and older entries are classified from their history. Records with no history stay under All.
+- **Stats:** total records, total plays, top album and current listening streak. The streak counts every listen in the selected source bucket on the local calendar.
 
-## Keyboard Shortcuts
+The collection is stored as `collection.json` next to your settings and is owned by the Rust backend. A record pressed on Windows opens on Linux and vice versa.
 
-Shortcuts work while a VinylDeck window is focused.
+### Crate Wrapped
+
+The **Wrapped** button in the Crate header opens a monthly recap for the selected source filter:
+
+- total listens and unique records, artists and tracks
+- the five most played records
+- top track and top artist
+- the rarest pressing you played
+- the busiest day
+
+Months without listens are skipped. Buckets use your local clock, so late-night listening lands on the day you experienced it.
+
+## Settings
+
+Settings persist across Main, Mini and restarts. The Rust backend validates and stores them.
+
+| Tab | Options |
+| --- | --- |
+| Look | Noir / Glass shell, Light / Dark / Halloween scheme, interface language |
+| Vinyl | Art Ambient, vinyl wobble, film grain |
+| Display | Window mode, always on top, lean-back, cursor hide, idle timeout, Mini transparency |
+| Source | Auto or a specific media session |
+| Other | Keyboard shortcuts, quit to tray, start at login, sleep timer, OBS overlay URL, Discord application ID |
+| About | Version and app details, empty-state test |
+
+### Language
+
+English and Russian are complete translations, including the tray menu, tooltips and screen-reader labels. **Auto** follows the OS locale. Switch with the round EN/RU button, `L`, the right-click menu, or Settings -> Look -> Language.
+
+### Player source
+
+When several media apps are open, Settings -> Source controls which session the deck follows:
+
+- **Auto** follows whichever app starts or resumes playback, then the last one that played, then a paused session.
+- Picking a specific app pins it. The choice is remembered even while that app is closed, and the menu shows "Saved source - not running".
+
+The same list appears as **Player source** in the right-click menu.
+
+### Start at login
+
+**Start At Login** uses the native mechanism for your platform: the registry Run key on Windows and an XDG autostart entry on Linux. It is off by default and only starts the app; it does not start playback.
+
+## Keyboard shortcuts
+
+Shortcuts work while a VinylDeck window is focused. Disable them in Settings -> Other; `Escape` stays available.
 
 | Action | Shortcut |
 | --- | --- |
 | Play / pause | `Space` |
-| Previous | `Left` |
-| Next | `Right` |
-| Seek back / forward 5s | `Shift+Left` / `Shift+Right` |
+| Play / pause (global) | `Ctrl+Alt+Space` |
+| Previous / next | `Left` / `Right` |
+| Seek -5 s / +5 s | `Shift+Left` / `Shift+Right` |
 | Fullscreen | `F` |
 | Mini player | `M` |
+| Mini player (global) | `Ctrl+Alt+M` |
 | Cycle shell | `T` |
 | Settings | `S` |
-| Toggle Art Ambient | `A` |
+| Art Ambient | `A` |
 | The Crate | `C` |
-| Show keyboard shortcuts | `?` |
-| Close the topmost menu, crate, or settings / leave fullscreen | `Escape` |
+| Switch language | `L` |
+| Shortcut cheat sheet | `?` |
+| Close the topmost surface | `Escape` |
 | Quit | `Ctrl+Q` |
 
-Disable shortcuts in Settings -> Other. Escape remains available for closing the cheat sheet, menus, the crate, Settings, and leaving fullscreen. Press `?` in Main or Fullscreen to open the cheat sheet; Mini ignores it. Escape closes the topmost surface in this order: keyboard shortcuts, context menu, The Crate, Settings, fullscreen.
+`?` opens the cheat sheet in Main and Fullscreen; Mini ignores it. Escape closes the topmost surface in this order: cheat sheet, context menu, the Crate, Settings, fullscreen.
 
-The progress ring around the record is a keyboard slider: `Tab` to it, then use `Left` / `Right` (with or without `Shift`) to seek 5 seconds, or `Home` to restart the track. While Settings or the crate is open, `Tab` stays inside it and focus returns to where you were when it closes.
+The two global shortcuts work while another application has focus. If the desktop already owns a combination, registration is skipped rather than failing the app.
 
-Start With Windows is opt-in. When enabled, VinylDeck launches automatically after sign-in so it can sit ready while you start music normally.
+## Context menu
 
-## Settings
+Right-click the deck for playback actions, **Sleep 30 min**, **Sleep after track**, **Cancel sleep timer** (while active), Art Ambient, fullscreen, Mini, Settings, Player source and Quit. Mini shows only the actions that make sense for the compact window.
 
-Settings persist across app windows.
+## Sleep timer
 
-<p align="center">
-  <img src="../app-screenshots/13-glass-settings-about.png" width="600" alt="Settings Dialog" />
-</p>
+Start a timer from Settings -> Other or the context menu:
 
-| Section | Options |
+- Off, 15, 30, 45 or 60 minutes
+- End of track
+
+The timer runs in Rust, so switching between Main, Mini and the tray does not reset it. When it fires, playback pauses and the tonearm lifts and parks. Timers are not persisted across restarts.
+
+## OBS overlay
+
+VinylDeck serves a local overlay at:
+
+```text
+http://127.0.0.1:43110/overlay
+```
+
+Add it as an OBS **Browser Source** (transparent page, self-refreshing). Also available:
+
+| Path | Content |
 | --- | --- |
-| Look | Noir and Glass visual shells |
-| Vinyl | Vinyl wobble, film grain, album-art ambient lighting |
-| Display | Main/fullscreen/mini, always-on-top, lean-back, cursor behavior, idle timeout, Mini Transparency |
-| Source | Which media session VinylDeck follows (Auto, or a specific app) |
-| Other | Keyboard Shortcuts, Quit To Tray, Start With Windows, Sleep Timer |
-| About | App identity and build information |
+| `/overlay` | Transparent browser-source page |
+| `/state` | Current track/state as JSON, for custom scenes |
+| `/artwork` | Cached cover image |
 
-When more than one media app is open, Settings -> Source chooses which session the deck follows. Auto (the default) follows whichever app is playing, then the last one that played, and the choice is remembered between launches.
+The server binds to localhost only and rejects requests whose `Host` header is not `127.0.0.1:43110` or `localhost:43110`. Other websites cannot read your listening state. The URL is listed in Settings -> Other.
 
-## Context Menu
+## Discord Rich Presence
 
-Right-click the player to open the VinylDeck command menu. It includes playback actions, Sleep 30 min, Sleep after track, Cancel sleep timer (while one is running), Art Ambient, fullscreen, mini player, Settings, Player source, and Quit. Mini mode keeps only actions that make sense for the compact window.
+Presence is opt-in and off by default. Create a Discord application in the [Discord Developer Portal](https://discord.com/developers/applications), copy its **Application ID**, and paste it into Settings -> Other. VinylDeck validates the numeric ID and mirrors the track, artist, album and elapsed time over the local Discord IPC socket. It only sends when the track or play state changes, and the ID never leaves your machine except to Discord.
 
-## Sleep Timer
+Clear the field to turn presence off.
 
-Settings -> Other offers a Sleep Timer keypad: Off, 15, 30, 45, or 60 minutes, or End of track. The same 30-minute and end-of-track choices are in the right-click menu, with Cancel sleep timer while one is active. The timer runs in the backend, so switching between Main, Mini, and the tray does not reset it. When it fires, playback pauses and the tonearm lifts and parks on its rest. Timers are ephemeral and do not survive a restart.
+## Visual behavior
 
-## Visual Behavior
-
-- Noir and Glass are the current visual shells.
-- Art Ambient uses album colors to tint the atmosphere.
-- Track changes triggered inside VinylDeck animate directionally.
-- The record stays visually anchored and receives an in-place skip impulse.
+- Noir and Glass are the live shells; Light, Dark and Halloween are color schemes layered over them.
+- Art Ambient tints the room with the album palette.
+- The vinyl material is derived from the cover, and wear is part of the pressing.
+- Track changes inside VinylDeck animate directionally: next enters from the left, previous from the right.
+- When the window is hidden or playback is paused, the record and animations suspend.
 
 ## Troubleshooting
 
-See [Troubleshooting](./TROUBLESHOOTING.md) for media-session detection, disabled controls, WebView2, tray, and shortcut issues.
+See [Troubleshooting](./TROUBLESHOOTING.md) for media detection, disabled controls, audio reactivity, transparency, updates and installer issues.
