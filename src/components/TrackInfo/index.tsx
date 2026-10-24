@@ -45,7 +45,7 @@ export function TrackInfo({
   showTooltip = true,
 }: TrackInfoProps) {
   const trackKey = `${track}::${artist}`;
-  const isEmpty = !track || track === "Nothing Playing";
+  const isEmpty = !track;
   const slideVariants = {
     enter: {
       x: enterX(direction),

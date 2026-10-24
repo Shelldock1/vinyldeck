@@ -8,7 +8,6 @@ import type { KeyboardEvent } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../Tooltip";
 import {
   SCHEME_IDS,
-  SCHEME_LABELS,
   applyVisualMode,
   resetAmbientColors,
 } from "../../lib/themes/applier";
@@ -17,8 +16,10 @@ import { useVinylDeckStore } from "../../lib/playback/store";
 import { commitSettings } from "../../lib/settings";
 import "./ThemeMenu.css";
 import { logger } from "../../lib/logger";
+import { useT } from "../../lib/i18n";
 
 export function ThemeMenu() {
+  const t = useT();
   const scheme = useVinylDeckStore((s) => s.settings.scheme);
   const hydrateSettings = useVinylDeckStore((s) => s.hydrateSettings);
   const [open, setOpen] = useState(false);
@@ -99,7 +100,7 @@ export function ThemeMenu() {
             ref={triggerRef}
             type="button"
             className="settings-trigger theme-menu__trigger"
-            aria-label="Theme"
+            aria-label={t.theme.menu}
             aria-haspopup="menu"
             aria-expanded={open}
             data-open={open || undefined}
@@ -118,14 +119,14 @@ export function ThemeMenu() {
             </svg>
           </button>
         </TooltipTrigger>
-        <TooltipContent>Theme</TooltipContent>
+        <TooltipContent>{t.theme.menu}</TooltipContent>
       </Tooltip>
 
       {open && (
         <div
           className="theme-menu__list"
           role="menu"
-          aria-label="Theme"
+          aria-label={t.theme.menu}
           tabIndex={-1}
           onKeyDown={handleMenuKeyDown}
         >
@@ -145,7 +146,7 @@ export function ThemeMenu() {
                 onClick={() => handleSelect(id)}
               >
                 <span className={`theme-menu__swatch theme-menu__swatch--${id}`} aria-hidden="true" />
-                <span className="theme-menu__label">{SCHEME_LABELS[id]}</span>
+                <span className="theme-menu__label">{t.theme.schemes[id]}</span>
                 {selected && (
                   <svg
                     className="theme-menu__check"

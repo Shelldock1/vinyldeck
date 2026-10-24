@@ -5,6 +5,7 @@ use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 
+use crate::i18n::{LANGUAGES, LANGUAGE_AUTO};
 use crate::media::authority::PlaybackAuthority;
 use crate::window::{self, MINI_LABEL};
 
@@ -54,6 +55,8 @@ pub struct PersistedSettings {
     /// Discord application id for Rich Presence. Empty disables the feature;
     /// there is no generic id that can be shipped, so the user supplies one.
     pub discord_client_id: String,
+    /// UI language: `"auto"` (follow the OS), `"en"`, or `"ru"`.
+    pub language: String,
 }
 
 impl Default for PersistedSettings {
@@ -78,6 +81,7 @@ impl Default for PersistedSettings {
             player_source_id: String::new(),
             player_source_name: String::new(),
             discord_client_id: String::new(),
+            language: LANGUAGE_AUTO.to_string(),
         }
     }
 }
@@ -103,6 +107,7 @@ pub struct SettingsPatch {
     pub player_source_id: Option<String>,
     pub player_source_name: Option<String>,
     pub discord_client_id: Option<String>,
+    pub language: Option<String>,
 }
 
 pub struct SettingsState {
@@ -144,6 +149,9 @@ impl SettingsState {
         sync_authority_selection(app, &next);
         save_settings(app, &next)?;
         sync_mini_transparency(app, &next, &current);
+        if next.language != current.language {
+            crate::tray::set_language(app, &next.language);
+        }
         emit_settings_changed(app, &next);
 
         Ok(next)
@@ -161,6 +169,7 @@ impl SettingsState {
         sync_authority_selection(app, &next);
         save_settings(app, &next)?;
         sync_mini_transparency(app, &next, &current);
+        crate::tray::set_language(app, &next.language);
         emit_settings_changed(app, &next);
 
         Ok(next)
@@ -289,6 +298,8 @@ fn validate_settings(value: Option<Value>) -> PersistedSettings {
         player_source_id: read_source_text(raw.get("playerSourceId")),
         player_source_name: read_source_text(raw.get("playerSourceName")),
         discord_client_id: read_discord_client_id(raw.get("discordClientId")),
+        language: read_string_choice(raw.get("language"), LANGUAGES)
+            .unwrap_or_else(|| defaults.language.clone()),
     }
 }
 
@@ -361,6 +372,12 @@ fn apply_patch(current: &PersistedSettings, patch: SettingsPatch) -> PersistedSe
     }
     if let Some(value) = patch.discord_client_id {
         next.discord_client_id = normalize_discord_client_id(&value);
+    }
+    if let Some(language) = patch
+        .language
+        .filter(|value| LANGUAGES.contains(&value.as_str()))
+    {
+        next.language = language;
     }
 
     next.art_ambient = next.ambient_mode != "off";
@@ -717,5 +734,35 @@ mod tests {
 
         assert_eq!(auto.player_source_id, "");
         assert_eq!(auto.player_source_name, "");
+    }
+
+    #[test]
+    fn language_accepts_only_known_values() {
+        assert_eq!(PersistedSettings::default().language, "auto");
+        assert_eq!(
+            validate_settings(Some(json!({ "language": "ru" }))).language,
+            "ru"
+        );
+        assert_eq!(
+            validate_settings(Some(json!({ "language": "klingon" }))).language,
+            "auto"
+        );
+
+        let patched = apply_patch(
+            &PersistedSettings::default(),
+            SettingsPatch {
+                language: Some("en".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+        assert_eq!(patched.language, "en");
+        let ignored = apply_patch(
+            &patched,
+            SettingsPatch {
+                language: Some("de".to_string()),
+                ..SettingsPatch::default()
+            },
+        );
+        assert_eq!(ignored.language, "en");
     }
 }

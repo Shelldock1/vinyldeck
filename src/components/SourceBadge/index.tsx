@@ -3,12 +3,14 @@
 // Bottom-right corner. Fades in on source change.
 
 import { AnimatePresence, motion } from "motion/react";
+import { useT } from "../../lib/i18n";
 
 interface SourceBadgeProps {
   sourceName: string;
 }
 
 export function SourceBadge({ sourceName }: SourceBadgeProps) {
+  const t = useT();
   if (!sourceName) return null;
 
   return (
@@ -21,7 +23,7 @@ export function SourceBadge({ sourceName }: SourceBadgeProps) {
         exit={{ opacity: 0, y: 4 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         whileHover={{ opacity: 0.9 }}
-        aria-label={`Now playing from ${sourceName}`}
+        aria-label={t.badge.nowPlayingFrom(sourceName)}
       >
         <span className="source-badge__dot" />
         <span className="source-badge__label">{sourceName}</span>

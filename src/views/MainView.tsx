@@ -66,6 +66,8 @@ import {
   resetAmbientColors,
 } from "../lib/themes/applier";
 import { setNativeWindowMode } from "../lib/window";
+import { useLanguage, useT } from "../lib/i18n";
+import { toggleLanguage } from "../lib/i18n/switch";
 import {
   cancelSleepTimer,
   getSleepTimer,
@@ -160,6 +162,8 @@ export function MainView() {
     (s) => s.markTrackChangeIntent,
   );
   const devForceEmpty = useVinylDeckStore((s) => s.devForceEmpty);
+  const t = useT();
+  const language = useLanguage();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("LOOK");
   const [needlePreview, setNeedlePreview] = useState<number | null>(null);
@@ -335,21 +339,21 @@ export function MainView() {
     () => [
       {
         id: "play-pause",
-        label: isPlaying ? "Pause" : "Play",
+        label: isPlaying ? t.common.pause : t.common.play,
         kbd: "Space",
         disabled: !canUseTransportControls(effectivePlayback),
         onSelect: isPlaying ? handlePause : handlePlay,
       },
       {
         id: "previous",
-        label: "Previous",
+        label: t.common.previous,
         kbd: "Left",
         disabled: !canUseSkipControls(effectivePlayback),
         onSelect: handlePrevious,
       },
       {
         id: "next",
-        label: "Next",
+        label: t.common.next,
         kbd: "Right",
         disabled: !canUseSkipControls(effectivePlayback),
         onSelect: handleNext,
@@ -357,14 +361,18 @@ export function MainView() {
       {
         id: "art-ambient",
         label:
-          settings.ambientMode === "off" ? "Art Ambient On" : "Art Ambient Off",
+          settings.ambientMode === "off"
+            ? t.contextMenu.artAmbientOn
+            : t.contextMenu.artAmbientOff,
         kbd: "A",
         onSelect: handleArtAmbientToggle,
       },
       {
         id: "fullscreen",
         label:
-          settings.windowMode === "fullscreen" ? "Exit Fullscreen" : "Fullscreen",
+          settings.windowMode === "fullscreen"
+            ? t.contextMenu.exitFullscreen
+            : t.contextMenu.fullscreen,
         kbd: "F",
         onSelect: () =>
           handleWindowModeSelect(
@@ -373,19 +381,19 @@ export function MainView() {
       },
       {
         id: "mini",
-        label: "Mini Player",
+        label: t.contextMenu.miniPlayer,
         kbd: "M",
         onSelect: () => handleWindowModeSelect("mini"),
       },
       {
         id: "crate",
-        label: "The Crate",
+        label: t.contextMenu.crate,
         kbd: "C",
         onSelect: () => setIsCrateOpen(true),
       },
       {
         id: "settings",
-        label: "Settings",
+        label: t.contextMenu.settings,
         onSelect: () => {
           setSettingsTab("LOOK");
           setIsSettingsOpen(true);
@@ -393,7 +401,7 @@ export function MainView() {
       },
       {
         id: "player-source",
-        label: "Player source\u2026",
+        label: t.contextMenu.playerSource,
         onSelect: () => {
           setSettingsTab("SOURCE");
           setIsSettingsOpen(true);
@@ -401,26 +409,32 @@ export function MainView() {
       },
       {
         id: "sleep-30",
-        label: "Sleep 30 min",
+        label: t.contextMenu.sleep30,
         onSelect: () => handleSleepStart("minutes", 30),
       },
       {
         id: "sleep-track",
-        label: "Sleep after track",
+        label: t.contextMenu.sleepTrack,
         onSelect: () => handleSleepStart("endOfTrack"),
       },
       ...(sleepTimer
         ? [
             {
               id: "sleep-cancel",
-              label: "Cancel sleep timer",
+              label: t.contextMenu.sleepCancel,
               onSelect: handleSleepCancel,
             },
           ]
         : []),
       {
+        id: "language",
+        label: `${t.contextMenu.language}: ${t.language.names[language === "ru" ? "en" : "ru"]}`,
+        kbd: "L",
+        onSelect: () => void toggleLanguage(),
+      },
+      {
         id: "quit",
-        label: "Quit",
+        label: t.contextMenu.quit,
         kbd: "Ctrl Q",
         destructive: true,
         onSelect: () => {
@@ -439,6 +453,8 @@ export function MainView() {
       settings.ambientMode,
       settings.windowMode,
       sleepTimer,
+      t,
+      language,
     ],
   );
 
@@ -557,13 +573,13 @@ export function MainView() {
                 />
               </div>
             </TooltipTrigger>
-            <TooltipContent>Drag to seek</TooltipContent>
+            <TooltipContent>{t.main.dragToSeek}</TooltipContent>
           </Tooltip>
 
           {/* Track info — Phase 7: fades on idle */}
           <div style={idleHideStyle}>
             <TrackInfo
-              track={effectivePlayback.track || "Nothing Playing"}
+              track={effectivePlayback.track}
               artist={effectivePlayback.artist}
               album={effectivePlayback.album}
               direction={trackChangeDirection}
@@ -622,7 +638,7 @@ export function MainView() {
           <button
             type="button"
             className="settings-trigger crate-trigger"
-            aria-label="Open the crate"
+            aria-label={t.main.openCrate}
             aria-haspopup="dialog"
             aria-expanded={isCrateOpen}
             onPointerDown={(event) => {
@@ -655,7 +671,7 @@ export function MainView() {
           </button>
         </TooltipTrigger>
         <TooltipContent>
-          The Crate <Kbd>C</Kbd>
+          {t.main.theCrate} <Kbd>C</Kbd>
         </TooltipContent>
       </Tooltip>
 
@@ -665,7 +681,7 @@ export function MainView() {
           <button
             type="button"
             className="settings-trigger mini-trigger"
-            aria-label="Open mini player"
+            aria-label={t.main.openMini}
             onPointerDown={(event) => {
               event.stopPropagation();
             }}
@@ -708,7 +724,7 @@ export function MainView() {
           </button>
         </TooltipTrigger>
         <TooltipContent>
-          Mini Player <Kbd>M</Kbd>
+          {t.main.miniPlayer} <Kbd>M</Kbd>
         </TooltipContent>
       </Tooltip>
 
@@ -718,7 +734,7 @@ export function MainView() {
           <button
             type="button"
             className="settings-trigger"
-            aria-label="Open settings"
+            aria-label={t.main.openSettings}
             aria-haspopup="dialog"
             aria-expanded={isSettingsOpen}
             onPointerDown={(event) => {
@@ -799,12 +815,38 @@ export function MainView() {
           </button>
         </TooltipTrigger>
         <TooltipContent>
-          Settings <Kbd>S</Kbd>
+          {t.main.settings} <Kbd>S</Kbd>
         </TooltipContent>
       </Tooltip>
 
       {/* z:90 — Theme (scheme) menu */}
       <ThemeMenu />
+
+      {/* z:90 — Language toggle: shows the current language, click flips it */}
+      <Tooltip side="bottom">
+        <TooltipTrigger>
+          <button
+            type="button"
+            className="settings-trigger language-trigger"
+            aria-label={t.language.switchTo(t.language.names[language === "ru" ? "en" : "ru"])}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void toggleLanguage();
+            }}
+          >
+            <span className="language-trigger__code" aria-hidden="true">
+              {language.toUpperCase()}
+            </span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {t.language.switchTo(t.language.names[language === "ru" ? "en" : "ru"])} <Kbd>L</Kbd>
+        </TooltipContent>
+      </Tooltip>
 
       {/* z:80 — The Crate overlay */}
       <Crate

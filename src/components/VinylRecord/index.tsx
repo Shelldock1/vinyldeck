@@ -19,6 +19,7 @@ import type { CSSProperties } from "react";
 import { useVinylRotation } from "../../hooks/useVinylRotation";
 import type { TrackChangeDirection } from "../../lib/trackTransition/types";
 import { VinylShaderCanvas } from "./VinylShaderCanvas";
+import { useT } from "../../lib/i18n";
 import type { VinylShaderHandle } from "./VinylShaderCanvas";
 import "./VinylRecord.css";
 import "./pressings.css";
@@ -59,6 +60,7 @@ export function VinylRecord({
   wear = 0,
   wearAngle = 0,
 }: VinylRecordProps) {
+  const t = useT();
   const sheenRef = useRef<HTMLDivElement>(null);
   const shaderRef = useRef<VinylShaderHandle>(null);
   const mouseFrameRef = useRef<number | null>(null);
@@ -204,7 +206,7 @@ export function VinylRecord({
       <div
         className="vinyl-disc"
         id="vinyl-disc"
-        aria-label={`Vinyl record${isPlaying ? " spinning" : " paused"}`}
+        aria-label={isPlaying ? t.vinyl.spinning : t.vinyl.paused}
       >
         {artworkDataUrl && (
           <div className="vinyl-translucent-ghost" style={ghostArtworkStyle} />

@@ -12,6 +12,7 @@ import {
 import { useVinylDeckStore } from "../lib/playback/store";
 import { isShortcutCheatSheetKey } from "../lib/shortcuts";
 import { setNativeWindowMode } from "../lib/window";
+import { toggleLanguage } from "../lib/i18n/switch";
 import type { RenderWindowMode, WindowMode } from "../lib/window/types";
 import { logger } from "../lib/logger";
 
@@ -189,6 +190,10 @@ export function useKeyboardShortcuts({
         case "KeyS":
           event.preventDefault();
           optionsRef.current.onOpenSettings?.();
+          break;
+        case "KeyL":
+          event.preventDefault();
+          void toggleLanguage();
           break;
         case "KeyC":
           if (!optionsRef.current.onToggleCrate) break;

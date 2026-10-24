@@ -4,6 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { commitSettings } from "../../lib/settings";
 import { useVinylDeckStore } from "../../lib/playback/store";
 import { setNativeWindowMode } from "../../lib/window";
+import { useT } from "../../lib/i18n";
 import "./TitleBar.css";
 import { logger } from "../../lib/logger";
 
@@ -27,6 +28,7 @@ interface TitleBarProps {
 export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const t = useT();
   const appWindow = isTauri() ? getCurrentWindow() : null;
 
   useEffect(() => {
@@ -123,8 +125,8 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
         <button
           type="button"
           className="titlebar__button"
-          aria-label="Minimize window"
-          title="Minimize"
+          aria-label={t.titleBar.minimizeWindow}
+          title={t.titleBar.minimize}
           onClick={handleMinimize}
         >
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -136,8 +138,8 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
           <button
             type="button"
             className="titlebar__button"
-            aria-label="Exit fullscreen"
-            title="Exit fullscreen (Esc)"
+            aria-label={t.titleBar.exitFullscreen}
+            title={t.titleBar.exitFullscreenHint}
             onClick={handleExitFullscreen}
           >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -154,8 +156,8 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
           <button
             type="button"
             className="titlebar__button"
-            aria-label={isMaximized ? "Restore window" : "Maximize window"}
-            title={isMaximized ? "Restore" : "Maximize"}
+            aria-label={isMaximized ? t.titleBar.restoreWindow : t.titleBar.maximizeWindow}
+            title={isMaximized ? t.titleBar.restore : t.titleBar.maximize}
             onClick={handleToggleMaximize}
           >
             {isMaximized ? (
@@ -174,8 +176,8 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
         <button
           type="button"
           className="titlebar__button titlebar__button--close"
-          aria-label="Close window"
-          title="Close"
+          aria-label={t.titleBar.closeWindow}
+          title={t.common.close}
           onClick={handleClose}
         >
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

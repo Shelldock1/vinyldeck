@@ -122,6 +122,7 @@ npm run tauri build -- --bundles deb,appimage
 | Settings | `S` |
 | Art Ambient | `A` |
 | The Crate (your collection) | `C` |
+| Switch language (English / Русский) | `L` |
 | Show keyboard shortcuts | `?` |
 | Close the topmost surface | `Escape` |
 | Quit | `Ctrl+Q` |

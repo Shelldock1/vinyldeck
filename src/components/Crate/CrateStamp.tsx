@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useCrateStore } from "../../lib/collection";
 import { formatPressingNumber, rarityFor } from "../../lib/collection/records";
 import type { CollectedRecord } from "../../lib/collection/types";
+import { useT } from "../../lib/i18n";
 
 const NEW_PRESSING_MS = 5200;
 
@@ -16,6 +17,7 @@ interface CrateStampProps {
 }
 
 export function CrateStamp({ record, onOpenCrate }: CrateStampProps) {
+  const t = useT();
   const lastNewPressing = useCrateStore((state) => state.lastNewPressing);
   const [celebrating, setCelebrating] = useState(false);
 
@@ -34,7 +36,8 @@ export function CrateStamp({ record, onOpenCrate }: CrateStampProps) {
   if (!record) return null;
 
   const rarity = rarityFor(record.recipe);
-  const plays = record.playCount === 1 ? "1 play" : `${record.playCount} plays`;
+  const plays = t.stamp.plays(record.playCount);
+  const number = formatPressingNumber(record.pressingNumber, t.common.numberPrefix);
 
   return (
     <button
@@ -43,16 +46,16 @@ export function CrateStamp({ record, onOpenCrate }: CrateStampProps) {
       data-rarity={rarity}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={onOpenCrate}
-      aria-label={`${formatPressingNumber(record.pressingNumber)}, ${record.pressingName ?? "pressing"}. Open the crate`}
+      aria-label={`${number}, ${record.pressingName ?? t.stamp.pressing}. ${t.stamp.openCrate}`}
     >
       <span className="crate-stamp__dot" aria-hidden="true" />
       {celebrating ? (
         <span className="crate-stamp__text">
-          <strong>New pressing</strong> · {record.pressingName ?? formatPressingNumber(record.pressingNumber)}
+          <strong>{t.stamp.newPressing}</strong> · {record.pressingName ?? number}
         </span>
       ) : (
         <span className="crate-stamp__text">
-          {formatPressingNumber(record.pressingNumber)}
+          {number}
           {record.pressingName ? ` · ${record.pressingName}` : ""} · {plays}
         </span>
       )}

@@ -6,6 +6,7 @@ import { Fragment, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { SHORTCUTS, SHORTCUT_GROUPS } from "../../lib/shortcuts";
+import { useT } from "../../lib/i18n";
 import { Kbd } from "../Kbd";
 import "./ShortcutSheet.css";
 
@@ -18,6 +19,7 @@ export function ShortcutSheet({ open, onClose }: ShortcutSheetProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const reduceMotion = useReducedMotion();
+  const t = useT();
 
   useFocusTrap(overlayRef, open, closeRef);
 
@@ -29,12 +31,12 @@ export function ShortcutSheet({ open, onClose }: ShortcutSheetProps) {
       className="shortcut-sheet"
       role="dialog"
       aria-modal="true"
-      aria-label="Keyboard shortcuts"
+      aria-label={t.shortcuts.title}
     >
       <button
         type="button"
         className="shortcut-sheet__scrim"
-        aria-label="Close keyboard shortcuts"
+        aria-label={t.shortcuts.close}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -53,14 +55,14 @@ export function ShortcutSheet({ open, onClose }: ShortcutSheetProps) {
       >
         <header className="shortcut-sheet__header">
           <div className="shortcut-sheet__heading">
-            <span className="shortcut-sheet__eyebrow">Controls</span>
-            <h2 className="shortcut-sheet__title">Keyboard shortcuts</h2>
+            <span className="shortcut-sheet__eyebrow">{t.shortcuts.eyebrow}</span>
+            <h2 className="shortcut-sheet__title">{t.shortcuts.title}</h2>
           </div>
           <button
             ref={closeRef}
             type="button"
             className="shortcut-sheet__close"
-            aria-label="Close keyboard shortcuts"
+            aria-label={t.shortcuts.close}
             onClick={onClose}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
@@ -84,14 +86,14 @@ export function ShortcutSheet({ open, onClose }: ShortcutSheetProps) {
                 aria-labelledby={id}
               >
                 <h3 id={id} className="shortcut-sheet__group-label">
-                  {group}
+                  {t.shortcuts.groups[group]}
                 </h3>
                 <ul className="shortcut-sheet__list">
                   {SHORTCUTS.filter((shortcut) => shortcut.group === group).map(
                     (shortcut) => (
                       <li key={shortcut.id} className="shortcut-sheet__row">
                         <span className="shortcut-sheet__action">
-                          {shortcut.action}
+                          {t.shortcuts.actions[shortcut.id] ?? shortcut.action}
                         </span>
                         <KeyCombo combo={shortcut.key} />
                       </li>
@@ -105,8 +107,9 @@ export function ShortcutSheet({ open, onClose }: ShortcutSheetProps) {
 
         <footer className="shortcut-sheet__footer">
           <p className="shortcut-sheet__hint">
-            Press <Kbd className="shortcut-sheet__keycap">?</Kbd> or{" "}
-            <Kbd className="shortcut-sheet__keycap">Esc</Kbd> to close
+            {t.shortcuts.hintPress} <Kbd className="shortcut-sheet__keycap">?</Kbd>{" "}
+            {t.shortcuts.hintOr} <Kbd className="shortcut-sheet__keycap">Esc</Kbd>{" "}
+            {t.shortcuts.hintToClose}
           </p>
         </footer>
       </motion.section>

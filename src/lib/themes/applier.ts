@@ -29,12 +29,6 @@ export const THEME_LABELS: Record<ThemeId, string> = {
 
 export const SCHEME_IDS: SchemeId[] = ["light", "dark", "halloween"];
 
-export const SCHEME_LABELS: Record<SchemeId, string> = {
-  light: "Light",
-  dark: "Dark",
-  halloween: "Halloween",
-};
-
 /** Matches the 300ms token interpolation in schemes.css, plus a frame of slack. */
 const SCHEME_SWITCH_MS = 320;
 

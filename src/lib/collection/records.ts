@@ -113,8 +113,8 @@ export function wearFor(playCount: number): number {
   return 1 - Math.exp(-playCount / WEAR_PLAYS);
 }
 
-export function formatPressingNumber(value: number): string {
-  return `No. ${String(Math.max(0, Math.floor(value))).padStart(3, "0")}`;
+export function formatPressingNumber(value: number, prefix = "No."): string {
+  return `${prefix} ${String(Math.max(0, Math.floor(value))).padStart(3, "0")}`;
 }
 
 // ── Shelf view helpers (search, sort, stats) ──────────────────

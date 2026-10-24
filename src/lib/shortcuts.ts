@@ -115,6 +115,13 @@ export const SHORTCUTS: ShortcutDefinition[] = [
     readmeRow: "| The Crate (your collection) | `C` |",
   },
   {
+    id: "language",
+    key: "L",
+    action: "Switch language",
+    group: "App",
+    readmeRow: "| Switch language (English / Русский) | `L` |",
+  },
+  {
     id: "shortcuts",
     key: "?",
     action: "Show keyboard shortcuts",

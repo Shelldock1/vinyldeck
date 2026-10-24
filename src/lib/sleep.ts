@@ -8,6 +8,8 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useVinylDeckStore } from "./playback/store";
 import { logger } from "./logger";
+import { en } from "./i18n/en";
+import type { Dict } from "./i18n/types";
 
 export const SLEEP_TIMER_START_COMMAND = "cmd_sleep_timer_start";
 export const SLEEP_TIMER_CANCEL_COMMAND = "cmd_sleep_timer_cancel";
@@ -100,17 +102,18 @@ export function sleepRemainingMinutes(
 export function formatSleepTimerStatus(
   snapshot: SleepTimerSnapshot | null,
   now = Date.now(),
+  text: Dict["sleep"] = en.sleep,
 ): string {
-  if (!snapshot) return "Off";
+  if (!snapshot) return text.off;
 
   if (snapshot.mode === "endOfTrack") {
-    return snapshot.track ? `After ${snapshot.track}` : "After this track";
+    return snapshot.track ? text.afterTrack(snapshot.track) : text.afterThisTrack;
   }
 
   const remaining = sleepRemainingMinutes(snapshot, now);
-  if (remaining === null) return "Off";
-  if (remaining <= 0) return "Pausing now";
-  return `${remaining} min left`;
+  if (remaining === null) return text.off;
+  if (remaining <= 0) return text.pausingNow;
+  return text.minutesLeft(remaining);
 }
 
 // ── Browser development fallback ──────────────────────────────

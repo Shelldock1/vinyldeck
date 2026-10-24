@@ -27,6 +27,9 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { WindowMode } from "../../lib/window/types";
 import "./Settings.css";
 import { logger } from "../../lib/logger";
+import { LANGUAGE_SETTINGS, useT } from "../../lib/i18n";
+import { setLanguage } from "../../lib/i18n/switch";
+import { version as APP_VERSION } from "../../../package.json";
 
 interface SettingsProps {
   open: boolean;
@@ -37,25 +40,13 @@ interface SettingsProps {
 const SETTINGS_TABS = ["LOOK", "VINYL", "DISPLAY", "SOURCE", "OTHER", "ABOUT"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
-const SHELL_CARD_META: Record<
-  ThemeId,
-  { bg: string; accent: string; note: string; material: string }
-> = {
-  noir: {
-    bg: "#000000",
-    accent: "#f1efea",
-    note: "OLED velvet room",
-    material: "Matte black silk",
-  },
-  glass: {
-    bg: "#f5f2ea",
-    accent: "#0070d9",
-    note: "Liquid display case",
-    material: "Refractive glass",
-  },
+const SHELL_CARD_META: Record<ThemeId, { bg: string; accent: string }> = {
+  noir: { bg: "#000000", accent: "#f1efea" },
+  glass: { bg: "#f5f2ea", accent: "#0070d9" },
 };
 
 export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) {
+  const t = useT();
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [players, setPlayers] = useState<MediaPlayer[]>([]);
   const [sleepTimer, setSleepTimer] = useState<SleepTimerSnapshot | null>(null);
@@ -250,7 +241,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
           className="settings-overlay"
           aria-modal="true"
           role="dialog"
-          aria-label="VinylDeck settings"
+          aria-label={t.settings.dialog}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -259,7 +250,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
           <button
             className="settings-overlay__scrim"
             type="button"
-            aria-label="Close settings"
+            aria-label={t.settings.close}
             tabIndex={-1}
             onClick={onClose}
           />
@@ -275,8 +266,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
             <button
               type="button"
               className="settings-panel__close"
-              aria-label="Close settings"
-              title="Close"
+              aria-label={t.settings.close}
+              title={t.common.close}
               onClick={onClose}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
@@ -290,8 +281,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
             </button>
             <div className="settings-panel__edge-light" aria-hidden="true" />
             <div className="settings-panel__sidebar">
-              <p className="settings-panel__eyebrow">Preferences</p>
-              <nav className="settings-nav" aria-label="Settings sections">
+              <p className="settings-panel__eyebrow">{t.settings.eyebrow}</p>
+              <nav className="settings-nav" aria-label={t.settings.nav}>
                 {SETTINGS_TABS.map((tab) => {
                   const active = tab === activeTab;
 
@@ -304,25 +295,27 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       onClick={() => setActiveTab(tab)}
                     >
                       <span className="settings-nav__rail" aria-hidden="true" />
-                      <span>{tab}</span>
+                      <span>{t.settings.tabs[tab].toUpperCase()}</span>
                     </button>
                   );
                 })}
               </nav>
             </div>
             <div className="settings-panel__content">
-              <p className="settings-panel__section-label">{activeTab}</p>
+              <p className="settings-panel__section-label">
+                {t.settings.tabs[activeTab].toUpperCase()}
+              </p>
               {activeTab === "LOOK" ? (
                 <div className="settings-look">
                   <div className="settings-look__section">
                     <div className="settings-look__header">
-                      <h3>Shell</h3>
-                      <p>Choose the physical room around the record.</p>
+                      <h3>{t.settings.shellTitle}</h3>
+                      <p>{t.settings.shellCopy}</p>
                     </div>
                     <div
                       className="settings-theme-grid settings-shell-grid"
                       role="radiogroup"
-                      aria-label="Visual shell"
+                      aria-label={t.settings.shellGroup}
                     >
                       {THEME_IDS.map((theme) => {
                         const active = theme === currentTheme;
@@ -334,7 +327,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                             type="button"
                             role="radio"
                             aria-checked={active}
-                            aria-label={`${THEME_LABELS[theme]} shell`}
+                            aria-label={t.theme.shell(THEME_LABELS[theme])}
                             className={`settings-theme-card settings-shell-card settings-shell-card--${theme}${active ? " settings-theme-card--active" : ""}`}
                             onClick={() => handleThemeSelect(theme)}
                           >
@@ -353,10 +346,10 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                                 {THEME_LABELS[theme]}
                               </span>
                               <span className="settings-theme-card__note">
-                                {meta.note}
+                                {t.settings.shells[theme].note}
                               </span>
                               <span className="settings-card__material">
-                                {meta.material}
+                                {t.settings.shells[theme].material}
                               </span>
                             </span>
                           </button>
@@ -367,27 +360,53 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
 
                   <div className="settings-look__section">
                     <div className="settings-look__header">
-                      <h3>Art Ambient</h3>
-                      <p>
-                        Small album-colour glow using the same palette as the
-                        vinyl pressing.
-                      </p>
+                      <h3>{t.settings.artAmbientTitle}</h3>
+                      <p>{t.settings.artAmbientCopy}</p>
                     </div>
                     <div className="settings-toggle-list settings-toggle-list--compact">
                       <SettingsToggle
-                        label="Art Ambient"
-                        description="Subtle primary, secondary, and accent glows behind the record. Shortcut: A."
+                        label={t.settings.artAmbientToggle}
+                        description={t.settings.artAmbientDescription}
                         checked={ambientMode !== "off"}
                         onToggle={handleArtAmbientToggle}
                       />
+                    </div>
+                  </div>
+
+                  <div className="settings-look__section">
+                    <div className="settings-look__header">
+                      <h3>{t.settings.languageTitle}</h3>
+                      <p>{t.settings.languageCopy}</p>
+                    </div>
+                    <div
+                      className="settings-sleep__options"
+                      role="radiogroup"
+                      aria-label={t.settings.languageGroup}
+                    >
+                      {LANGUAGE_SETTINGS.map((language) => {
+                        const active = settings.language === language;
+                        return (
+                          <button
+                            key={language}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            lang={language === "auto" ? undefined : language}
+                            className={`settings-sleep__option${active ? " settings-sleep__option--active" : ""}`}
+                            onClick={() => void setLanguage(language)}
+                          >
+                            {t.language.names[language]}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
               ) : activeTab === "VINYL" ? (
                 <div className="settings-toggle-list">
                   <SettingsToggle
-                    label="Vinyl Wobble"
-                    description="Subtle platter imperfection while playback is active."
+                    label={t.settings.vinylWobble}
+                    description={t.settings.vinylWobbleDescription}
                     checked={settings.vinylWobble}
                     onToggle={() =>
                       updateBackendSettings({
@@ -396,8 +415,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                     }
                   />
                   <SettingsToggle
-                    label="Film Grain"
-                    description="Analog texture over the visual engine."
+                    label={t.settings.filmGrain}
+                    description={t.settings.filmGrainDescription}
                     checked={settings.filmGrain}
                     onToggle={() =>
                       updateBackendSettings({ filmGrain: !settings.filmGrain })
@@ -410,17 +429,17 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                     <div className="settings-slider-row__header">
                       <span className="settings-toggle-row__copy">
                         <span className="settings-toggle-row__label">
-                          Window Mode
+                          {t.settings.windowMode}
                         </span>
                         <span className="settings-toggle-row__description">
-                          Switch between main, fullscreen, and mini player.
+                          {t.settings.windowModeDescription}
                         </span>
                       </span>
                     </div>
                     <div
                       className="settings-window-mode-grid"
                       role="group"
-                      aria-label="Window mode"
+                      aria-label={t.settings.windowMode}
                     >
                       {(["main", "fullscreen", "mini"] as const).map((mode) => {
                         const active =
@@ -435,18 +454,10 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                           >
                             <span className="settings-theme-card__copy">
                               <span className="settings-theme-card__name">
-                                {mode === "main"
-                                  ? "Main"
-                                  : mode === "fullscreen"
-                                    ? "Fullscreen"
-                                    : "Mini"}
+                                {t.settings.windowModes[mode].name}
                               </span>
                               <span className="settings-theme-card__note">
-                                {mode === "main"
-                                  ? "Native shell"
-                                  : mode === "fullscreen"
-                                    ? "Lean-back view"
-                                    : "Resizable widget"}
+                                {t.settings.windowModes[mode].note}
                               </span>
                             </span>
                           </button>
@@ -456,14 +467,14 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                   </div>
                   <div className="settings-display__switch-grid">
                     <SettingsToggle
-                      label="Always On Top"
-                      description="Keep VinylDeck above other windows."
+                      label={t.settings.alwaysOnTop}
+                      description={t.settings.alwaysOnTopDescription}
                       checked={settings.alwaysOnTop}
                       onToggle={handleAlwaysOnTopToggle}
                     />
                     <SettingsToggle
-                      label="Lean-Back Mode"
-                      description="Let controls disappear while the record becomes the room."
+                      label={t.settings.leanBack}
+                      description={t.settings.leanBackDescription}
                       checked={settings.leanBackMode}
                       onToggle={() =>
                         updateBackendSettings({
@@ -472,8 +483,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       }
                     />
                     <SettingsToggle
-                      label="Cursor Hide"
-                      description="Hide the pointer when playback settles into idle."
+                      label={t.settings.cursorHide}
+                      description={t.settings.cursorHideDescription}
                       checked={settings.cursorHide}
                       onToggle={() =>
                         updateBackendSettings({
@@ -486,14 +497,14 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                     <div className="settings-slider-row__header">
                       <span className="settings-toggle-row__copy">
                         <span className="settings-toggle-row__label">
-                          Idle Timeout
+                          {t.settings.idleTimeout}
                         </span>
                         <span className="settings-toggle-row__description">
-                          Delay before controls fade from view.
+                          {t.settings.idleTimeoutDescription}
                         </span>
                       </span>
                       <span className="settings-slider-row__value">
-                        {settings.idleTimeoutSeconds}s
+                        {t.settings.seconds(settings.idleTimeoutSeconds)}
                       </span>
                     </div>
                     <input
@@ -503,7 +514,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       max="5"
                       step="1"
                       value={settings.idleTimeoutSeconds}
-                      aria-label="Idle timeout"
+                      aria-label={t.settings.idleTimeout}
                       onChange={(event) =>
                         updateBackendSettings({
                           idleTimeoutSeconds: Number(event.currentTarget.value),
@@ -514,15 +525,15 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       className="settings-slider-row__ticks"
                       aria-hidden="true"
                     >
-                      <span>1s</span>
-                      <span>3s</span>
-                      <span>5s</span>
+                      <span>{t.settings.seconds(1)}</span>
+                      <span>{t.settings.seconds(3)}</span>
+                      <span>{t.settings.seconds(5)}</span>
                     </div>
                   </div>
                   <div className="settings-toggle-list settings-toggle-list--compact">
                     <SettingsToggle
-                      label="Mini Transparency"
-                      description="Mini only. Blurs your desktop through the player using Windows Acrylic; the vinyl and controls float over it. Mini can shrink from its 280px square down to a compact size."
+                      label={t.settings.miniTransparency}
+                      description={t.settings.miniTransparencyDescription}
                       checked={settings.miniTransparentMode}
                       onToggle={() =>
                         updateBackendSettings({
@@ -535,27 +546,25 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
               ) : activeTab === "SOURCE" ? (
                 <div className="settings-source">
                   <div className="settings-look__header">
-                    <h3>Player Source</h3>
-                    <p>
-                      Choose which media session the deck follows. Auto
-                      follows whichever app starts or resumes playback.
-                    </p>
+                    <h3>{t.settings.playerSource}</h3>
+                    <p>{t.settings.playerSourceCopy}</p>
                   </div>
                   <div
                     className="settings-source__list"
                     role="radiogroup"
-                    aria-label="Media player source"
+                    aria-label={t.settings.playerSourceGroup}
                   >
                     <SourcePlayerRow
-                      label="Auto (most recently playing)"
-                      note="Follows the session that starts or resumes"
+                      label={t.settings.auto}
+                      note={t.settings.autoNote}
                       selected={settings.playerSourceId.length === 0}
                       onSelect={() => handlePlayerSelect(null)}
                     />
                     {savedPlayerMissing ? (
                       <SourcePlayerRow
                         label={settings.playerSourceName || settings.playerSourceId}
-                        note="Saved source - not running"
+                        note={t.settings.savedMissing}
+                        missingLabel={t.settings.notRunning}
                         selected
                         missing
                         onSelect={() => {}}
@@ -568,21 +577,22 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                         note={player.id}
                         selected={player.id === settings.playerSourceId}
                         playing={player.isPlaying}
+                        playingLabel={t.settings.playing}
                         onSelect={() => handlePlayerSelect(player)}
                       />
                     ))}
                   </div>
                   {players.length === 0 ? (
                     <p className="settings-source__empty">
-                      No media sessions found
+                      {t.settings.noSessions}
                     </p>
                   ) : null}
                 </div>
               ) : activeTab === "OTHER" ? (
                 <div className="settings-toggle-list">
                   <SettingsToggle
-                    label="Keyboard Shortcuts"
-                    description="Use Space, arrows, and single-key actions while VinylDeck is focused."
+                    label={t.settings.keyboardShortcuts}
+                    description={t.settings.keyboardShortcutsDescription}
                     checked={settings.keyboardShortcutsEnabled}
                     onToggle={() =>
                       updateBackendSettings({
@@ -592,8 +602,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                     }
                   />
                   <SettingsToggle
-                    label="Quit To Tray"
-                    description="Keep VinylDeck available from the tray when closing the player window."
+                    label={t.settings.quitToTray}
+                    description={t.settings.quitToTrayDescription}
                     checked={settings.quitToTray}
                     onToggle={() =>
                       updateBackendSettings({
@@ -602,8 +612,8 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                     }
                   />
                   <SettingsToggle
-                    label="Start With Windows"
-                    description="Launch VinylDeck automatically when you sign in."
+                    label={t.settings.startAtLogin}
+                    description={t.settings.startAtLoginDescription}
                     checked={settings.startWithWindows}
                     onToggle={() =>
                       updateBackendSettings({
@@ -617,12 +627,10 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       className="settings-field__label"
                       htmlFor="settings-discord-id"
                     >
-                      Discord Rich Presence
+                      {t.settings.discord}
                     </label>
                     <p className="settings-field__description">
-                      Paste the Application ID from your own Discord developer
-                      app. Presence stays off while this is empty, and the app
-                      id never leaves your machine except to Discord.
+                      {t.settings.discordDescription}
                     </p>
                     <div className="settings-field__row">
                       <input
@@ -633,7 +641,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                         autoComplete="off"
                         spellCheck={false}
                         maxLength={32}
-                        placeholder="Discord application ID"
+                        placeholder={t.settings.discordPlaceholder}
                         value={discordIdDraft}
                         onChange={(event) =>
                           setDiscordIdDraft(event.currentTarget.value)
@@ -649,7 +657,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                         className={`settings-field__saved${discordIdSaved ? " settings-field__saved--visible" : ""}`}
                         aria-live="polite"
                       >
-                        Saved
+                        {t.settings.saved}
                       </span>
                     </div>
                   </div>
@@ -659,11 +667,10 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       className="settings-field__label"
                       htmlFor="settings-overlay-url"
                     >
-                      OBS Overlay
+                      {t.settings.obs}
                     </label>
                     <p className="settings-field__description">
-                      Add a Browser Source in OBS and point it at this address.
-                      The page is transparent and refreshes itself.
+                      {t.settings.obsDescription}
                     </p>
                     <input
                       id="settings-overlay-url"
@@ -671,23 +678,20 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                       type="text"
                       readOnly
                       value="http://127.0.0.1:43110/overlay"
-                      aria-label="OBS overlay URL"
+                      aria-label={t.settings.obsUrl}
                       onFocus={(event) => event.currentTarget.select()}
                     />
                   </div>
 
                   <div className="settings-sleep">
                     <div className="settings-look__header">
-                      <h3>Sleep Timer</h3>
-                      <p>
-                        Pause playback after a set time, or when the current
-                        track ends and the needle returns to rest.
-                      </p>
+                      <h3>{t.settings.sleepTitle}</h3>
+                      <p>{t.settings.sleepCopy}</p>
                     </div>
                     <div
                       className="settings-sleep__options"
                       role="group"
-                      aria-label="Sleep timer"
+                      aria-label={t.settings.sleepGroup}
                     >
                       <button
                         type="button"
@@ -695,7 +699,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                         aria-pressed={!sleepTimer}
                         onClick={handleSleepCancel}
                       >
-                        Off
+                        {t.common.off}
                       </button>
                       {SLEEP_MINUTE_OPTIONS.map((minutes) => (
                         <button
@@ -705,7 +709,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                           aria-pressed={false}
                           onClick={() => handleSleepStart("minutes", minutes)}
                         >
-                          {minutes} min
+                          {t.sleep.minutes(minutes)}
                         </button>
                       ))}
                       <button
@@ -714,7 +718,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                         aria-pressed={sleepTimer?.mode === "endOfTrack"}
                         onClick={() => handleSleepStart("endOfTrack")}
                       >
-                        End of track
+                        {t.settings.endOfTrack}
                       </button>
                     </div>
                     <div
@@ -726,11 +730,11 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                         aria-hidden="true"
                       />
                       <span className="settings-sleep__status-label">
-                        {sleepTimer ? "Active" : "Sleep"}
+                        {sleepTimer ? t.settings.active : t.settings.sleep}
                       </span>
                       <span className="settings-sleep__status-value">
                         {sleepError ??
-                          formatSleepTimerStatus(sleepTimer, sleepNow)}
+                          formatSleepTimerStatus(sleepTimer, sleepNow, t.sleep)}
                       </span>
                       {sleepTimer ? (
                         <button
@@ -738,7 +742,7 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
                           className="settings-sleep__cancel"
                           onClick={handleSleepCancel}
                         >
-                          Cancel
+                          {t.settings.cancel}
                         </button>
                       ) : null}
                     </div>
@@ -747,32 +751,25 @@ export function Settings({ open, onClose, initialTab = "LOOK" }: SettingsProps) 
               ) : activeTab === "ABOUT" ? (
                 <div className="settings-about">
                   <p className="settings-about__kicker">VinylDeck</p>
-                  <h3>
-                    A focused desktop player that turns whatever is playing on
-                    your computer into a living vinyl deck.
-                  </h3>
-                  <p className="settings-about__body">
-                    VinylDeck follows your system media session, reacts to album
-                    art, and keeps a beautiful record-player view close by
-                    without taking over your workspace.
-                  </p>
+                  <h3>{t.settings.aboutHeadline}</h3>
+                  <p className="settings-about__body">{t.settings.aboutBody}</p>
                   <div
                     className="settings-about__grid"
-                    aria-label="App details"
+                    aria-label={t.settings.aboutDetails}
                   >
-                    <span>Version</span>
-                    <strong>0.1.0</strong>
-                    <span>Playback</span>
-                    <strong>System media</strong>
-                    <span>Windows</span>
-                    <strong>Main, fullscreen, mini</strong>
-                    <span>Visuals</span>
-                    <strong>Noir, Glass, Art Ambient</strong>
+                    <span>{t.settings.version}</span>
+                    <strong>{APP_VERSION}</strong>
+                    <span>{t.settings.playback}</span>
+                    <strong>{t.settings.playbackValue}</strong>
+                    <span>{t.settings.windows}</span>
+                    <strong>{t.settings.windowsValue}</strong>
+                    <span>{t.settings.visuals}</span>
+                    <strong>{t.settings.visualsValue}</strong>
                   </div>
                   <div className="settings-about__qa">
                     <SettingsToggle
-                      label="Test Empty State"
-                      description="Force the no-media visual state for inspection."
+                      label={t.settings.testEmpty}
+                      description={t.settings.testEmptyDescription}
                       checked={devForceEmpty}
                       onToggle={() => setDevForceEmpty(!devForceEmpty)}
                     />
@@ -792,7 +789,9 @@ interface SourcePlayerRowProps {
   note: string;
   selected: boolean;
   playing?: boolean;
+  playingLabel?: string;
   missing?: boolean;
+  missingLabel?: string;
   onSelect: () => void;
 }
 
@@ -801,7 +800,9 @@ function SourcePlayerRow({
   note,
   selected,
   playing = false,
+  playingLabel,
   missing = false,
+  missingLabel,
   onSelect,
 }: SourcePlayerRowProps) {
   return (
@@ -821,12 +822,12 @@ function SourcePlayerRow({
       {playing ? (
         <span className="settings-source__playing">
           <span className="settings-source__dot" aria-hidden="true" />
-          Playing
+          {playingLabel}
         </span>
       ) : null}
       {missing ? (
         <span className="settings-source__playing settings-source__playing--idle">
-          Not running
+          {missingLabel}
         </span>
       ) : null}
     </button>

@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { initCollection } from "./lib/collection";
 import { useBrowserListenTracker } from "./hooks/useCrate";
+import { useLanguage } from "./lib/i18n";
 import { useAudioReactivity } from "./hooks/useAudioReactivity";
 import { createPlaybackSource } from "./lib/playback/sourceFactory";
 import { useVinylDeckStore } from "./lib/playback/store";
@@ -98,6 +99,11 @@ function App() {
   }, []);
 
   useAudioReactivity();
+
+  const language = useLanguage();
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const windowMode = useVinylDeckStore((s) => s.settings.windowMode);
   const view = renderMode === "mini" ? <MiniView /> : <MainView />;

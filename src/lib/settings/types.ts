@@ -1,3 +1,4 @@
+import type { LanguageSetting } from "../i18n/types";
 import type { AmbientModeId, SchemeId, ThemeId } from "../themes/applier";
 import { WINDOW_MODES } from "../window/types";
 import type { WindowMode } from "../window/types";
@@ -39,6 +40,8 @@ export interface PersistedSettings {
    * feature; Discord requires an id owned by the user, so none is shipped.
    */
   discordClientId: string;
+  /** UI and tray language; "auto" follows the operating system. */
+  language: LanguageSetting;
 }
 
 export const DEFAULT_SETTINGS: PersistedSettings = {
@@ -61,4 +64,5 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   playerSourceId: "",
   playerSourceName: "",
   discordClientId: "",
+  language: "auto",
 };

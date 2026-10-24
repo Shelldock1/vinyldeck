@@ -26,6 +26,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import "./NeedleArm.css";
+import { useT } from "../../lib/i18n";
 
 const NEEDLE_ANGLE_LIFTED = 15; // degrees: resting, no known duration
 const NEEDLE_ANGLE_DOWN = 4; // degrees: playing, no known duration
@@ -108,6 +109,7 @@ export function NeedleArm({
   onScrubPreview,
   parkRequest = 0,
 }: NeedleArmProps) {
+  const t = useT();
   const rotate = useMotionValue(NEEDLE_ANGLE_LIFTED);
   // Keeps the drop-time label upright while the arm swings.
   const labelRotate = useTransform(() => -rotate.get());
@@ -354,7 +356,7 @@ export function NeedleArm({
         {/* Headshell + cartridge — grab handle for Needle Drop */}
         <div
           className={`needle-arm__head${showBump ? " needle-arm__head--bump" : ""}${canDrag ? " needle-arm__head--grabbable" : ""}`}
-          aria-label={canDrag ? "Tonearm: drag to drop the needle" : undefined}
+          aria-label={canDrag ? t.vinyl.tonearm : undefined}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

@@ -17,6 +17,7 @@ import type { ThemeId } from "../../lib/themes/applier";
 import { useVinylDeckStore } from "../../lib/playback/store";
 import { commitSettings } from "../../lib/settings";
 import { logger } from "../../lib/logger";
+import { useT } from "../../lib/i18n";
 
 const SHELL_ACCENT: Record<ThemeId, string> = {
   noir: "#f1efea",
@@ -29,6 +30,7 @@ const SHELL_BG: Record<ThemeId, string> = {
 };
 
 export function ThemePicker() {
+  const t = useT();
   const currentTheme = useVinylDeckStore((s) => s.theme);
   const ambientMode = useVinylDeckStore((s) => s.ambientMode);
   const hydrateSettings = useVinylDeckStore((s) => s.hydrateSettings);
@@ -67,9 +69,9 @@ export function ThemePicker() {
       variant="dock"
       intensity="normal"
       role="group"
-      aria-label="Visual shell and art ambient"
+      aria-label={t.theme.pickerGroup}
     >
-      <div className="theme-picker__shells" role="radiogroup" aria-label="Visual shell">
+      <div className="theme-picker__shells" role="radiogroup" aria-label={t.settings.shellGroup}>
         {THEME_IDS.map((id) => {
           const active = id === currentTheme;
           return (
@@ -80,7 +82,7 @@ export function ThemePicker() {
                   className={`theme-picker__shell theme-picker__shell--${id}${active ? " theme-picker__shell--active" : ""}`}
                   role="radio"
                   aria-checked={active}
-                  aria-label={`${THEME_LABELS[id]} shell`}
+                  aria-label={t.theme.shell(THEME_LABELS[id])}
                   onClick={() => handleThemeSelect(id)}
                   style={
                     {
@@ -96,7 +98,7 @@ export function ThemePicker() {
                 </motion.button>
               </TooltipTrigger>
               <TooltipContent>
-                {THEME_LABELS[id]} shell <Kbd>T</Kbd>
+                {t.theme.shell(THEME_LABELS[id])} <Kbd>T</Kbd>
               </TooltipContent>
             </Tooltip>
           );
@@ -111,14 +113,14 @@ export function ThemePicker() {
             type="button"
             className={`theme-picker__ambient${artAmbient ? " theme-picker__ambient--active" : ""}`}
             aria-pressed={artAmbient}
-            aria-label="Toggle art ambient"
+            aria-label={t.theme.toggleArtAmbient}
             onClick={handleArtAmbientToggle}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 420, damping: 22 }}
           >
             <span className="theme-picker__ambient-dot" aria-hidden="true" />
-            <span>ART AMBIENT</span>
+            <span>{t.theme.artAmbientChip}</span>
           </motion.button>
         </TooltipTrigger>
         <TooltipContent>

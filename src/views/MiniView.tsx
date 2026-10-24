@@ -28,6 +28,7 @@ import {
 } from "../lib/playback/store";
 import "./MiniView.css";
 import { logger } from "../lib/logger";
+import { useT } from "../lib/i18n";
 
 const MINI_CONTROLS_HIDE_MS = 1400;
 const MINI_SNAP_THRESHOLD_PX = 40;
@@ -49,6 +50,7 @@ const MINI_TRANSPARENT_HTML_CLASS = "mini-transparent-active";
 const MINI_WINDOW_HTML_CLASS = "mini-window-active";
 
 export function MiniView() {
+  const t = useT();
   const playback = useVinylDeckStore(selectPlayback);
   const rawIsPlaying = useVinylDeckStore(selectIsPlaying);
   const rawArtworkDataUrl = useVinylDeckStore(selectArtwork);
@@ -190,7 +192,7 @@ export function MiniView() {
       />
       <SeasonalLayer compact />
 
-      <section className="mini-view__centerpiece" aria-label="Mini player">
+      <section className="mini-view__centerpiece" aria-label={t.mini.player}>
         <VinylRecord
           isPlaying={isPlaying}
           suspended={isSuspended}
@@ -207,7 +209,7 @@ export function MiniView() {
 
       <div className="mini-view__track">
         <TrackInfo
-          track={effectivePlayback.track || "Nothing Playing"}
+          track={effectivePlayback.track}
           artist={effectivePlayback.artist}
           album={effectivePlayback.album}
           direction={trackChangeDirection}
@@ -238,8 +240,8 @@ export function MiniView() {
         <button
           className="mini-view__window-button"
           type="button"
-          aria-label="Minimize mini player"
-          title="Minimize"
+          aria-label={t.mini.minimize}
+          title={t.titleBar.minimize}
           onClick={(event) => {
             event.stopPropagation();
             void getCurrentWindow()
@@ -256,8 +258,8 @@ export function MiniView() {
         <button
           className="mini-view__window-button mini-view__window-button--close"
           type="button"
-          aria-label="Close mini player"
-          title="Close"
+          aria-label={t.mini.close}
+          title={t.common.close}
           onClick={(event) => {
             event.stopPropagation();
             void getCurrentWindow()
@@ -281,7 +283,7 @@ export function MiniView() {
       <button
         className={`mini-view__return${controlsVisible ? " mini-view__return--visible" : ""}`}
         type="button"
-        aria-label="Return to main window"
+        aria-label={t.mini.returnToMain}
         onClick={(event) => {
           event.stopPropagation();
           void setNativeWindowMode("main");

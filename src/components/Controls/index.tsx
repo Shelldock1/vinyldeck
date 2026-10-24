@@ -14,6 +14,7 @@ import { Kbd } from "../Kbd";
 import { LiquidGlass } from "../LiquidGlass";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../Tooltip";
 import type { RepeatMode } from "../../lib/playback/types";
+import { useT } from "../../lib/i18n";
 import { HardwareToggle } from "./HardwareToggle";
 import "./Controls.css";
 
@@ -124,12 +125,17 @@ export function Controls({
   onToggleRepeat,
   onToggleShuffle,
 }: ControlsProps) {
+  const t = useT();
   const canUseSkip = canControl && canSkip;
   const showShuffle = showModes && canShuffle;
   const showRepeat = showModes && canRepeat;
   const hasModes = showShuffle || showRepeat;
   const repeatStateLabel =
-    repeatMode === "one" ? "One" : repeatMode === "all" ? "All" : "Off";
+    repeatMode === "one"
+      ? t.controls.repeatOne
+      : repeatMode === "all"
+        ? t.controls.repeatAll
+        : t.common.off;
   const renderControl = (control: ReactNode, tooltip: ReactNode) => {
     if (!showTooltips) return control;
 
@@ -147,8 +153,8 @@ export function Controls({
         <div className="controls-modes">
           {showShuffle ? (
             <HardwareToggle
-              label="Shuffle"
-              tooltip={`Shuffle \u00b7 ${shuffle ? "On" : "Off"}`}
+              label={t.controls.shuffle}
+              tooltip={`${t.controls.shuffle} \u00b7 ${shuffle ? t.common.on : t.common.off}`}
               showTooltip={showTooltips}
               checked={shuffle}
               glyph="shuffle"
@@ -159,8 +165,8 @@ export function Controls({
           )}
           {showRepeat ? (
             <HardwareToggle
-              label="Repeat"
-              tooltip={`Repeat \u00b7 ${repeatStateLabel}`}
+              label={t.controls.repeat}
+              tooltip={`${t.controls.repeat} \u00b7 ${repeatStateLabel}`}
               showTooltip={showTooltips}
               checked={repeatMode !== "off"}
               badge={repeatMode === "one" ? "1" : undefined}
@@ -179,7 +185,7 @@ export function Controls({
         variant="dock"
         intensity="strong"
         role="group"
-        aria-label="Playback controls"
+        aria-label={t.controls.group}
       >
         {/* ── Previous ── */}
         {renderControl(
@@ -187,7 +193,7 @@ export function Controls({
             className="controls-btn-secondary"
             disabled={!canUseSkip}
             onClick={onPrevious}
-            aria-label="Previous track"
+            aria-label={t.controls.previousTrack}
             style={{ opacity: canUseSkip ? 0.65 : 0.35 }}
             whileHover={canUseSkip ? { scale: 1.1 } : {}}
             whileTap={canUseSkip ? { scale: 0.86 } : {}}
@@ -196,7 +202,7 @@ export function Controls({
             <IconPrev />
           </motion.button>,
           <>
-            Previous <Kbd>Left</Kbd>
+            {t.common.previous} <Kbd>Left</Kbd>
           </>,
         )}
 
@@ -206,7 +212,7 @@ export function Controls({
             className={`controls-btn-primary ${isPlaying ? "playing" : "paused"}`}
             disabled={!canControl}
             onClick={isPlaying ? onPause : onPlay}
-            aria-label={isPlaying ? "Pause" : "Play"}
+            aria-label={isPlaying ? t.common.pause : t.common.play}
             whileHover={canControl ? { scale: 1.06 } : {}}
             whileTap={canControl ? { scale: 0.88 } : {}}
             transition={{ type: "spring", stiffness: 350, damping: 22 }}
@@ -249,7 +255,7 @@ export function Controls({
             </AnimatePresence>
           </motion.button>,
           <>
-            {isPlaying ? "Pause" : "Play"} <Kbd>Space</Kbd>
+            {isPlaying ? t.common.pause : t.common.play} <Kbd>Space</Kbd>
           </>,
         )}
 
@@ -259,7 +265,7 @@ export function Controls({
             className="controls-btn-secondary"
             disabled={!canUseSkip}
             onClick={onNext}
-            aria-label="Next track"
+            aria-label={t.controls.nextTrack}
             style={{ opacity: canUseSkip ? 0.65 : 0.35 }}
             whileHover={canUseSkip ? { scale: 1.1 } : {}}
             whileTap={canUseSkip ? { scale: 0.86 } : {}}
@@ -268,7 +274,7 @@ export function Controls({
             <IconNext />
           </motion.button>,
           <>
-            Next <Kbd>Right</Kbd>
+            {t.common.next} <Kbd>Right</Kbd>
           </>,
         )}
       </LiquidGlass>

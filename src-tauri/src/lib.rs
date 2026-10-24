@@ -1,5 +1,6 @@
 mod app_lifecycle;
 mod collection;
+mod i18n;
 mod media;
 mod overlay;
 mod presence;

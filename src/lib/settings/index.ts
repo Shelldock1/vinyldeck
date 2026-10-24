@@ -12,6 +12,8 @@ import {
   normalizeAmbientMode,
   resetAmbientColors,
 } from "../themes/applier";
+import { LANGUAGE_SETTINGS } from "../i18n/types";
+import type { LanguageSetting } from "../i18n/types";
 import { DEFAULT_SETTINGS, WINDOW_MODES } from "./types";
 import type { PersistedSettings } from "./types";
 import type { AmbientModeId, LegacyThemeId, ThemeId } from "../themes/applier";
@@ -73,6 +75,9 @@ export function validateSettings(value: unknown): PersistedSettings {
     playerSourceId: readSourceText(raw.playerSourceId),
     playerSourceName: readSourceText(raw.playerSourceName),
     discordClientId: readDiscordClientId(raw.discordClientId),
+    language: LANGUAGE_SETTINGS.includes(raw.language as LanguageSetting)
+      ? (raw.language as LanguageSetting)
+      : DEFAULT_SETTINGS.language,
   };
 }
 

@@ -62,10 +62,10 @@ export function emptyWrapped(now = new Date()): WrappedStats {
 }
 
 /** "2026-10-01" -> localized "Oct 1" (already a local calendar date). */
-export function formatWrappedDay(date: string): string {
+export function formatWrappedDay(date: string, locale?: string): string {
   const parsed = new Date(`${date}T12:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     timeZone: "UTC",
@@ -73,12 +73,14 @@ export function formatWrappedDay(date: string): string {
 }
 
 /** "2026-10" -> localized "October 2026", used in the month picker. */
-export function formatWrappedMonth(month: string): string {
+export function formatWrappedMonth(month: string, locale?: string): string {
   const parsed = new Date(`${month}-01T12:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return month;
-  return new Intl.DateTimeFormat(undefined, {
+  const label = new Intl.DateTimeFormat(locale, {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
   }).format(parsed);
+  // Russian standalone months come back lowercase ("октябрь 2026 г.").
+  return label.charAt(0).toLocaleUpperCase(locale) + label.slice(1);
 }

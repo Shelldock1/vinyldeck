@@ -12,6 +12,7 @@ import { motion } from "motion/react";
 import { useVinylDeckStore, selectAmbientMode } from "../../lib/playback/store";
 import { KEYBOARD_SEEK_STEP_SECONDS, clampSeek } from "../../hooks/useKeyboardShortcuts";
 import "./ProgressRing.css";
+import { useT } from "../../lib/i18n";
 
 interface ProgressRingProps {
   duration: number;
@@ -39,6 +40,7 @@ export function ProgressRing({
   previewPosition = null,
 }: ProgressRingProps) {
   // ── ALL hooks first — no early returns before this block ──────
+  const t = useT();
   const ambientMode = useVinylDeckStore(selectAmbientMode);
   const svgRef = useRef<SVGSVGElement>(null);
   const [isScrubbing, setIsScrubbing] = useState(false);
@@ -166,12 +168,12 @@ export function ProgressRing({
       className="progress-ring"
       role={onSeek ? "slider" : "progressbar"}
       tabIndex={onSeek ? 0 : undefined}
-      aria-label="Track position"
+      aria-label={t.vinyl.trackPosition}
       aria-valuemin={0}
       aria-valuemax={Math.round(duration)}
       // Whole seconds: the attribute only changes ~1Hz, not per render.
       aria-valuenow={Math.round(Math.min(position, duration))}
-      aria-valuetext={`${formatTime(position)} of ${formatTime(duration)}`}
+      aria-valuetext={t.vinyl.positionOf(formatTime(position), formatTime(duration))}
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
