@@ -1,6 +1,7 @@
-// Crate Wrapped: monthly listening stats owned by the Rust backend. In the
-// browser dev build there is no play history, so the card renders an empty
-// current month instead of pretending the localStorage collection has dates.
+// Crate Wrapped: monthly listening stats owned by the Rust backend. Months and
+// days are bucketed on this machine's clock (the current UTC offset is sent
+// along). In the browser dev build there is no play history, so the card
+// renders an empty current month and the streak falls back to lastPlayedAt.
 
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { CrateSource, WrappedStats } from "./types";
@@ -16,10 +17,25 @@ export async function getCollectionWrapped(
     return await invoke<WrappedStats>("cmd_collection_wrapped", {
       month: month ?? null,
       source,
+      utcOffsetMinutes: -new Date().getTimezoneOffset(),
     });
   } catch (error) {
     logger.warn("[Crate] Wrapped failed:", error);
     throw error;
+  }
+}
+
+/** Every counted listen (UTC epoch ms) in one source bucket, for the streak. */
+export async function getPlayTimes(source: CrateSource): Promise<number[]> {
+  if (!isTauri()) return [];
+  try {
+    const times = await invoke<unknown>("cmd_collection_play_times", { source });
+    return Array.isArray(times)
+      ? times.filter((value): value is number => typeof value === "number")
+      : [];
+  } catch (error) {
+    logger.warn("[Crate] Play history failed:", error);
+    return [];
   }
 }
 
@@ -45,7 +61,7 @@ export function emptyWrapped(now = new Date()): WrappedStats {
   };
 }
 
-/** "2026-10-01" -> localized "Oct 1" (the backend dates are UTC). */
+/** "2026-10-01" -> localized "Oct 1" (already a local calendar date). */
 export function formatWrappedDay(date: string): string {
   const parsed = new Date(`${date}T12:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return date;

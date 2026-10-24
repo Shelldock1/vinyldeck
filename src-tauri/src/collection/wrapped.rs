@@ -3,9 +3,9 @@
 //! Play counts on the records are cumulative, so the poller also appends a
 //! small event per counted listen. This module validates that bounded history
 //! and folds one calendar month of it into the numbers the Wrapped card shows.
-//! Months are UTC: the app does not otherwise deal in time zones, and a play
-//! at midnight on the 1st should never land in two different months depending
-//! on where the machine is.
+//! Months and days follow the viewer's clock: the frontend passes its current
+//! UTC offset, so a play at 01:00 local time lands on the local day, not the
+//! UTC one. Events keep UTC timestamps; only the bucketing shifts.
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -18,6 +18,8 @@ use crate::media::model::{SOURCE_KIND_APP, SOURCE_KIND_BROWSER};
 pub const MAX_HISTORY: usize = 10_000;
 const TOP_RECORDS: usize = 5;
 const MAX_MONTHS: usize = 24;
+/// Real-world offsets span UTC-12:00 to UTC+14:00.
+const MAX_UTC_OFFSET_MINUTES: i32 = 14 * 60;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -131,8 +133,11 @@ pub fn build_wrapped(
     history: &[PlayEvent],
     requested_month: Option<&str>,
     source: Option<&str>,
+    utc_offset_minutes: i32,
     now: u64,
 ) -> WrappedStats {
+    let offset = utc_offset_minutes.clamp(-MAX_UTC_OFFSET_MINUTES, MAX_UTC_OFFSET_MINUTES);
+    let local = |at: u64| to_local(at, offset);
     // `None` or "all" keeps every source; otherwise one bucket only.
     let source = source.filter(|kind| *kind == SOURCE_KIND_APP || *kind == SOURCE_KIND_BROWSER);
     let history: Vec<&PlayEvent> = history
@@ -141,7 +146,7 @@ pub fn build_wrapped(
         .collect();
     let mut available_months: Vec<String> = history
         .iter()
-        .map(|event| month_key(event.at))
+        .map(|event| month_key(local(event.at)))
         .collect::<BTreeSet<_>>()
         .into_iter()
         .rev()
@@ -152,7 +157,7 @@ pub fn build_wrapped(
         .filter(|value| is_valid_month(value))
         .map(str::to_string)
         .or_else(|| available_months.first().cloned())
-        .unwrap_or_else(|| month_key(now));
+        .unwrap_or_else(|| month_key(local(now)));
 
     // The requested month may be older than the trimmed list; still show it.
     if is_valid_month(&month)
@@ -168,7 +173,7 @@ pub fn build_wrapped(
     let events: Vec<&PlayEvent> = history
         .iter()
         .copied()
-        .filter(|event| month_key(event.at) == month)
+        .filter(|event| month_key(local(event.at)) == month)
         .collect();
 
     let mut albums: HashMap<String, (String, String, u32)> = HashMap::new();
@@ -210,7 +215,7 @@ pub fn build_wrapped(
             entry.2 = entry.2.saturating_add(1);
         }
 
-        *days.entry(day_key(event.at)).or_insert(0) += 1;
+        *days.entry(day_key(local(event.at))).or_insert(0) += 1;
     }
 
     let pressing_numbers: HashMap<&str, u32> = records
@@ -276,6 +281,23 @@ pub fn build_wrapped(
         busiest_day,
         available_months,
     }
+}
+
+/// Play timestamps (UTC epoch ms) for one source bucket, oldest first. The
+/// frontend folds them into local calendar days for the listening streak.
+pub fn play_times(history: &[PlayEvent], source: Option<&str>) -> Vec<u64> {
+    let source = source.filter(|kind| *kind == SOURCE_KIND_APP || *kind == SOURCE_KIND_BROWSER);
+    history
+        .iter()
+        .filter(|event| source.is_none_or(|kind| event_source_kind(event) == kind))
+        .map(|event| event.at)
+        .collect()
+}
+
+/// Shifts a UTC timestamp into the viewer's wall clock for bucketing.
+fn to_local(at: u64, offset_minutes: i32) -> u64 {
+    let shifted = i128::from(at) + i128::from(offset_minutes) * 60_000;
+    shifted.clamp(0, i128::from(u64::MAX)) as u64
 }
 
 pub fn month_key(milliseconds: u64) -> String {
@@ -351,7 +373,8 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        build_wrapped, civil_from_days, month_key, month_label, validate_history, PlayEvent,
+        build_wrapped, civil_from_days, month_key, month_label, play_times, validate_history,
+        PlayEvent,
     };
     use crate::collection::{press, PressInput, PressingColors};
 
@@ -444,7 +467,14 @@ mod tests {
             ),
         ];
 
-        let stats = build_wrapped(&records, &history, Some("2026-10"), None, october + 5_000);
+        let stats = build_wrapped(
+            &records,
+            &history,
+            Some("2026-10"),
+            None,
+            0,
+            october + 5_000,
+        );
         assert_eq!(stats.month, "2026-10");
         assert_eq!(stats.label, "October 2026");
         assert_eq!(stats.total_plays, 4);
@@ -463,11 +493,11 @@ mod tests {
     #[test]
     fn defaults_to_the_newest_month_and_handles_empty_history() {
         let history = vec![event("A", "B", "C", month_start(2026, 9))];
-        let stats = build_wrapped(&[], &history, None, None, month_start(2026, 10));
+        let stats = build_wrapped(&[], &history, None, None, 0, month_start(2026, 10));
         assert_eq!(stats.month, "2026-09");
         assert_eq!(stats.total_plays, 1);
 
-        let empty = build_wrapped(&[], &[], None, None, month_start(2026, 10));
+        let empty = build_wrapped(&[], &[], None, None, 0, month_start(2026, 10));
         assert_eq!(empty.month, "2026-10");
         assert_eq!(empty.total_plays, 0);
         assert!(empty.top_records.is_empty());
@@ -486,14 +516,41 @@ mod tests {
             event("Vlogger", "", "Clip", october + 3_000),
         ];
 
-        let music = build_wrapped(&[], &history, Some("2026-10"), Some("app"), october);
+        let music = build_wrapped(&[], &history, Some("2026-10"), Some("app"), 0, october);
         assert_eq!(music.total_plays, 1);
         assert_eq!(music.top_artist.unwrap().artist, "A");
 
-        let browser = build_wrapped(&[], &history, Some("2026-10"), Some("browser"), october);
+        let browser = build_wrapped(&[], &history, Some("2026-10"), Some("browser"), 0, october);
         assert_eq!(browser.total_plays, 2);
 
-        let all = build_wrapped(&[], &history, Some("2026-10"), Some("all"), october);
+        let all = build_wrapped(&[], &history, Some("2026-10"), Some("all"), 0, october);
         assert_eq!(all.total_plays, 3);
+    }
+
+    #[test]
+    fn buckets_months_and_days_on_the_viewer_clock() {
+        // 2026-10-31 23:30 UTC is already November 1st in Moscow (UTC+3).
+        // `month_start` is noon UTC on the 1st; step back to 23:30 the day before.
+        let late = month_start(2026, 11) - (12 * 60 + 30) * 60_000;
+        let history = vec![event("A", "One", "Song", late)];
+
+        let utc = build_wrapped(&[], &history, None, None, 0, late);
+        assert_eq!(utc.month, "2026-10");
+        assert_eq!(utc.busiest_day.unwrap().date, "2026-10-31");
+
+        let moscow = build_wrapped(&[], &history, None, None, 180, late);
+        assert_eq!(moscow.month, "2026-11");
+        assert_eq!(moscow.busiest_day.unwrap().date, "2026-11-01");
+        assert_eq!(moscow.available_months, vec!["2026-11".to_string()]);
+    }
+
+    #[test]
+    fn play_times_follow_the_source_filter() {
+        let mut video = event("Channel", "", "Video", 20);
+        video.source_kind = Some("browser".to_string());
+        let history = vec![event("A", "One", "Song", 10), video];
+        assert_eq!(play_times(&history, Some("app")), vec![10]);
+        assert_eq!(play_times(&history, Some("browser")), vec![20]);
+        assert_eq!(play_times(&history, None), vec![10, 20]);
     }
 }

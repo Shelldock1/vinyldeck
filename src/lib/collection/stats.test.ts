@@ -206,4 +206,13 @@ describe("crate stats", () => {
     ];
     expect(collectionStreak(shelf, NOW)).toBe(1);
   });
+
+  it("counts every day in the play history, not just each record's last", () => {
+    // One album played daily: its lastPlayedAt alone would give a 1-day streak.
+    const shelf = [record({ lastPlayedAt: at(22, 9) })];
+    expect(collectionStreak(shelf, NOW)).toBe(1);
+    const history = [at(18), at(19, 23), at(20), at(21, 7), at(22, 9)];
+    expect(collectionStreak(shelf, NOW, history)).toBe(5);
+    expect(collectionStats(shelf, NOW, history).streak).toBe(5);
+  });
 });

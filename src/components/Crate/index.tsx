@@ -9,6 +9,7 @@ import type { CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { useCrateStore } from "../../lib/collection";
+import { getPlayTimes } from "../../lib/collection/wrapped";
 import {
   collectionStats,
   filterBySource,
@@ -112,7 +113,21 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   const records = useMemo(() => filterBySource(allRecords, source), [allRecords, source]);
   const filtered = useMemo(() => filterRecords(records, query), [records, query]);
   const sorted = useMemo(() => sortRecords(filtered, sort), [filtered, sort]);
-  const stats = collectionStats(records);
+  const [playTimes, setPlayTimes] = useState<number[]>([]);
+  const stats = collectionStats(records, Date.now(), playTimes);
+
+  // The streak needs every listen, not just each record's latest. Refetch when
+  // a play lands (the store updates) or the source changes.
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    void getPlayTimes(source).then((times) => {
+      if (alive) setPlayTimes(times);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [open, source, recordsByKey]);
 
   useEffect(() => {
     if (!open) {

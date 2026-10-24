@@ -167,6 +167,7 @@ pub async fn cmd_collection_wrapped(
     state: State<'_, CollectionState>,
     month: Option<String>,
     source: Option<String>,
+    utc_offset_minutes: Option<i32>,
 ) -> Result<wrapped::WrappedStats, String> {
     let records = state.records.lock().await.clone();
     let history = state.history.lock().await.clone();
@@ -175,8 +176,19 @@ pub async fn cmd_collection_wrapped(
         &history,
         month.as_deref(),
         source.as_deref(),
+        utc_offset_minutes.unwrap_or(0),
         now_millis(),
     ))
+}
+
+/// Timestamps of every counted listen in one source bucket, for the streak.
+#[tauri::command]
+pub async fn cmd_collection_play_times(
+    state: State<'_, CollectionState>,
+    source: Option<String>,
+) -> Result<Vec<u64>, String> {
+    let history = state.history.lock().await;
+    Ok(wrapped::play_times(&history, source.as_deref()))
 }
 
 /// Shared identity with the frontend pressing seed: artist + (album or track).

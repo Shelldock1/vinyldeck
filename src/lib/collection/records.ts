@@ -215,17 +215,24 @@ function localDayIndex(timestamp: number): number {
  * Consecutive days with a play, anchored to today when today already has a
  * play, otherwise to yesterday so an evening streak survives the morning.
  * Missing the last two days breaks the streak.
+ *
+ * `playTimes` is the backend play history (every counted listen). A record's
+ * `lastPlayedAt` only remembers its latest day, so without the history one
+ * album played every day would count as a one-day streak.
  */
 export function collectionStreak(
   records: readonly CollectedRecord[],
   now: number = Date.now(),
+  playTimes: readonly number[] = [],
 ): number {
   const days = new Set<number>();
-  for (const record of records) {
-    if (typeof record.lastPlayedAt === "number" && Number.isFinite(record.lastPlayedAt)) {
-      days.add(localDayIndex(record.lastPlayedAt));
+  const addDay = (timestamp: number | null) => {
+    if (typeof timestamp === "number" && Number.isFinite(timestamp)) {
+      days.add(localDayIndex(timestamp));
     }
-  }
+  };
+  for (const record of records) addDay(record.lastPlayedAt);
+  for (const timestamp of playTimes) addDay(timestamp);
 
   const today = localDayIndex(now);
   let cursor = days.has(today) ? today : days.has(today - 1) ? today - 1 : null;
@@ -242,6 +249,7 @@ export function collectionStreak(
 export function collectionStats(
   records: readonly CollectedRecord[],
   now: number = Date.now(),
+  playTimes: readonly number[] = [],
 ): CrateStats {
   let totalPlays = 0;
   let topAlbum: CollectedRecord | null = null;
@@ -272,7 +280,7 @@ export function collectionStats(
     totalRecords: records.length,
     totalPlays,
     topAlbum,
-    streak: collectionStreak(records, now),
+    streak: collectionStreak(records, now, playTimes),
   };
 }
 

@@ -69,6 +69,7 @@ pub fn run() {
             collection::cmd_collection_snapshot,
             collection::cmd_collection_press,
             collection::cmd_collection_wrapped,
+            collection::cmd_collection_play_times,
             app_lifecycle::cmd_quit,
             window::cmd_set_always_on_top,
             window::cmd_set_window_mode,
