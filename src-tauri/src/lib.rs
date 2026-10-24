@@ -68,6 +68,7 @@ pub fn run() {
             settings::cmd_settings_reset,
             collection::cmd_collection_snapshot,
             collection::cmd_collection_press,
+            collection::cmd_collection_wrapped,
             app_lifecycle::cmd_quit,
             window::cmd_set_always_on_top,
             window::cmd_set_window_mode,

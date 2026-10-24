@@ -11,11 +11,13 @@ use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 
 pub mod listen;
+mod wrapped;
 
 pub const COLLECTION_CHANGED_EVENT: &str = "collection-changed";
 
 const STORE_FILE: &str = "collection.json";
 const STORE_KEY: &str = "records";
+const HISTORY_KEY: &str = "history";
 const MAX_RECORDS: usize = 5_000;
 const MAX_THUMBNAIL_LEN: usize = 48 * 1024;
 const MAX_TEXT_LEN: usize = 512;
@@ -70,12 +72,14 @@ pub struct PressResult {
 
 pub struct CollectionState {
     records: Mutex<Vec<CollectedRecord>>,
+    history: Mutex<Vec<wrapped::PlayEvent>>,
 }
 
 impl CollectionState {
     pub fn new() -> Self {
         Self {
             records: Mutex::new(Vec::new()),
+            history: Mutex::new(Vec::new()),
         }
     }
 }
@@ -83,9 +87,11 @@ impl CollectionState {
 pub fn initialize_collection(app: &AppHandle) -> Result<(), String> {
     let store = app.store(STORE_FILE).map_err(|error| error.to_string())?;
     let records = validate_records(store.get(STORE_KEY));
+    let history = wrapped::validate_history(store.get(HISTORY_KEY));
     let state = app.state::<CollectionState>();
     tauri::async_runtime::block_on(async {
         *state.records.lock().await = records;
+        *state.history.lock().await = history;
     });
     Ok(())
 }
@@ -114,15 +120,45 @@ pub async fn cmd_collection_press(
 /// Called by the media poller once a listen crosses the scrobble threshold.
 pub async fn record_play(app: &AppHandle, artist: &str, album: &str, track: &str) {
     let state = app.state::<CollectionState>();
+    let now = now_millis();
     let mut records = state.records.lock().await;
-    let Some(record) = count_play(&mut records, artist, album, track, now_millis()) else {
+    let Some(record) = count_play(&mut records, artist, album, track, now) else {
         return;
     };
-    if let Err(error) = save_records(app, &records) {
+
+    let mut history = state.history.lock().await;
+    history.push(wrapped::PlayEvent {
+        at: now,
+        artist: clip(artist.trim()),
+        album: clip(album.trim()),
+        track: clip(track.trim()),
+    });
+    if history.len() > wrapped::MAX_HISTORY {
+        let excess = history.len() - wrapped::MAX_HISTORY;
+        history.drain(..excess);
+    }
+
+    if let Err(error) = save_collection(app, &records, &history) {
         eprintln!("[VinylDeck crate] failed to save play: {error}");
     }
+    drop(history);
     drop(records);
     emit_record_changed(app, &record);
+}
+
+#[tauri::command]
+pub async fn cmd_collection_wrapped(
+    state: State<'_, CollectionState>,
+    month: Option<String>,
+) -> Result<wrapped::WrappedStats, String> {
+    let records = state.records.lock().await.clone();
+    let history = state.history.lock().await.clone();
+    Ok(wrapped::build_wrapped(
+        &records,
+        &history,
+        month.as_deref(),
+        now_millis(),
+    ))
 }
 
 /// Shared identity with the frontend pressing seed: artist + (album or track).
@@ -141,7 +177,7 @@ pub fn record_key(artist: &str, album: &str, track: &str) -> Option<String> {
     Some(format!("{artist}|{title}"))
 }
 
-fn press(
+pub(crate) fn press(
     records: &mut Vec<CollectedRecord>,
     input: PressInput,
     now: u64,
@@ -251,6 +287,23 @@ fn save_records(app: &AppHandle, records: &[CollectedRecord]) -> Result<(), Stri
     store.save().map_err(|error| error.to_string())
 }
 
+fn save_collection(
+    app: &AppHandle,
+    records: &[CollectedRecord],
+    history: &[wrapped::PlayEvent],
+) -> Result<(), String> {
+    let store = app.store(STORE_FILE).map_err(|error| error.to_string())?;
+    store.set(
+        STORE_KEY,
+        serde_json::to_value(records).map_err(|error| error.to_string())?,
+    );
+    store.set(
+        HISTORY_KEY,
+        serde_json::to_value(history).map_err(|error| error.to_string())?,
+    );
+    store.save().map_err(|error| error.to_string())
+}
+
 fn emit_record_changed(app: &AppHandle, record: &CollectedRecord) {
     let _ = app.emit(COLLECTION_CHANGED_EVENT, record);
 }
@@ -287,7 +340,7 @@ fn is_valid_thumbnail(value: &str) -> bool {
     value.len() <= MAX_THUMBNAIL_LEN && value.starts_with("data:image/")
 }
 
-fn clip(value: &str) -> String {
+pub(super) fn clip(value: &str) -> String {
     value.chars().take(MAX_TEXT_LEN).collect()
 }
 

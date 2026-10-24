@@ -4,6 +4,7 @@
 
 ### Added
 
+- Crate Wrapped: the backend now keeps a bounded play history alongside the collection, and a Wrapped card in The Crate folds the selected month into total listens, unique records/artists/tracks, the five most played records, top track, top artist, the rarest pressing played, and the busiest day. Months are UTC and older months can be stepped through from the picker.
 - OBS overlay: a local read-only HTTP server on `127.0.0.1:43110` serves a transparent, self-refreshing Browser Source at `/overlay` with cover art, track, artist, album, and interpolated progress. `/state` exposes the same snapshot as JSON for custom scenes, and `/artwork` serves the cached cover because a browser source cannot resolve the `vinyldeck:` scheme. The URL is listed in Settings -> Other.
 - Discord Rich Presence: paste your own Discord application client ID in Settings -> Other and VinylDeck mirrors the current track, artist, album, and elapsed time through the local Discord IPC socket. Presence stays completely off while the field is empty, and the worker only sends on track or play-state changes.
 - System-audio reactivity: a slim VU meter under the transport, a bass-driven tonearm/headshell jitter, and a groove/glow pulse follow what is actually playing. Windows captures the default render endpoint with WASAPI loopback; Linux reads the PipeWire/Pulse monitor source through `parec`. Capture starts and stops with playback, failures leave the deck still, and the analysis is a lightweight three-band envelope (no FFT) emitted at ~30 Hz. No microphone is opened.

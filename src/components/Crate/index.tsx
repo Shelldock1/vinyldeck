@@ -21,6 +21,7 @@ import {
 import type { CrateSort } from "../../lib/collection/records";
 import type { CollectedRecord } from "../../lib/collection/types";
 import { CrateDisc } from "./CrateDisc";
+import { CrateWrapped } from "./CrateWrapped";
 import "../VinylRecord/wear.css";
 import "./Crate.css";
 
@@ -71,6 +72,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   const [sort, setSort] = useState<CrateSort>("recent");
   const [query, setQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [wrappedOpen, setWrappedOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -87,6 +89,7 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
     if (!open) {
       // Clear while closed so reopening never flashes a stale filtered shelf.
       setQuery("");
+      setWrappedOpen(false);
       lastFadeKey.current = "";
       return;
     }
@@ -145,18 +148,29 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
             <span className="crate-panel__eyebrow">The Crate</span>
             <h2 className="crate-panel__title">Your collection</h2>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            className="crate-panel__close"
-            aria-label="Close crate"
-            onClick={onClose}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-              <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
+          <div className="crate-panel__actions">
+            <button
+              type="button"
+              className="crate-panel__wrapped"
+              onClick={() => setWrappedOpen(true)}
+            >
+              Wrapped
+            </button>
+            <button
+              ref={closeRef}
+              type="button"
+              className="crate-panel__close"
+              aria-label="Close crate"
+              onClick={onClose}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
         </header>
+
+        <CrateWrapped open={wrappedOpen} onClose={() => setWrappedOpen(false)} />
 
         <dl className="crate-panel__stats" aria-label="Collection statistics">
           <div className="crate-panel__stat">

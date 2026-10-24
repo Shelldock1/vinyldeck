@@ -43,3 +43,44 @@ export interface PressResult {
 }
 
 export type RarityTier = "common" | "uncommon" | "rare" | "legendary";
+
+export interface WrappedAlbum {
+  key: string;
+  artist: string;
+  album: string;
+  plays: number;
+  pressingNumber: number | null;
+}
+
+export interface WrappedTrack {
+  track: string;
+  artist: string;
+  plays: number;
+}
+
+export interface WrappedArtist {
+  artist: string;
+  plays: number;
+}
+
+export interface WrappedDay {
+  /** YYYY-MM-DD (UTC). */
+  date: string;
+  plays: number;
+}
+
+export interface WrappedStats {
+  /** YYYY-MM (UTC). */
+  month: string;
+  label: string;
+  totalPlays: number;
+  uniqueAlbums: number;
+  uniqueArtists: number;
+  uniqueTracks: number;
+  topRecords: WrappedAlbum[];
+  topTrack: WrappedTrack | null;
+  topArtist: WrappedArtist | null;
+  rarest: WrappedAlbum | null;
+  busiestDay: WrappedDay | null;
+  availableMonths: string[];
+}
