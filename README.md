@@ -44,15 +44,21 @@
 VinylDeck does not stream music and does not need your library. Start a track in Spotify, a browser, VLC, mpv or anything else that talks to Windows SMTC or Linux MPRIS, open VinylDeck, and the active session becomes the deck. Album art is pressed into the record label, its palette lights the room, the tonearm follows the song, and every control acts on the real player.
 
 <p align="center">
-  <img src="./app-screenshots/05-glass-main-playing-full-ui.png" width="800" alt="VinylDeck Glass shell">
+  <img src="./app-screenshots/main-noir.png" width="800" alt="VinylDeck Noir shell with Art Ambient lighting the room in the album's colors">
 </p>
 <p align="center">
-  <img src="./app-screenshots/11-noir-main-playing-full-ui.png" width="800" alt="VinylDeck Noir shell">
+  <img src="./app-screenshots/main-light.png" width="395" alt="Glass shell in the Light scheme">
+  <img src="./app-screenshots/main-halloween.png" width="395" alt="Noir shell in the seasonal Halloween scheme">
 </p>
 <p align="center">
-  <img src="./app-screenshots/03-mini-glass-playing.png" width="380" alt="VinylDeck Mini player">
-  <img src="./app-screenshots/16-glass-fullscreen-track2-idle.png" width="380" alt="VinylDeck Fullscreen mode">
+  <img src="./app-screenshots/crate.png" width="395" alt="The Crate: every album pressed into a numbered record with play counts and a listening streak">
+  <img src="./app-screenshots/crate-wrapped.png" width="395" alt="Crate Wrapped: a monthly recap of listens, top records, top artist and rarest pressing">
 </p>
+<p align="center">
+  <img src="./app-screenshots/settings-russian.png" width="395" alt="Settings in Russian">
+  <img src="./app-screenshots/mini-player.png" width="200" alt="Mini player">
+</p>
+<p align="center"><sub>Noir with Art Ambient · Light and Halloween schemes · The Crate and Wrapped · Russian localization · Mini player</sub></p>
 
 ## Install
 
