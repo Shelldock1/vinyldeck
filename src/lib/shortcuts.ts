@@ -29,6 +29,13 @@ export const SHORTCUTS: ShortcutDefinition[] = [
     readmeRow: "| Play / pause | `Space` |",
   },
   {
+    id: "global-play-pause",
+    key: "Ctrl+Alt+Space",
+    action: "Play / pause (global)",
+    group: "Playback",
+    readmeRow: "| Play / pause (global) | `Ctrl+Alt+Space` |",
+  },
+  {
     id: "previous",
     key: "Left",
     action: "Previous track",
@@ -71,6 +78,13 @@ export const SHORTCUTS: ShortcutDefinition[] = [
     action: "Mini player",
     group: "Window",
     readmeRow: "| Mini player | `M` |",
+  },
+  {
+    id: "global-mini",
+    key: "Ctrl+Alt+M",
+    action: "Mini player (global)",
+    group: "Window",
+    readmeRow: "| Mini player (global) | `Ctrl+Alt+M` |",
   },
   {
     id: "theme",

@@ -2,6 +2,7 @@ mod app_lifecycle;
 mod collection;
 mod media;
 mod settings;
+mod shortcuts;
 mod sleep;
 mod tray;
 mod window;
@@ -37,6 +38,7 @@ pub fn run() {
             None,
         ))
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(shortcuts::plugin())
         // Artwork bytes are served from the in-process cache. The frontend
         // converts the short `vinyldeck://art/<hash>` value from snapshots
         // into the platform URL form for this scheme.
@@ -74,6 +76,7 @@ pub fn run() {
                 eprintln!("[VinylDeck crate] failed to load collection: {error}");
             }
             media::poller::start_smtc_poller(app.handle().clone());
+            shortcuts::register(app.handle());
             tray::setup_tray(app)?;
             Ok(())
         })

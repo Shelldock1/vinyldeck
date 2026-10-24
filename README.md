@@ -90,10 +90,12 @@ npm run dev
 | Action | Shortcut |
 | --- | --- |
 | Play / pause | `Space` |
+| Play / pause (global) | `Ctrl+Alt+Space` |
 | Previous / next | `Left` / `Right` |
 | Seek -5s / +5s | `Shift+Left` / `Shift+Right` (or arrows with the progress ring focused) |
 | Fullscreen | `F` |
 | Mini player | `M` |
+| Mini player (global) | `Ctrl+Alt+M` |
 | Cycle shell | `T` |
 | Settings | `S` |
 | Art Ambient | `A` |

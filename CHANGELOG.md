@@ -4,6 +4,7 @@
 
 ### Added
 
+- Global shortcuts: `Ctrl+Alt+M` toggles the Mini player and `Ctrl+Alt+Space` toggles playback even while another app has focus. Registration is best-effort when the desktop already owns a combination, and both appear in the `?` cheat sheet.
 - Keyboard cheat sheet: press `?` in Main or Fullscreen to open a small glass overlay listing every shortcut, grouped Playback / Window / App. `Escape`, the scrim, or the close button dismisses it, and focus returns to the control that opened it. The sheet is rendered from one shared definition list and is not available in Mini.
 - Sleep timer: pause after 15/30/45/60 minutes or at the end of the current track from the right-click menu or Settings -> Other. The timer runs in Rust so it survives Mini/Main switches and window hiding; when it fires, playback pauses through the normal media bridge and the tonearm lifts and returns to its rest. It is not persisted across launches.
 - Shuffle and repeat hardware levers now sit beside the transport pill when the active source supports them. Repeat cycles Off -> All -> One, and the tray menu mirrors both toggles. Linux reads and writes MPRIS `LoopStatus`/`Shuffle`; Windows reads and writes SMTC auto-repeat and shuffle.
