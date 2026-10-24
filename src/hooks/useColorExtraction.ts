@@ -193,7 +193,7 @@ async function extractAmbientFromImage(imgEl: HTMLImageElement): Promise<{
   return { primary: color, secondary: color };
 }
 
-function buildAmbientFromPalette(palette: ArtworkPalette): {
+export function buildAmbientFromPalette(palette: ArtworkPalette): {
   primary: string;
   secondary: string;
   accent: string;
@@ -264,6 +264,14 @@ function extractArtworkPaletteFromImage(
     PALETTE_CANVAS_SIZE,
     PALETTE_CANVAS_SIZE,
   ).data;
+  return paletteFromPixels(pixels);
+}
+
+/**
+ * Quantizes RGBA pixels into the album palette. Exported so the clustering
+ * rules can be tested without a real canvas.
+ */
+export function paletteFromPixels(pixels: Uint8ClampedArray): ArtworkPalette | null {
   const clusters = new Map<string, QuantizedCluster>();
   let totalR = 0;
   let totalG = 0;

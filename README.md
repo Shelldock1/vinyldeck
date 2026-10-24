@@ -4,7 +4,7 @@
 </h1>
 
 <p align="center">
-  <strong>A cinematic vinyl experience for everything playing on your Windows desktop.</strong>
+  <strong>A cinematic vinyl experience for everything playing on your Windows or Linux desktop.</strong>
 </p>
 
 <p align="center">
@@ -19,6 +19,7 @@
 
 <p align="center">
   <img alt="Windows" src="https://img.shields.io/badge/platform-Windows-1f6feb">
+  <img alt="Linux" src="https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black">
   <img alt="Tauri" src="https://img.shields.io/badge/shell-Tauri-24c8db">
   <img alt="React" src="https://img.shields.io/badge/frontend-React-61dafb">
   <img alt="Rust" src="https://img.shields.io/badge/backend-Rust-b7410e">
@@ -26,18 +27,21 @@
 
 VinylDeck turns the track already playing on your system into a living turntable. Album art becomes the record label, extracted colors bloom through the scene, the needle breathes with the music state, and every control feels like part of a physical deck.
 
-Built with Tauri, Rust, React, and Windows media integration, VinylDeck is designed to feel native, lightweight, and quietly dramatic.
+Built with Tauri, Rust, React, and native system-media integration (Windows SMTC, Linux MPRIS), VinylDeck is designed to feel native, lightweight, and quietly dramatic.
 
 ## Highlights
 
-- **Works with system media** - reads Windows media sessions from apps such as Spotify, browsers, and VLC.
+- **Works with system media** - reads Windows SMTC or Linux MPRIS sessions from apps such as Spotify, browsers, and VLC.
 - **Cinematic vinyl rendering** - animated record motion, album-art label, physical tonearm, ambient bloom, film grain, and glass/noir shells.
-- **Native desktop feel** - main, fullscreen, and resizable mini-player modes with tray lifecycle.
+- **Native desktop feel** - main, fullscreen, and resizable mini-player modes with tray lifecycle on Windows and Linux.
 - **Mini transparency** - optional Mini-only Windows Acrylic mode lets the desktop blur through behind the vinyl and controls.
 - **Opt-in startup** - launch with Windows when you want VinylDeck ready as a quiet companion.
-- **Real media controls** - play, pause, previous, next, and seek flow through Windows SMTC when supported by the active source.
+- **Real media controls** - play, pause, previous, next, and seek flow through SMTC or MPRIS when supported by the active source.
 - **Persistent settings** - visual and behavior preferences sync across app windows through the Rust backend.
-- **The Crate** - every album you play is pressed into a personal collection as a one-of-a-kind record that wears with every listen.
+- **The Crate** - every album you play is pressed into a personal collection as a one-of-a-kind record that wears with every listen, with monthly Wrapped stats for what you actually played.
+- **Reactive deck** - a VU meter, needle vibration, and groove glow follow the system audio through WASAPI loopback or the PipeWire/Pulse monitor, without opening a microphone.
+- **Stream and status extras** - a transparent OBS browser-source overlay on `127.0.0.1:43110`, plus opt-in Discord Rich Presence.
+- **Global shortcuts** - `Ctrl+Alt+M` toggles Mini and `Ctrl+Alt+Space` toggles playback even when another app has focus.
 - **Needle Drop** - grab the tonearm and drop it anywhere on the grooves to seek, or lift it off to pause.
 - **Keyboard-first polish** - focused shortcuts, keycap hints, custom tooltips, and a right-click command menu.
 
@@ -58,8 +62,8 @@ VinylDeck is a desktop-first visual player, not a streaming service. Start music
 
 ```mermaid
 flowchart LR
-  Music["Spotify / Browser / VLC"] --> Windows["Windows media session"]
-  Windows --> VinylDeck["VinylDeck"]
+  Music["Spotify / Browser / VLC"] --> Media["Windows SMTC / Linux MPRIS"]
+  Media --> VinylDeck["VinylDeck"]
   VinylDeck --> Scene["Animated vinyl deck"]
 ```
 
@@ -67,23 +71,37 @@ flowchart LR
 
 Requirements:
 
-- Windows 10 or 11
-- Microsoft WebView2 runtime
+- Windows 10 or 11 with the Microsoft WebView2 runtime, or a Linux desktop with GTK 3 / WebKitGTK 4.1
 - Node.js + npm
 - Rust toolchain
 
 Run the desktop app:
 
-```powershell
+```bash
 npm install
 npm run tauri dev
 ```
 
 Run browser-only visual development with mock playback:
 
-```powershell
+```bash
 npm run dev
 ```
+
+On Linux, Tauri also needs the usual WebKitGTK build dependencies, for example on Debian/Ubuntu:
+
+```bash
+sudo apt install build-essential curl wget file libssl-dev libxdo-dev \
+  libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+```
+
+Audio reactivity reads the default PipeWire/Pulse monitor through `parec`; install `pulseaudio-utils` (or PipeWire's Pulse compatibility package) if it is missing. To install a user-level launcher into `~/.local/bin`, run:
+
+```bash
+npm run install:linux
+```
+
+Release bundles build for Windows (`msi`, `nsis`) and Linux (`deb`, `appimage`).
 
 ## Controls
 
@@ -132,7 +150,7 @@ Shortcuts can be turned off in Settings. Escape stays available and closes the t
 ## Tech Stack
 
 - Tauri v2 desktop shell
-- Rust backend for Windows media, settings, tray, and window lifecycle
+- Rust backend for Windows SMTC / Linux MPRIS media, settings, tray, and window lifecycle
 - React 19 + TypeScript visual engine
 - Zustand v5 state cache
 - `motion/react` v12 animation
@@ -141,7 +159,7 @@ Shortcuts can be turned off in Settings. Escape stays available and closes the t
 
 ## Project Status
 
-VinylDeck is actively developed for Windows. The current version is `0.1.1`. Ready-to-use installers are available on the GitHub Releases page.
+VinylDeck is actively developed for Windows and Linux. The current version is `0.1.1`. Windows installers and Linux bundles are available on the GitHub Releases page.
 
 ## Credits
 
