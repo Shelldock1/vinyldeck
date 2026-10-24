@@ -1,7 +1,7 @@
 # VinylDeck: Current State
 
-**Current Phase:** Release `0.2.0` prepared — Windows/Linux parity, tag-driven releases, one-line installers, manual update check and docs overhaul.
-**Current Stage:** Windows + Linux desktop app at `0.2.0`; CI and release pipelines cover both hosts. Version bump committed; tag/push and live CI verification are the remaining release steps.
+**Current Phase:** Release `0.2.0` shipped — Windows/Linux parity, tag-driven releases, one-line installers, manual update check and docs overhaul.
+**Current Stage:** `v0.2.0` is public on GitHub with checksummed Windows and Linux assets; `main` and CI are green. No release follow-up is pending.
 
 ## Active Work
 
@@ -59,7 +59,7 @@ Post-roadmap:
 - NSIS `installMode: currentUser`; stable names `vinyldeck-setup-windows-x64.exe`, `vinyldeck-windows-x64.msi`, `vinyldeck-linux-x64.AppImage`, `vinyldeck-linux-x64.deb`.
 - Docs rewritten: `README.md`, `CHANGELOG.md` (0.2.0 + tagged history), new `CONTRIBUTING.md`, `docs/{USER_GUIDE,DEVELOPMENT,ARCHITECTURE,API,TROUBLESHOOTING,RELEASING}.md`, `llms.txt`; `docs/RELEASE_V1.md` renamed to `docs/RELEASING.md`. Landing download links moved to Shelldock1 stable assets and now include Linux.
 - Local verification: Linux release binary, `deb` and AppImage built; `collect-release.mjs` produced stable names; `install.sh` installed from a local HTTP mirror with checksum verification; AppImage `--appimage-extract` clean. AppImage bundling needs `PKG_CONFIG_PATH` set but `PKG_CONFIG_SYSROOT_DIR` unset (updated docs); DEB needs the sysroot visible.
-- Not verified here: Windows runtime/installer, PowerShell execution, GitHub Actions run, live downloads, code signing. CI logs and a Windows host are the remaining gates.
+- Not verified here at the time: Windows runtime/installer, PowerShell execution, live downloads, code signing. The tag run and live downloads were later verified; see below.
 
 ## Release 0.2.0 preparation (2026-10-24)
 
@@ -68,7 +68,15 @@ Post-roadmap:
 - Restored README `## Controls` table to the exact `SHORTCUTS[].readmeRow` strings; the Phase 3 docs rewrite had broken `shortcuts.test.ts`.
 - Version bumped to `0.2.0` in root and landing `package.json`/lockfiles, `src-tauri/Cargo.toml`, `Cargo.lock`, `tauri.conf.json`. Landing download metadata already pointed at 0.2.0.
 - Verified after the change: `npm run lint`, `npm run build`, 144 frontend tests / 25 files, `cargo fmt --check`, `cargo clippy -D warnings`, 102 Rust tests, `cargo check --locked`.
-- Pending: push `main`, push annotated `v0.2.0`, watch the release workflow, verify `releases/latest/download/*` and the one-line installers against the published assets.
+
+## Release 0.2.0 shipped (2026-10-24)
+
+- `main` at `e03e70e`; annotated tag `v0.2.0` points at the same commit. Release run `40119715636` succeeded (Windows bundles, Linux bundles, publish) and CI run `40119710653` passed all three jobs.
+- Published assets: `vinyldeck-setup-windows-x64.exe`, `vinyldeck-windows-x64.msi`, `vinyldeck-linux-x64.AppImage`, `vinyldeck-linux-x64.deb`, `SHA256SUMS.txt`, `install.sh`, `install.ps1`.
+- Verified locally: every `releases/latest/download/*` URL returns 200, `sha256sum -c SHA256SUMS.txt` passes for all six files, the AppImage extracts and its libraries resolve, the DEB ships binary/icons/desktop entry, and the published `install.sh` one-liner installs the AppImage into a temp prefix with checksum verification.
+- Failure history: the first tag run died in `makensis` (`RestartManager_StartSession` missing; stale NSIS template, fixed in `c7079dc`); the second timed out in `apt-get` on a stalled mirror. Both workflows now bound each apt attempt with `timeout 300`, retry three times, and no longer install the unused `libfuse2` (`e03e70e`).
+- Temporary `ci-debug*` branches and their log-capture workflows are deleted locally and remotely; only `main`, `v0.1.1` and `v0.2.0` remain.
+- Not verifiable here: Windows installer execution, PowerShell runtime, Acrylic, live Discord IPC. Published `install.ps1` is CRLF because `.gitattributes` pins `*.ps1`; content matches the repo script.
 
 ## Phase 3 Implementation Notes
 
