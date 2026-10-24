@@ -91,12 +91,29 @@ pub async fn cmd_update_check() -> Result<UpdateStatus, String> {
         .map_err(|error| format!("update check task failed: {error}"))?
 }
 
-/// Open the release page in the user's browser. Only URLs under the project's
-/// GitHub releases path are accepted so the webview cannot use this command as
-/// a generic launcher.
+/// Accept only the releases index, `/latest`, or `/tag/<tag>` with a plain
+/// tag. A prefix check alone would let shell metacharacters (`&`, `|`, `^`)
+/// ride along to the platform opener.
+fn is_release_url(url: &str) -> bool {
+    let Some(rest) = url.strip_prefix(RELEASE_PREFIX) else {
+        return false;
+    };
+    match rest {
+        "" | "/" | "/latest" => true,
+        _ => rest.strip_prefix("/tag/").is_some_and(|tag| {
+            !tag.is_empty()
+                && tag
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_' | '+'))
+        }),
+    }
+}
+
+/// Open the release page in the user's browser. Only release URLs are accepted
+/// so the webview cannot use this command as a generic launcher.
 #[tauri::command]
 pub fn cmd_open_release(url: String) -> Result<(), String> {
-    if !url.starts_with(RELEASE_PREFIX) {
+    if !is_release_url(&url) {
         return Err("refusing to open a URL outside the VinylDeck releases".into());
     }
     open_external(&url)
@@ -126,8 +143,9 @@ fn open_external(url: &str) -> Result<(), String> {
 
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
-    Command::new("cmd")
-        .args(["/C", "start", "", url])
+    // rundll32 hands the URL to the default browser without cmd.exe parsing it.
+    Command::new("rundll32")
+        .args(["url.dll,FileProtocolHandler", url])
         .creation_flags(CREATE_NO_WINDOW)
         .spawn()
         .map(|_| ())
@@ -176,5 +194,23 @@ mod tests {
 
         let current = status_from_release("0.2.0", release("v0.2.0"));
         assert!(!current.update_available);
+    }
+
+    #[test]
+    fn accepts_only_plain_release_urls() {
+        assert!(is_release_url(RELEASE_PREFIX));
+        assert!(is_release_url(&format!("{RELEASE_PREFIX}/latest")));
+        assert!(is_release_url(&format!("{RELEASE_PREFIX}/tag/v0.2.1")));
+        assert!(is_release_url(&format!(
+            "{RELEASE_PREFIX}/tag/v0.3.0-beta.1"
+        )));
+
+        assert!(!is_release_url("https://example.com/releases"));
+        assert!(!is_release_url(&format!("{RELEASE_PREFIX}&calc")));
+        assert!(!is_release_url(&format!("{RELEASE_PREFIX}.evil.com")));
+        assert!(!is_release_url(&format!("{RELEASE_PREFIX}/tag/")));
+        assert!(!is_release_url(&format!("{RELEASE_PREFIX}/tag/v1&calc")));
+        assert!(!is_release_url(&format!("{RELEASE_PREFIX}/tag/v1|calc")));
+        assert!(!is_release_url(&format!("{RELEASE_PREFIX}/tag/v1/../../x")));
     }
 }
