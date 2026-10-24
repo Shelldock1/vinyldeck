@@ -9,7 +9,7 @@ export interface PlaybackState {
   track: string;
   artist: string;
   album: string;
-  artworkDataUrl: string | null;  // base64 data URI or null
+  artworkDataUrl: string | null;  // artwork URL (data: or vinyldeck://) or null
   duration: number;               // seconds, 0 if unknown
   position: number;               // seconds, client-side extrapolated
   isPlaying: boolean;
