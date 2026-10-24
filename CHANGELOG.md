@@ -11,7 +11,7 @@ Nothing yet.
 ## [0.2.0] - 2026-10-24
 
 The cross-platform release: Windows and Linux reach feature parity, both ship
-signed-shaped artifacts from one tag-driven pipeline, and the product gains the
+checksummed artifacts from one tag-driven pipeline, and the product gains the
 Crate, Wrapped, localization, system-audio reactivity, streaming extras and a
 full documentation pass.
 

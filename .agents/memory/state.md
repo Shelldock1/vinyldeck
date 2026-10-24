@@ -1,7 +1,7 @@
 # VinylDeck: Current State
 
-**Current Phase:** Cross-platform distribution complete — Windows/Linux parity, tag-driven releases, one-line installers and docs overhaul.
-**Current Stage:** Windows + Linux desktop app at `0.2.0`; CI and release pipelines cover both hosts.
+**Current Phase:** Release `0.2.0` prepared — Windows/Linux parity, tag-driven releases, one-line installers, manual update check and docs overhaul.
+**Current Stage:** Windows + Linux desktop app at `0.2.0`; CI and release pipelines cover both hosts. Version bump committed; tag/push and live CI verification are the remaining release steps.
 
 ## Active Work
 
@@ -60,6 +60,15 @@ Post-roadmap:
 - Docs rewritten: `README.md`, `CHANGELOG.md` (0.2.0 + tagged history), new `CONTRIBUTING.md`, `docs/{USER_GUIDE,DEVELOPMENT,ARCHITECTURE,API,TROUBLESHOOTING,RELEASING}.md`, `llms.txt`; `docs/RELEASE_V1.md` renamed to `docs/RELEASING.md`. Landing download links moved to Shelldock1 stable assets and now include Linux.
 - Local verification: Linux release binary, `deb` and AppImage built; `collect-release.mjs` produced stable names; `install.sh` installed from a local HTTP mirror with checksum verification; AppImage `--appimage-extract` clean. AppImage bundling needs `PKG_CONFIG_PATH` set but `PKG_CONFIG_SYSROOT_DIR` unset (updated docs); DEB needs the sysroot visible.
 - Not verified here: Windows runtime/installer, PowerShell execution, GitHub Actions run, live downloads, code signing. CI logs and a Windows host are the remaining gates.
+
+## Release 0.2.0 preparation (2026-10-24)
+
+- Phase 5: `src-tauri/src/update.rs` adds `cmd_update_check` (GitHub latest-release API via universal `ureq`, 10 s timeout, 256 KiB cap, numeric version compare) and `cmd_open_release` (release-URL allowlist, system browser). Settings -> About shows idle/checking/current/available/error states with EN/RU strings; `src/lib/update` validates the payload and has Vitest coverage. No auto-download; updater signing keys are still absent.
+- Contributor hygiene: issue forms, PR template, `.claude/` ignored, personal Windows path redacted from BUG-002.
+- Restored README `## Controls` table to the exact `SHORTCUTS[].readmeRow` strings; the Phase 3 docs rewrite had broken `shortcuts.test.ts`.
+- Version bumped to `0.2.0` in root and landing `package.json`/lockfiles, `src-tauri/Cargo.toml`, `Cargo.lock`, `tauri.conf.json`. Landing download metadata already pointed at 0.2.0.
+- Verified after the change: `npm run lint`, `npm run build`, 144 frontend tests / 25 files, `cargo fmt --check`, `cargo clippy -D warnings`, 102 Rust tests, `cargo check --locked`.
+- Pending: push `main`, push annotated `v0.2.0`, watch the release workflow, verify `releases/latest/download/*` and the one-line installers against the published assets.
 
 ## Phase 3 Implementation Notes
 
