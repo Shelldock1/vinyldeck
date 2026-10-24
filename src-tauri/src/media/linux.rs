@@ -4,13 +4,15 @@
 
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use zbus::blocking::{Connection, Proxy};
+use zbus::blocking::{Connection, MessageIterator, Proxy};
 use zbus::zvariant::{OwnedObjectPath, OwnedValue};
+use zbus::{fdo::NameOwnerChanged, MatchRule};
 
-use super::artwork::bytes_to_data_url;
+use super::artwork::{store_artwork, store_data_uri, MAX_ARTWORK_BYTES};
 use super::model::{
     mpris_loop_status, order_players, repeat_mode_from_mpris, MediaPlayer, MediaSnapshot,
     REPEAT_MODE_OFF,
@@ -21,7 +23,6 @@ const MPRIS_ROOT_IFACE: &str = "org.mpris.MediaPlayer2";
 const MPRIS_PLAYER_IFACE: &str = "org.mpris.MediaPlayer2.Player";
 const MPRIS_PATH: &str = "/org/mpris/MediaPlayer2";
 const MICROS_PER_SECOND: f64 = 1_000_000.0;
-const MAX_ARTWORK_BYTES: u64 = 5 * 1024 * 1024;
 const ARTWORK_TIMEOUT: Duration = Duration::from_secs(6);
 
 #[derive(Debug, Clone)]
@@ -30,8 +31,25 @@ struct PlayerSession {
     identity: String,
 }
 
+static SESSION_BUS: OnceLock<Connection> = OnceLock::new();
+static IDENTITIES: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+
+/// One shared session-bus connection for the whole app. D-Bus connections are
+/// thread-safe and cheap to clone, and reconnecting per poll costs a full
+/// handshake several times a second.
 fn session_bus() -> Result<Connection> {
-    Connection::session().map_err(|error| anyhow!("cannot connect to session bus: {error}"))
+    if let Some(connection) = SESSION_BUS.get() {
+        return Ok(connection.clone());
+    }
+
+    let connection =
+        Connection::session().map_err(|error| anyhow!("cannot connect to session bus: {error}"))?;
+    let _ = SESSION_BUS.set(connection.clone());
+    Ok(connection)
+}
+
+fn identity_cache() -> &'static Mutex<HashMap<String, String>> {
+    IDENTITIES.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 fn player_proxy<'a>(connection: &'a Connection, bus_name: &'a str) -> Result<Proxy<'a>> {
@@ -67,7 +85,16 @@ fn playback_status(proxy: &Proxy<'_>) -> String {
 }
 
 fn identity_for(connection: &Connection, bus_name: &str) -> String {
-    root_proxy(connection, bus_name)
+    {
+        let cache = identity_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(identity) = cache.get(bus_name) {
+            return identity.clone();
+        }
+    }
+
+    let identity = root_proxy(connection, bus_name)
         .and_then(|proxy| {
             proxy
                 .get_property::<String>("Identity")
@@ -84,7 +111,23 @@ fn identity_for(connection: &Connection, bus_name: &str) -> String {
                     .next()
                     .unwrap_or(bus_name),
             )
-        })
+        });
+
+    let mut cache = identity_cache()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if cache.len() > 128 {
+        cache.clear();
+    }
+    cache.insert(bus_name.to_string(), identity.clone());
+    identity
+}
+
+fn forget_identity(bus_name: &str) {
+    identity_cache()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .remove(bus_name);
 }
 
 /// Picks the session we should treat as "the deck". An explicit selection wins
@@ -267,13 +310,18 @@ fn read_artwork(uri: &str) -> Option<String> {
         return None;
     }
     if uri.starts_with("data:") {
-        return Some(uri.to_string());
+        return store_data_uri(uri).or_else(|| Some(uri.to_string()));
     }
 
     if let Some(path) = uri.strip_prefix("file://") {
         let decoded = percent_decode(path);
+        // Check the size before reading: cover files can be tens of megabytes.
+        let metadata = std::fs::metadata(&decoded).ok()?;
+        if metadata.len() == 0 || metadata.len() > MAX_ARTWORK_BYTES as u64 {
+            return None;
+        }
         let bytes = std::fs::read(decoded).ok()?;
-        return bytes_to_data_url(&bytes);
+        return store_artwork(&bytes);
     }
 
     if uri.starts_with("http://") || uri.starts_with("https://") {
@@ -281,10 +329,13 @@ fn read_artwork(uri: &str) -> Option<String> {
         let mut bytes = Vec::new();
         response
             .into_reader()
-            .take(MAX_ARTWORK_BYTES)
+            .take(MAX_ARTWORK_BYTES as u64 + 1)
             .read_to_end(&mut bytes)
             .ok()?;
-        return bytes_to_data_url(&bytes);
+        if bytes.len() > MAX_ARTWORK_BYTES {
+            return None;
+        }
+        return store_artwork(&bytes);
     }
 
     None
@@ -351,6 +402,81 @@ pub(crate) async fn current_media_snapshot_with_artwork(
         Ok(Some(snapshot))
     })
     .await?
+}
+
+fn properties_changed_rule() -> Option<zbus::MatchRule<'static>> {
+    let rule = MatchRule::builder()
+        .msg_type(zbus::message::Type::Signal)
+        .interface("org.freedesktop.DBus.Properties")
+        .ok()?
+        .member("PropertiesChanged")
+        .ok()?
+        .path(MPRIS_PATH)
+        .ok()?;
+    Some(rule.build())
+}
+
+fn name_owner_changed_rule() -> Option<zbus::MatchRule<'static>> {
+    let rule = MatchRule::builder()
+        .msg_type(zbus::message::Type::Signal)
+        .interface("org.freedesktop.DBus")
+        .ok()?
+        .member("NameOwnerChanged")
+        .ok()?;
+    Some(rule.build())
+}
+
+pub(crate) fn spawn_event_watchers() {
+    let _ = std::thread::Builder::new()
+        .name("vinyldeck-mpris-props".to_string())
+        .spawn(|| {
+            let Ok(connection) = session_bus() else {
+                return;
+            };
+            let Some(rule) = properties_changed_rule() else {
+                return;
+            };
+            let Ok(mut events) = MessageIterator::for_match_rule(rule, &connection, Some(64))
+            else {
+                return;
+            };
+
+            for _ in events.by_ref() {
+                crate::media::poller::wake_poller();
+            }
+        });
+
+    let _ = std::thread::Builder::new()
+        .name("vinyldeck-mpris-names".to_string())
+        .spawn(|| {
+            let Ok(connection) = session_bus() else {
+                return;
+            };
+            let Some(rule) = name_owner_changed_rule() else {
+                return;
+            };
+            let Ok(events) = MessageIterator::for_match_rule(rule, &connection, Some(64)) else {
+                return;
+            };
+
+            for message in events {
+                let Ok(message) = message else {
+                    continue;
+                };
+                let Some(signal) = NameOwnerChanged::from_message(message) else {
+                    continue;
+                };
+                let Ok(args) = signal.args() else {
+                    continue;
+                };
+                let name = args.name().as_str();
+                if !name.starts_with(MPRIS_PREFIX) {
+                    continue;
+                }
+                forget_identity(name);
+                crate::media::poller::wake_poller();
+            }
+        });
 }
 
 fn call_player_method(

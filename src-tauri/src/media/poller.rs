@@ -2,6 +2,7 @@ use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc::{self, Receiver, TryRecvError},
+        Condvar, Mutex, OnceLock,
     },
     thread,
     time::{Duration, Instant},
@@ -16,10 +17,56 @@ use super::{
 };
 use crate::collection::{self, listen::ListenTracker};
 
-const SMTC_POLL_INTERVAL_MS: u64 = 500;
+const SMTC_POLL_INTERVAL_MS: u64 = 1_000;
 const POSITION_RESYNC_INTERVAL_MS: u64 = 2_000;
 const ERROR_LOG_INTERVAL_MS: u64 = 5_000;
 static SMTC_POLLER_STARTED: AtomicBool = AtomicBool::new(false);
+
+/// Wakes the poll loop from platform events or transport commands instead of
+/// waiting for the next fallback tick.
+static POLL_WAKE: OnceLock<PollWake> = OnceLock::new();
+
+struct PollWake {
+    pending: Mutex<bool>,
+    signal: Condvar,
+}
+
+impl PollWake {
+    fn wait(&self, timeout: Duration) {
+        let mut pending = self
+            .pending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if *pending {
+            *pending = false;
+            return;
+        }
+        let (mut pending, _) = self
+            .signal
+            .wait_timeout(pending, timeout)
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *pending = false;
+    }
+}
+
+fn poll_wake() -> &'static PollWake {
+    POLL_WAKE.get_or_init(|| PollWake {
+        pending: Mutex::new(false),
+        signal: Condvar::new(),
+    })
+}
+
+/// Asks the poll loop to read the player again right away. Safe to call from
+/// any thread; calls coalesce while a poll is already in flight.
+pub(crate) fn wake_poller() {
+    let wake = poll_wake();
+    let mut pending = wake
+        .pending
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    *pending = true;
+    wake.signal.notify_one();
+}
 
 pub fn start_smtc_poller(app: AppHandle) {
     if SMTC_POLLER_STARTED
@@ -37,8 +84,10 @@ pub fn start_smtc_poller(app: AppHandle) {
             let mut poller = SmtcPoller::default();
             let mut error_log = ErrorRateLimiter::new(error_log_interval());
 
+            super::platform::spawn_event_watchers();
+
             loop {
-                thread::sleep(poll_interval);
+                poll_wake().wait(poll_interval);
                 if let Err(error) = tauri::async_runtime::block_on(poll_once(&app, &mut poller)) {
                     if let Some(message) =
                         error_log.message_for_error(&error.to_string(), Instant::now())
@@ -188,11 +237,20 @@ impl SmtcPoller {
         self.artwork_in_flight = Some(key.clone());
         self.artwork_rx = Some(rx);
 
-        tauri::async_runtime::spawn(async move {
-            let fetched =
-                super::platform::current_media_snapshot_with_artwork(selected, fallback).await;
-            let _ = tx.send((key, fetched.ok().flatten()));
-        });
+        // A dedicated thread, not the async runtime: the WinRT thumbnail
+        // handles are not `Send`, and the poll thread must not wait either way.
+        let spawned = thread::Builder::new()
+            .name("vinyldeck-artwork".to_string())
+            .spawn(move || {
+                let fetched = tauri::async_runtime::block_on(
+                    super::platform::current_media_snapshot_with_artwork(selected, fallback),
+                );
+                let _ = tx.send((key, fetched.ok().flatten()));
+            });
+
+        if spawned.is_err() {
+            self.artwork_in_flight = None;
+        }
     }
 
     /// Drains finished artwork downloads, caching and emitting the ones that

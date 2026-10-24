@@ -1,9 +1,17 @@
+use std::collections::HashSet;
+use std::sync::{Mutex, OnceLock};
+
+use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager as SessionManager;
+
 use super::model::{
     order_players, repeat_mode_from_smtc_code, smtc_auto_repeat_code, MediaPlayer, MediaSnapshot,
 };
 
 const TICKS_PER_SECOND: f64 = 10_000_000.0;
 const WINDOWS_UNIX_EPOCH_DIFF_SECONDS: u64 = 11_644_473_600;
+
+static MANAGER: OnceLock<SessionManager> = OnceLock::new();
+static SUBSCRIBED_SESSIONS: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
 
 pub(crate) async fn current_media_snapshot_with_metadata(
     selected: Option<String>,
@@ -56,7 +64,7 @@ pub(crate) async fn current_media_snapshot_with_artwork(
             .unwrap_or_default();
 
         if let Ok(thumbnail) = properties.Thumbnail() {
-            snapshot.artwork_data_url = super::artwork::thumbnail_to_data_url(thumbnail).await?;
+            snapshot.artwork_data_url = super::artwork::thumbnail_to_artwork_url(thumbnail).await?;
         }
     }
 
@@ -105,11 +113,84 @@ pub(crate) async fn list_players() -> anyhow::Result<Vec<MediaPlayer>> {
     Ok(order_players(players))
 }
 
-async fn manager(
-) -> anyhow::Result<windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager> {
-    use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
+async fn manager() -> anyhow::Result<SessionManager> {
+    if let Some(manager) = MANAGER.get() {
+        return Ok(manager.clone());
+    }
 
-    Ok(GlobalSystemMediaTransportControlsSessionManager::RequestAsync()?.await?)
+    // RequestAsync performs a broker round trip; the manager lives for the
+    // whole process, so ask for it once instead of every poll.
+    let manager = SessionManager::RequestAsync()?.await?;
+    let _ = MANAGER.set(manager.clone());
+    Ok(manager)
+}
+
+/// Subscribes to change events for sessions we have not seen yet. Tokens are
+/// dropped on purpose: the handlers live as long as the SMTC session does and
+/// only wake the poller, so there is nothing to unregister per track.
+fn ensure_session_subscriptions(manager: &SessionManager) {
+    use windows::Foundation::TypedEventHandler;
+
+    let Ok(sessions) = manager.GetSessions() else {
+        return;
+    };
+    let Ok(size) = sessions.Size() else {
+        return;
+    };
+    let mut subscribed = SUBSCRIBED_SESSIONS
+        .get_or_init(|| Mutex::new(HashSet::new()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if subscribed.len() > 64 {
+        subscribed.clear();
+    }
+
+    for index in 0..size {
+        let Ok(session) = sessions.GetAt(index) else {
+            continue;
+        };
+        let source_id = session_source_id(&session);
+        if source_id.is_empty() || !subscribed.insert(source_id) {
+            continue;
+        }
+
+        let _ = session.MediaPropertiesChanged(&TypedEventHandler::new(|_, _| {
+            crate::media::poller::wake_poller();
+            Ok(())
+        }));
+        let _ = session.PlaybackInfoChanged(&TypedEventHandler::new(|_, _| {
+            crate::media::poller::wake_poller();
+            Ok(())
+        }));
+        let _ = session.TimelinePropertiesChanged(&TypedEventHandler::new(|_, _| {
+            crate::media::poller::wake_poller();
+            Ok(())
+        }));
+    }
+}
+
+/// Subscribes to the manager-level session list. Individual session events are
+/// attached lazily by `ensure_session_subscriptions` once the poller sees them.
+pub(crate) fn spawn_event_watchers() {
+    use windows::Foundation::TypedEventHandler;
+
+    let _ = std::thread::Builder::new()
+        .name("vinyldeck-smtc-events".to_string())
+        .spawn(|| {
+            let Ok(manager) = tauri::async_runtime::block_on(manager()) else {
+                return;
+            };
+            let _ = manager.SessionsChanged(&TypedEventHandler::new(|_, _| {
+                crate::media::poller::wake_poller();
+                Ok(())
+            }));
+
+            // Hold the manager (and therefore the subscription) for the
+            // lifetime of the process.
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(3_600));
+            }
+        });
 }
 
 async fn current_session(
@@ -117,6 +198,7 @@ async fn current_session(
     fallback: Option<&str>,
 ) -> anyhow::Result<Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession>> {
     let manager = manager().await?;
+    ensure_session_subscriptions(&manager);
 
     if let Some(selected) = selected.map(str::trim).filter(|value| !value.is_empty()) {
         if let Some(session) = session_by_source_id(&manager, selected) {

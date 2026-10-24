@@ -37,6 +37,7 @@ pub async fn cmd_smtc_play(
     super::platform::play(source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -48,6 +49,7 @@ pub async fn cmd_smtc_pause(
     super::platform::pause(source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -59,6 +61,7 @@ pub async fn cmd_smtc_toggle_play_pause(
     super::platform::toggle_play_pause(source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -70,6 +73,7 @@ pub async fn cmd_smtc_next(
     super::platform::next(source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -81,6 +85,7 @@ pub async fn cmd_smtc_previous(
     super::platform::previous(source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -93,6 +98,7 @@ pub async fn cmd_smtc_seek(
     super::platform::seek(seconds, source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -105,6 +111,7 @@ pub async fn cmd_media_set_repeat(
     super::platform::set_repeat(&mode, source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }
 
@@ -117,5 +124,6 @@ pub async fn cmd_media_set_shuffle(
     super::platform::set_shuffle(enabled, source_id.as_deref())
         .await
         .map_err(|error| error.to_string())?;
+    super::poller::wake_poller();
     cmd_smtc_snapshot(authority).await
 }

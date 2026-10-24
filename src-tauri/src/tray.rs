@@ -6,7 +6,7 @@ use tauri::{
 
 use crate::{
     app_lifecycle,
-    media::{authority::PlaybackAuthority, model::MediaSnapshot, platform},
+    media::{authority::PlaybackAuthority, model::MediaSnapshot, platform, poller},
     settings::SettingsState,
     window::{self, WindowMode, MAIN_LABEL, MINI_LABEL},
 };
@@ -177,6 +177,7 @@ fn control_media_from_tray(app: &AppHandle, action: TrayMediaAction) {
             TrayMediaAction::Previous => platform::previous(source_id.as_deref()).await,
             TrayMediaAction::Next => platform::next(source_id.as_deref()).await,
         };
+        poller::wake_poller();
         if let Err(error) = result {
             eprintln!("[VinylDeck tray] media control failed: {error}");
         }
@@ -214,6 +215,7 @@ fn control_mode_from_tray(app: &AppHandle, action: TrayModeAction) {
                 platform::set_repeat(next_mode, source_id.as_deref()).await
             }
         };
+        poller::wake_poller();
         if let Err(error) = result {
             eprintln!("[VinylDeck tray] media mode control failed: {error}");
         }

@@ -15,7 +15,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::media::{authority::PlaybackAuthority, model::MediaSnapshot, platform};
+use crate::media::{authority::PlaybackAuthority, model::MediaSnapshot, platform, poller};
 
 pub const SLEEP_TIMER_CHANGED_EVENT: &str = "sleep-timer-changed";
 pub const SLEEP_TIMER_FIRED_EVENT: &str = "sleep-timer-fired";
@@ -222,6 +222,7 @@ async fn fire(app: AppHandle, generation: u64) {
     if let Err(error) = platform::pause(source_id.as_deref()).await {
         eprintln!("[VinylDeck sleep] pause failed: {error}");
     }
+    poller::wake_poller();
 
     emit_changed(&app, None);
     emit_fired(&app, &snapshot.mode);

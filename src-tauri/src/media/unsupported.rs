@@ -57,3 +57,5 @@ pub(crate) async fn set_repeat(_mode: &str, _source_id: Option<&str>) -> Result<
 pub(crate) async fn set_shuffle(_enabled: bool, _source_id: Option<&str>) -> Result<()> {
     Err(anyhow!(UNSUPPORTED))
 }
+
+pub(crate) fn spawn_event_watchers() {}
