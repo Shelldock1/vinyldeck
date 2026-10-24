@@ -26,12 +26,25 @@ jobs:
       # A stalled Azure mirror once hung this step for 25+ minutes: retry
       # stalled downloads, and fail fast instead of hanging if that's not enough.
       - name: Install Tauri system dependencies
-        timeout-minutes: 10
+        timeout-minutes: 20
         env:
-          APT_OPTS: -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
+          APT_OPTS: -o Acquire::Retries=5 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20
         run: |
-          sudo apt-get $APT_OPTS update
-          sudo apt-get $APT_OPTS install -y --no-install-recommends \
+          set -euo pipefail
+          # A stalled mirror can hang apt forever: bound every attempt and retry.
+          retry() {
+            for attempt in 1 2 3; do
+              if timeout 300 "$@"; then
+                return 0
+              fi
+              echo "apt attempt $attempt failed, retrying" >&2
+              sudo dpkg --configure -a || true
+              sleep 5
+            done
+            return 1
+          }
+          retry sudo apt-get $APT_OPTS update
+          retry sudo apt-get $APT_OPTS install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
