@@ -74,6 +74,7 @@ pub fn run() {
             window::cmd_set_window_mode,
         ])
         .setup(|app| {
+            window::fit_main_to_monitor(app.handle());
             let app_handle = app.handle().clone();
             tauri::async_runtime::block_on(settings::initialize_settings(app_handle))?;
             if let Err(error) = collection::initialize_collection(app.handle()) {

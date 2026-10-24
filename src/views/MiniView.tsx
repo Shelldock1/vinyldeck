@@ -11,7 +11,6 @@ import { SeasonalLayer } from "../components/SeasonalLayer";
 import { Controls } from "../components/Controls";
 import { TrackInfo } from "../components/TrackInfo";
 import { VinylRecord } from "../components/VinylRecord";
-import { VaporGrid } from "../components/VaporGrid";
 import { useColorExtraction } from "../hooks/useColorExtraction";
 import { useCurrentRecord } from "../hooks/useCrate";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -190,7 +189,6 @@ export function MiniView() {
         theme={theme}
       />
       <SeasonalLayer compact />
-      <VaporGrid />
 
       <section className="mini-view__centerpiece" aria-label="Mini player">
         <VinylRecord

@@ -122,22 +122,6 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
       <div className="titlebar__controls">
         <button
           type="button"
-          className="titlebar__button titlebar__button--close"
-          aria-label="Close window"
-          title="Close"
-          onClick={handleClose}
-        >
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M7.5 7.5l9 9M16.5 7.5l-9 9"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        <button
-          type="button"
           className="titlebar__button"
           aria-label="Minimize window"
           title="Minimize"
@@ -187,6 +171,22 @@ export function TitleBar({ visible, fullscreen = false }: TitleBarProps) {
           </button>
         )}
 
+        <button
+          type="button"
+          className="titlebar__button titlebar__button--close"
+          aria-label="Close window"
+          title="Close"
+          onClick={handleClose}
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M7.5 7.5l9 9M16.5 7.5l-9 9"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );

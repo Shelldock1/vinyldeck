@@ -1,17 +1,12 @@
 // src/views/MainView.tsx
-// Final z-stack layout for Stage 2.
-// Hierarchy:
-//   z:0  AmbientLayer (fixed, behind all)
-//   z:0  VaporGrid (fixed, Vapor theme only)
-//   z:1  Content container (flex column, centered)
-//         vinyl-area (relative) → ProgressRing + VinylRecord + NeedleArm
-//         TrackInfo    ← fades on idle
-//         Controls     ← fades on idle
-//         ThemePicker  ← fades on idle
+// Main window layout.
+//   z:0  AmbientLayer + SeasonalLayer (fixed, behind all)
+//   z:1  Deck: ProgressRing + VinylRecord + NeedleArm, TrackInfo, Controls,
+//        ThemePicker. Laid out at natural size and scaled down to fit the
+//        window (useFitScale) so nothing clips in small windows.
 //   z:2  SourceBadge (fixed, bottom-right)
-//
-// Phase 7: useIdleMode — 3s inactivity → TrackInfo/Controls/ThemePicker fade out
-// Phase 8: ProgressRing receives onSeek for scrub-to-seek
+//   z:90 Floating triggers (Crate, Mini, Settings, Theme)
+// Idle mode fades the chrome and enlarges the record while playing.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -38,7 +33,6 @@ import {
 
 import { AmbientLayer } from "../components/AmbientLayer";
 import { SeasonalLayer } from "../components/SeasonalLayer";
-import { VaporGrid } from "../components/VaporGrid";
 import { VinylRecord } from "../components/VinylRecord";
 import { NeedleArm } from "../components/NeedleArm";
 import { ProgressRing } from "../components/ProgressRing";
@@ -60,6 +54,7 @@ import { Kbd } from "../components/Kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../components/Tooltip";
 import { useColorExtraction } from "../hooks/useColorExtraction";
 import { logger } from "../lib/logger";
+import { useFitScale } from "../hooks/useFitScale";
 import { useIdleMode } from "../hooks/useIdleMode";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useWindowActivity } from "../hooks/useWindowActivity";
@@ -85,6 +80,8 @@ import type {
 
 const VINYL_SIZE = 420;
 const RING_SIZE = VINYL_SIZE + 28;
+/** Space kept clear around the deck: title bar, corner triggers, badges. */
+const DECK_RESERVE = { x: 48, y: 96 } as const;
 
 // Shared transition for idle fade in/out
 const IDLE_TRANSITION =
@@ -173,6 +170,8 @@ export function MainView() {
   const [parkRequest, setParkRequest] = useState(0);
   const { isSuspended } = useWindowActivity();
   const contextMenuRef = useRef<AppContextMenuHandle>(null);
+  const deckRef = useRef<HTMLDivElement>(null);
+  const deckScale = useFitScale(deckRef, DECK_RESERVE);
   const effectivePlayback = devForceEmpty ? EMPTY_PLAYBACK : playback;
   const isPlaying = devForceEmpty ? false : rawIsPlaying;
   const artworkDataUrl = devForceEmpty ? null : rawArtworkDataUrl;
@@ -471,9 +470,6 @@ export function MainView() {
       {/* z:0 — Halloween decoration, shown only by data-scheme CSS */}
       <SeasonalLayer />
 
-      {/* z:0 — Vapor grid floor */}
-      <VaporGrid />
-
       {/* z:1 — Main content */}
       <div
         style={{
@@ -482,113 +478,124 @@ export function MainView() {
           width: "100vw",
           height: "100vh",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: "28px",
-          padding: "40px 24px",
+          overflow: "hidden",
         }}
       >
-        {/* Vinyl area */}
-        <Tooltip maxVisibleMs={1800}>
-          <TooltipTrigger>
-            <div
-              style={{
-                position: "relative",
-                width: `${RING_SIZE}px`,
-                height: `${RING_SIZE}px`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                ...idleVinylAreaStyle,
-              }}
-            >
-              {/* Progress ring — Phase 8: receives onSeek */}
-              {/* Phase 7: ring fades with rest of UI on idle */}
-              <div style={idleHideStyle}>
-                <PlaybackProgressRing
+        <div
+          ref={deckRef}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "28px",
+            flexShrink: 0,
+            transform: deckScale < 1 ? `scale(${deckScale})` : undefined,
+            transformOrigin: "center center",
+          }}
+        >
+          {/* Vinyl area */}
+          <Tooltip maxVisibleMs={1800}>
+            <TooltipTrigger>
+              <div
+                style={{
+                  position: "relative",
+                  width: `${RING_SIZE}px`,
+                  height: `${RING_SIZE}px`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  ...idleVinylAreaStyle,
+                }}
+              >
+                {/* Progress ring — Phase 8: receives onSeek */}
+                {/* Phase 7: ring fades with rest of UI on idle */}
+                <div style={idleHideStyle}>
+                  <PlaybackProgressRing
+                    duration={effectivePlayback.duration}
+                    isPlaying={isPlaying}
+                    suspended={isSuspended}
+                    size={RING_SIZE}
+                    canSeek={canUseSeekControl(effectivePlayback)}
+                    onSeek={handleSeek}
+                    previewPosition={needlePreview}
+                  />
+                </div>
+
+                {/* Vinyl record */}
+                <div style={{ position: "relative", zIndex: 2 }}>
+                  <VinylRecord
+                    isPlaying={isPlaying}
+                    suspended={isSuspended}
+                    vinylWobble={settings.vinylWobble}
+                    artworkDataUrl={artworkDataUrl}
+                    trackTitle={effectivePlayback.track}
+                    size={VINYL_SIZE}
+                    trackChangeDirection={trackChangeDirection}
+                    trackChangeNonce={trackChangeNonce}
+                    wear={currentRecord.wear}
+                    wearAngle={currentRecord.wearAngle}
+                  />
+                </div>
+
+                {/* Needle arm */}
+                {/* Needle Drop: drag the headshell to seek, off the record to pause */}
+                <NeedleArm
+                  isPlaying={isPlaying}
+                  trackKey={effectivePlayback.track}
                   duration={effectivePlayback.duration}
-                  isPlaying={isPlaying}
-                  suspended={isSuspended}
-                  size={RING_SIZE}
+                  getPosition={getLivePosition}
                   canSeek={canUseSeekControl(effectivePlayback)}
+                  canControl={canUseTransportControls(effectivePlayback)}
                   onSeek={handleSeek}
-                  previewPosition={needlePreview}
+                  onPlay={handlePlay}
+                  onPause={handlePause}
+                  onScrubPreview={setNeedlePreview}
+                  parkRequest={parkRequest}
                 />
               </div>
+            </TooltipTrigger>
+            <TooltipContent>Drag to seek</TooltipContent>
+          </Tooltip>
 
-              {/* Vinyl record */}
-              <div style={{ position: "relative", zIndex: 2 }}>
-                <VinylRecord
-                  isPlaying={isPlaying}
-                  suspended={isSuspended}
-                  vinylWobble={settings.vinylWobble}
-                  artworkDataUrl={artworkDataUrl}
-                  trackTitle={effectivePlayback.track}
-                  size={VINYL_SIZE}
-                  trackChangeDirection={trackChangeDirection}
-                  trackChangeNonce={trackChangeNonce}
-                  wear={currentRecord.wear}
-                  wearAngle={currentRecord.wearAngle}
-                />
-              </div>
-
-              {/* Needle arm */}
-              {/* Needle Drop: drag the headshell to seek, off the record to pause */}
-              <NeedleArm
-                isPlaying={isPlaying}
-                trackKey={effectivePlayback.track}
-                duration={effectivePlayback.duration}
-                getPosition={getLivePosition}
-                canSeek={canUseSeekControl(effectivePlayback)}
-                canControl={canUseTransportControls(effectivePlayback)}
-                onSeek={handleSeek}
-                onPlay={handlePlay}
-                onPause={handlePause}
-                onScrubPreview={setNeedlePreview}
-                parkRequest={parkRequest}
-              />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>Drag to seek</TooltipContent>
-        </Tooltip>
-
-        {/* Track info — Phase 7: fades on idle */}
-        <div style={idleHideStyle}>
-          <TrackInfo
-            track={effectivePlayback.track || "Nothing Playing"}
-            artist={effectivePlayback.artist}
-            album={effectivePlayback.album}
-            direction={trackChangeDirection}
-          />
-        </div>
-
-        {/* Controls — Phase 7: fades on idle */}
-        <div style={{ ...idleHideStyle, position: "relative" }}>
-          <Controls
-            isPlaying={isPlaying}
-            canControl={effectivePlayback.canControl}
-            canSkip={effectivePlayback.canSkip}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            canRepeat={effectivePlayback.canRepeat}
-            canShuffle={effectivePlayback.canShuffle}
-            repeatMode={effectivePlayback.repeatMode}
-            shuffle={effectivePlayback.shuffle}
-            onToggleRepeat={handleToggleRepeat}
-            onToggleShuffle={handleToggleShuffle}
-          />
-          <div className="controls-reactivity">
-            <AudioMeter />
+          {/* Track info — Phase 7: fades on idle */}
+          <div style={idleHideStyle}>
+            <TrackInfo
+              track={effectivePlayback.track || "Nothing Playing"}
+              artist={effectivePlayback.artist}
+              album={effectivePlayback.album}
+              direction={trackChangeDirection}
+            />
           </div>
-        </div>
 
-        {/* Theme picker — Phase 7: fades on idle */}
-        <div style={idleHideStyle}>
-          <ThemePicker />
+          {/* Controls — Phase 7: fades on idle */}
+          <div style={{ ...idleHideStyle, position: "relative" }}>
+            <Controls
+              isPlaying={isPlaying}
+              canControl={effectivePlayback.canControl}
+              canSkip={effectivePlayback.canSkip}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+              canRepeat={effectivePlayback.canRepeat}
+              canShuffle={effectivePlayback.canShuffle}
+              repeatMode={effectivePlayback.repeatMode}
+              shuffle={effectivePlayback.shuffle}
+              onToggleRepeat={handleToggleRepeat}
+              onToggleShuffle={handleToggleShuffle}
+            />
+            <div className="controls-reactivity">
+              <AudioMeter />
+            </div>
+          </div>
+
+          {/* Theme picker — Phase 7: fades on idle */}
+          <div style={idleHideStyle}>
+            <ThemePicker />
+          </div>
         </div>
       </div>
 

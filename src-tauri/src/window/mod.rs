@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use tauri::{
     window::{Effect, EffectsBuilder},
-    AppHandle, LogicalSize, Manager, PhysicalPosition, WebviewUrl, WebviewWindow,
+    AppHandle, LogicalSize, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
     WebviewWindowBuilder,
 };
 
@@ -19,6 +19,9 @@ const MINI_MAX_HEIGHT: f64 = 280.0;
 
 /// Gap between the Mini window and the monitor working area edge.
 const MINI_SCREEN_MARGIN: f64 = 16.0;
+
+/// Largest share of the monitor working area the main window opens at.
+const MAIN_MAX_WORK_AREA_SHARE: f64 = 0.92;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum WindowMode {
@@ -108,6 +111,55 @@ fn show_main(app: &AppHandle) -> Result<(), String> {
     main.set_focus().map_err(|error| error.to_string())?;
 
     Ok(())
+}
+
+/// Shrinks the main window at launch when its configured size does not fit the
+/// monitor working area (small laptop screens, large DPI scales, panels), then
+/// re-centers it. The deck itself scales to fit whatever size results.
+pub(crate) fn fit_main_to_monitor(app: &AppHandle) {
+    let Some(main) = app.get_webview_window(MAIN_LABEL) else {
+        return;
+    };
+    let monitor = main
+        .current_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| main.primary_monitor().ok().flatten());
+    let (Some(monitor), Ok(size)) = (monitor, main.inner_size()) else {
+        return;
+    };
+
+    let area = monitor.work_area().size;
+    let Some(fitted) = fit_within(
+        (size.width, size.height),
+        (area.width, area.height),
+        MAIN_MAX_WORK_AREA_SHARE,
+    ) else {
+        return;
+    };
+
+    window_debug_log(&format!(
+        "fit_main_to_monitor: {}x{} -> {}x{}",
+        size.width, size.height, fitted.0, fitted.1
+    ));
+    if let Err(error) = main.set_size(PhysicalSize::new(fitted.0, fitted.1)) {
+        eprintln!("[VinylDeck window] failed to fit main window: {error}");
+        return;
+    }
+    let _ = main.center();
+}
+
+/// Returns the clamped size when `size` exceeds `share` of `area`, else None.
+fn fit_within(size: (u32, u32), area: (u32, u32), share: f64) -> Option<(u32, u32)> {
+    if area.0 == 0 || area.1 == 0 {
+        return None;
+    }
+    let max_width = (f64::from(area.0) * share).floor() as u32;
+    let max_height = (f64::from(area.1) * share).floor() as u32;
+    if size.0 <= max_width && size.1 <= max_height {
+        return None;
+    }
+    Some((size.0.min(max_width), size.1.min(max_height)))
 }
 
 fn show_fullscreen(app: &AppHandle) -> Result<(), String> {
@@ -281,7 +333,7 @@ fn window_debug_log(_message: &str) {
 
 #[cfg(test)]
 mod tests {
-    use super::WindowMode;
+    use super::{fit_within, WindowMode};
     use std::str::FromStr;
 
     #[test]
@@ -300,5 +352,15 @@ mod tests {
             WindowMode::from_str("compact"),
             Err("Unknown window mode: compact".to_string())
         );
+    }
+
+    #[test]
+    fn main_window_only_shrinks_when_it_does_not_fit() {
+        assert_eq!(fit_within((1000, 860), (1920, 1040), 0.92), None);
+        assert_eq!(
+            fit_within((1000, 860), (1366, 728), 0.92),
+            Some((1000, 669))
+        );
+        assert_eq!(fit_within((1000, 860), (0, 0), 0.92), None);
     }
 }

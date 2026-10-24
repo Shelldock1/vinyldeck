@@ -48,15 +48,15 @@ export function ProgressRing({
   const angleFromPointer = useCallback(
     (e: React.PointerEvent<SVGSVGElement>): number => {
       if (!svgRef.current) return 0;
-      const center = size / 2;
+      // Measure the rendered box: the deck may be scaled to fit the window.
       const rect = svgRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left - center;
-      const y = e.clientY - rect.top - center;
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
       let deg = Math.atan2(x, -y) * (180 / Math.PI);
       if (deg < 0) deg += 360;
       return deg;
     },
-    [size]
+    []
   );
 
   const handlePointerDown = useCallback(
