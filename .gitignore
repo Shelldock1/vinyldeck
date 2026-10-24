@@ -7,6 +7,8 @@ dist/
 dist-ssr/
 build/
 coverage/
+release/
+release-notes.md
 
 # Tauri / Rust outputs
 src-tauri/target/

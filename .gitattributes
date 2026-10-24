@@ -1,0 +1,72 @@
+# Line endings and binary handling for Windows + Linux contributors.
+#
+# The repository stores text as LF. Git for Windows checks files out with the
+# platform default unless an attribute overrides it, so every text file is
+# pinned below. Windows-only tooling keeps CRLF because classic PowerShell,
+# cmd and NSIS editors expect it.
+
+* text=auto
+
+# Cross-platform source and docs: LF in the working tree on every OS.
+*.rs        text eol=lf
+*.toml      text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.sh        text eol=lf
+*.desktop   text eol=lf
+*.txt       text eol=lf
+*.xml       text eol=lf
+*.svg       text eol=lf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+
+# Windows-only tooling: CRLF so Notepad, PowerShell ISE and NSIS stay happy.
+*.ps1       text eol=crlf
+*.psm1      text eol=crlf
+*.psd1      text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.nsi       text eol=crlf
+*.nsh       text eol=crlf
+*.wxs       text eol=crlf
+*.wxi       text eol=crlf
+
+# Executable bits survive clones with core.fileMode=false.
+*.sh        text eol=lf
+
+# Binary assets.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.icns      binary
+*.woff      binary
+*.woff2     binary
+*.mp4       binary
+*.webm      binary
+*.pdf       binary
+*.exe       binary
+*.msi       binary
+*.dll       binary
+*.so        binary
+*.dylib     binary
+*.AppImage  binary
+*.deb       binary
+*.rpm       binary
+
+# Lockfiles are generated and should keep their platform-independent text.
+package-lock.json text eol=lf
+src-tauri/Cargo.lock text eol=lf
+landing/package-lock.json text eol=lf
