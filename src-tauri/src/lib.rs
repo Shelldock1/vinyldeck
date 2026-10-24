@@ -37,6 +37,12 @@ pub fn run() {
             None,
         ))
         .plugin(tauri_plugin_store::Builder::new().build())
+        // Artwork bytes are served from the in-process cache. The frontend
+        // converts the short `vinyldeck://art/<hash>` value from snapshots
+        // into the platform URL form for this scheme.
+        .register_uri_scheme_protocol("vinyldeck", |_context, request| {
+            media::artwork::protocol_response(request.uri().path())
+        })
         .on_window_event(tray::handle_window_close)
         .invoke_handler(tauri::generate_handler![
             media::commands::cmd_media_players,

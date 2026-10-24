@@ -325,6 +325,9 @@ function uploadArtworkTexture(state: GlState, dataUrl: string | null): void {
 
   const image = new Image();
   image.decoding = "async";
+  // The artwork scheme is cross-origin to the app; ask for CORS so the
+  // texture upload is not blocked as a tainted image.
+  image.crossOrigin = "anonymous";
   image.onload = () => {
     if (state.disposed) return;
     state.artworkTexture = uploadImageTexture(

@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { EMPTY_PLAYBACK } from "./store";
 import type { PlaybackSource, PlaybackState, RepeatMode } from "./types";
 import { logger } from "../logger";
+import { resolveArtworkSrc } from "../artwork";
 
 const MEDIA_SNAPSHOT_EVENT = "media-state-changed";
 const MEDIA_POSITION_EVENT = "media-position-changed";
@@ -98,7 +99,7 @@ export function mapBackendMediaSnapshot(
     track: snapshot.track,
     artist: snapshot.artist,
     album: snapshot.album,
-    artworkDataUrl: snapshot.artworkDataUrl,
+    artworkDataUrl: resolveArtworkSrc(snapshot.artworkDataUrl),
     duration: snapshot.duration,
     position: snapshot.position,
     isPlaying: snapshot.isPlaying,
