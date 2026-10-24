@@ -1,5 +1,8 @@
 use std::{
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc::{self, Receiver, TryRecvError},
+    },
     thread,
     time::{Duration, Instant},
 };
@@ -52,12 +55,14 @@ pub fn start_smtc_poller(app: AppHandle) {
 }
 
 async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<()> {
+    poller.collect_artwork(app);
+
     let selection = app
         .try_state::<PlaybackAuthority>()
         .and_then(|authority| authority.selection());
     let fallback = poller.last_playing_source_id.clone();
     let snapshot = poller
-        .snapshot_for_poll(selection.as_deref(), fallback.as_deref())
+        .snapshot_for_poll(selection.clone(), fallback.clone())
         .await?;
     poller.observe_playing_source(snapshot.as_ref());
     if let Some(authority) = app.try_state::<PlaybackAuthority>() {
@@ -67,6 +72,9 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
     if let Some(play) = poller.listens.observe(snapshot.as_ref(), now) {
         collection::record_play(app, &play.artist, &play.album, &play.track).await;
     }
+    // Metadata goes out now; the artwork download runs off the poll thread and
+    // is emitted as a follow-up snapshot once it lands.
+    poller.request_artwork(snapshot.as_ref(), selection, fallback);
     match poller.handle_polled_snapshot(snapshot, now) {
         Some(MediaEmission::Snapshot(snapshot)) => emit_media_snapshot(app, &snapshot),
         Some(MediaEmission::Position(position)) => emit_media_position(app, position),
@@ -92,7 +100,11 @@ struct SmtcPoller {
     had_session: bool,
     last_playing_source_id: Option<String>,
     listens: ListenTracker,
+    artwork_rx: Option<Receiver<ArtworkResult>>,
+    artwork_in_flight: Option<TrackCacheKey>,
 }
+
+type ArtworkResult = (TrackCacheKey, Option<MediaSnapshot>);
 
 impl SmtcPoller {
     fn handle_polled_snapshot(
@@ -122,16 +134,14 @@ impl SmtcPoller {
 
     async fn snapshot_for_poll(
         &mut self,
-        selected: Option<&str>,
-        fallback: Option<&str>,
+        selected: Option<String>,
+        fallback: Option<String>,
     ) -> anyhow::Result<Option<MediaSnapshot>> {
-        let Some(metadata_snapshot) = super::platform::current_media_snapshot_with_metadata(
-            selected.map(str::to_string),
-            fallback.map(str::to_string),
-        )
-        .await?
+        let Some(metadata_snapshot) =
+            super::platform::current_media_snapshot_with_metadata(selected, fallback).await?
         else {
             self.cached_media = None;
+            self.artwork_in_flight = None;
             return Ok(None);
         };
 
@@ -147,23 +157,86 @@ impl SmtcPoller {
             )));
         }
 
-        let Some(full_snapshot) = super::platform::current_media_snapshot_with_artwork(
-            selected.map(str::to_string),
-            fallback.map(str::to_string),
-        )
-        .await?
-        else {
-            self.cached_media = None;
-            return Ok(Some(metadata_snapshot));
-        };
+        Ok(Some(metadata_snapshot))
+    }
 
-        if TrackCacheKey::from_snapshot(&full_snapshot) == cache_key {
-            self.cached_media = Some(CachedMedia::from_snapshot(&full_snapshot));
-            return Ok(Some(full_snapshot));
+    /// Starts an artwork download for a track that is not cached yet. The
+    /// result comes back over a channel and is emitted by `collect_artwork`,
+    /// so a slow or unreachable artwork URL never stalls the poll loop.
+    fn request_artwork(
+        &mut self,
+        snapshot: Option<&MediaSnapshot>,
+        selected: Option<String>,
+        fallback: Option<String>,
+    ) {
+        let Some(snapshot) = snapshot else {
+            return;
+        };
+        let key = TrackCacheKey::from_snapshot(snapshot);
+        if self
+            .cached_media
+            .as_ref()
+            .is_some_and(|cached| cached.key == key)
+        {
+            return;
+        }
+        if self.artwork_in_flight.as_ref() == Some(&key) {
+            return;
         }
 
-        self.cached_media = None;
-        Ok(Some(metadata_snapshot))
+        let (tx, rx) = mpsc::channel();
+        self.artwork_in_flight = Some(key.clone());
+        self.artwork_rx = Some(rx);
+
+        tauri::async_runtime::spawn(async move {
+            let fetched =
+                super::platform::current_media_snapshot_with_artwork(selected, fallback).await;
+            let _ = tx.send((key, fetched.ok().flatten()));
+        });
+    }
+
+    /// Drains finished artwork downloads, caching and emitting the ones that
+    /// still belong to the current track.
+    fn collect_artwork(&mut self, app: &AppHandle) {
+        let Some(rx) = self.artwork_rx.take() else {
+            return;
+        };
+        let mut disconnected = false;
+
+        loop {
+            match rx.try_recv() {
+                Ok((key, fetched)) => {
+                    if self.artwork_in_flight.as_ref() != Some(&key) {
+                        continue;
+                    }
+                    self.artwork_in_flight = None;
+
+                    let Some(full_snapshot) = fetched else {
+                        continue;
+                    };
+                    if TrackCacheKey::from_snapshot(&full_snapshot) != key {
+                        continue;
+                    }
+
+                    self.cached_media = Some(CachedMedia::from_snapshot(&full_snapshot));
+                    self.last_emitted_key = Some(full_snapshot.semantic_key());
+                    self.last_emit_at = Some(Instant::now());
+                    if let Some(authority) = app.try_state::<PlaybackAuthority>() {
+                        authority.update(Some(full_snapshot.clone()));
+                    }
+                    emit_media_snapshot(app, &full_snapshot);
+                }
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => {
+                    disconnected = true;
+                    break;
+                }
+            }
+        }
+
+        if !disconnected {
+            self.artwork_rx = Some(rx);
+        }
     }
 
     fn observe_playing_source(&mut self, snapshot: Option<&MediaSnapshot>) {
@@ -178,6 +251,7 @@ impl SmtcPoller {
         self.cached_media = None;
         self.last_emitted_key = None;
         self.last_emit_at = None;
+        self.artwork_in_flight = None;
 
         if self.had_session {
             self.had_session = false;
@@ -486,6 +560,7 @@ mod tests {
             last_emit_at: None,
             last_playing_source_id: None,
             listens: Default::default(),
+            ..Default::default()
         };
 
         let ended = poller.session_ended_snapshot();
