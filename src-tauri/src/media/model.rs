@@ -316,6 +316,8 @@ pub(crate) fn known_music_app_name(value: &str) -> Option<&'static str> {
 
 /// Readable name for a source: known music apps get their brand spelling
 /// ("YandexMusic" becomes "Yandex Music"), anything else is kept as is.
+/// MPRIS identities only; SMTC names go through `friendly_source_name`.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub(crate) fn display_source_name(identity: &str) -> String {
     known_music_app_name(identity)
         .map(str::to_string)
