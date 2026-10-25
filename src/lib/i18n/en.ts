@@ -286,7 +286,7 @@ export const en = {
     seconds: (value: number) => `${value}s`,
     miniTransparency: "Mini Transparency",
     miniTransparencyDescription:
-      "Mini only. Blurs your desktop through the player using Windows Acrylic; the vinyl and controls float over it. Mini can shrink from its 280px square down to a compact size.",
+      "Mini only. Lets your desktop show through the player: blurred on Windows, softly tinted on Linux. Mini can shrink from its 280px square down to a compact size.",
     playerSource: "Player Source",
     playerSourceCopy:
       "Choose which media session the deck follows. Auto follows whichever app starts or resumes playback.",

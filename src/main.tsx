@@ -23,6 +23,8 @@ const isLinuxWebView =
   /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
 if (isLinuxWebView) {
   document.documentElement.setAttribute("data-soft-render", "1");
+  // Platform features (no Acrylic blur behind windows) key off this.
+  document.documentElement.setAttribute("data-platform", "linux");
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

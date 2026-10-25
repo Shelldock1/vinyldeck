@@ -278,3 +278,17 @@ html.mini-window-active #root {
     0 1px 3px rgba(0, 0, 0, 0.5),
     0 2px 14px rgba(0, 0, 0, 0.45);
 }
+
+/* Linux has no Acrylic: nothing blurs the desktop, so a fully clear card
+   left light text over whatever window sat behind it. Keep a see-through
+   backing in the scheme's own color instead; it carries the contrast, so
+   the dark shadows go (they muddied dark text in the Light scheme). */
+html[data-platform="linux"] .mini-view--transparent {
+  background: color-mix(in srgb, var(--bg, #000000) 78%, transparent) !important;
+}
+
+html[data-platform="linux"] .mini-view--transparent .mini-view__track .track-info__title,
+html[data-platform="linux"] .mini-view--transparent .mini-view__track .track-info__artist,
+html[data-platform="linux"] .mini-view--transparent .mini-view__track .track-info__album {
+  text-shadow: none;
+}
