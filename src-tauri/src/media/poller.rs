@@ -20,6 +20,11 @@ use crate::collection::{self, listen::ListenTracker};
 const SMTC_POLL_INTERVAL_MS: u64 = 1_000;
 const POSITION_RESYNC_INTERVAL_MS: u64 = 2_000;
 const ERROR_LOG_INTERVAL_MS: u64 = 5_000;
+/// Players often publish the cover a beat after the title, and one download
+/// can fail. Retry with backoff before giving up on a track's artwork.
+const ARTWORK_MAX_ATTEMPTS: u8 = 5;
+const ARTWORK_RETRY_BASE_MS: u64 = 1_000;
+const ARTWORK_RETRY_MAX_MS: u64 = 8_000;
 static SMTC_POLLER_STARTED: AtomicBool = AtomicBool::new(false);
 
 /// Wakes the poll loop from platform events or transport commands instead of
@@ -128,7 +133,7 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
     }
     // Metadata goes out now; the artwork download runs off the poll thread and
     // is emitted as a follow-up snapshot once it lands.
-    poller.request_artwork(snapshot.as_ref(), selection, fallback);
+    poller.request_artwork(snapshot.as_ref(), selection, fallback, now);
     match poller.handle_polled_snapshot(snapshot, now) {
         Some(MediaEmission::Snapshot(snapshot)) => emit_media_snapshot(app, &snapshot),
         Some(MediaEmission::Position(position)) => emit_media_position(app, position),
@@ -156,9 +161,18 @@ struct SmtcPoller {
     listens: ListenTracker,
     artwork_rx: Option<Receiver<ArtworkResult>>,
     artwork_in_flight: Option<TrackCacheKey>,
+    artwork_retry: Option<ArtworkRetry>,
 }
 
 type ArtworkResult = (TrackCacheKey, Option<MediaSnapshot>);
+
+/// Failed artwork attempts for one track and when the next one may start.
+#[derive(Debug, Clone)]
+struct ArtworkRetry {
+    key: TrackCacheKey,
+    attempts: u8,
+    next_at: Instant,
+}
 
 impl SmtcPoller {
     fn handle_polled_snapshot(
@@ -196,6 +210,7 @@ impl SmtcPoller {
         else {
             self.cached_media = None;
             self.artwork_in_flight = None;
+            self.artwork_retry = None;
             return Ok(None);
         };
 
@@ -222,19 +237,13 @@ impl SmtcPoller {
         snapshot: Option<&MediaSnapshot>,
         selected: Option<String>,
         fallback: Option<String>,
+        now: Instant,
     ) {
         let Some(snapshot) = snapshot else {
             return;
         };
         let key = TrackCacheKey::from_snapshot(snapshot);
-        if self
-            .cached_media
-            .as_ref()
-            .is_some_and(|cached| cached.key == key)
-        {
-            return;
-        }
-        if self.artwork_in_flight.as_ref() == Some(&key) {
+        if !self.artwork_request_due(&key, now) {
             return;
         }
 
@@ -258,6 +267,29 @@ impl SmtcPoller {
         }
     }
 
+    /// Whether a download should start for `key` now: not cached, not already
+    /// running, and not waiting out (or past) its retry budget.
+    fn artwork_request_due(&self, key: &TrackCacheKey, now: Instant) -> bool {
+        if self
+            .cached_media
+            .as_ref()
+            .is_some_and(|cached| &cached.key == key)
+        {
+            return false;
+        }
+        if self.artwork_in_flight.as_ref() == Some(key) {
+            return false;
+        }
+        match self
+            .artwork_retry
+            .as_ref()
+            .filter(|retry| &retry.key == key)
+        {
+            Some(retry) => retry.attempts < ARTWORK_MAX_ATTEMPTS && now >= retry.next_at,
+            None => true,
+        }
+    }
+
     /// Drains finished artwork downloads, caching and emitting the ones that
     /// still belong to the current track.
     fn collect_artwork(&mut self, app: &AppHandle) {
@@ -269,21 +301,10 @@ impl SmtcPoller {
         loop {
             match rx.try_recv() {
                 Ok((key, fetched)) => {
-                    if self.artwork_in_flight.as_ref() != Some(&key) {
-                        continue;
-                    }
-                    self.artwork_in_flight = None;
-
-                    let Some(full_snapshot) = fetched else {
+                    let Some(full_snapshot) = self.accept_artwork(key, fetched, Instant::now())
+                    else {
                         continue;
                     };
-                    if TrackCacheKey::from_snapshot(&full_snapshot) != key {
-                        continue;
-                    }
-
-                    self.cached_media = Some(CachedMedia::from_snapshot(&full_snapshot));
-                    self.last_emitted_key = Some(full_snapshot.semantic_key());
-                    self.last_emit_at = Some(Instant::now());
                     if let Some(authority) = app.try_state::<PlaybackAuthority>() {
                         authority.update(Some(full_snapshot.clone()));
                     }
@@ -302,6 +323,50 @@ impl SmtcPoller {
         }
     }
 
+    /// Decides what to do with one finished artwork download. Returns the
+    /// snapshot to emit when a cover arrived for the current track. A missing
+    /// cover is not cached, so the track is retried with backoff until it
+    /// lands or `ARTWORK_MAX_ATTEMPTS` is spent.
+    fn accept_artwork(
+        &mut self,
+        key: TrackCacheKey,
+        fetched: Option<MediaSnapshot>,
+        now: Instant,
+    ) -> Option<MediaSnapshot> {
+        if self.artwork_in_flight.as_ref() != Some(&key) {
+            return None;
+        }
+        self.artwork_in_flight = None;
+
+        let full_snapshot = match fetched {
+            // The track changed while downloading; the new key fetches afresh.
+            Some(snapshot) if TrackCacheKey::from_snapshot(&snapshot) != key => return None,
+            Some(snapshot) if snapshot.artwork_data_url.is_some() => snapshot,
+            _ => {
+                self.schedule_artwork_retry(key, now);
+                return None;
+            }
+        };
+
+        self.artwork_retry = None;
+        self.cached_media = Some(CachedMedia::from_snapshot(&full_snapshot));
+        self.last_emitted_key = Some(full_snapshot.semantic_key());
+        self.last_emit_at = Some(now);
+        Some(full_snapshot)
+    }
+
+    fn schedule_artwork_retry(&mut self, key: TrackCacheKey, now: Instant) {
+        let attempts = match self.artwork_retry.as_ref() {
+            Some(retry) if retry.key == key => retry.attempts.saturating_add(1),
+            _ => 1,
+        };
+        self.artwork_retry = Some(ArtworkRetry {
+            key,
+            attempts,
+            next_at: now + artwork_retry_delay(attempts),
+        });
+    }
+
     fn observe_playing_source(&mut self, snapshot: Option<&MediaSnapshot>) {
         if let Some(snapshot) =
             snapshot.filter(|snapshot| snapshot.is_playing && !snapshot.source_id.is_empty())
@@ -315,6 +380,7 @@ impl SmtcPoller {
         self.last_emitted_key = None;
         self.last_emit_at = None;
         self.artwork_in_flight = None;
+        self.artwork_retry = None;
 
         if self.had_session {
             self.had_session = false;
@@ -386,6 +452,13 @@ fn apply_cached_media(
     lightweight
 }
 
+/// 1s, 2s, 4s, then 8s between attempts.
+fn artwork_retry_delay(attempts: u8) -> Duration {
+    let exponent = u32::from(attempts.saturating_sub(1)).min(16);
+    let millis = ARTWORK_RETRY_BASE_MS.saturating_mul(1 << exponent);
+    Duration::from_millis(millis.min(ARTWORK_RETRY_MAX_MS))
+}
+
 fn seconds_to_millis(seconds: f64) -> u64 {
     if !seconds.is_finite() || seconds <= 0.0 {
         return 0;
@@ -446,13 +519,101 @@ mod tests {
     use std::time::Duration;
 
     use super::{
-        apply_cached_media, error_log_interval, position_resync_interval, CachedMedia,
-        ErrorRateLimiter, MediaEmission, MediaPosition, MediaSnapshot, SmtcPoller, TrackCacheKey,
+        apply_cached_media, artwork_retry_delay, error_log_interval, position_resync_interval,
+        CachedMedia, ErrorRateLimiter, MediaEmission, MediaPosition, MediaSnapshot, SmtcPoller,
+        TrackCacheKey, ARTWORK_MAX_ATTEMPTS,
     };
 
     fn claim_start(flag: &AtomicBool) -> bool {
         flag.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
             .is_ok()
+    }
+
+    fn artwork_track() -> MediaSnapshot {
+        MediaSnapshot {
+            source_id: "spotify".to_string(),
+            track: "Track".to_string(),
+            artist: "Artist".to_string(),
+            album: "Album".to_string(),
+            duration: 200.0,
+            ..MediaSnapshot::default()
+        }
+    }
+
+    #[test]
+    fn missing_artwork_is_retried_with_backoff_until_the_budget_is_spent() {
+        let mut poller = SmtcPoller::default();
+        let track = artwork_track();
+        let key = TrackCacheKey::from_snapshot(&track);
+        let mut now = std::time::Instant::now();
+
+        for attempt in 1..=ARTWORK_MAX_ATTEMPTS {
+            assert!(poller.artwork_request_due(&key, now), "attempt {attempt}");
+            poller.artwork_in_flight = Some(key.clone());
+            assert_eq!(
+                poller.accept_artwork(key.clone(), Some(track.clone()), now),
+                None
+            );
+            // A miss is never cached, so the track stays eligible for retries.
+            assert!(poller.cached_media.is_none());
+            assert!(!poller.artwork_request_due(&key, now));
+            now += artwork_retry_delay(attempt);
+        }
+
+        assert!(!poller.artwork_request_due(&key, now + std::time::Duration::from_secs(60)));
+    }
+
+    #[test]
+    fn late_cover_is_cached_emitted_and_clears_the_retry() {
+        let mut poller = SmtcPoller::default();
+        let track = artwork_track();
+        let key = TrackCacheKey::from_snapshot(&track);
+        let now = std::time::Instant::now();
+
+        poller.artwork_in_flight = Some(key.clone());
+        assert_eq!(poller.accept_artwork(key.clone(), None, now), None);
+
+        let later = now + artwork_retry_delay(1);
+        assert!(poller.artwork_request_due(&key, later));
+        poller.artwork_in_flight = Some(key.clone());
+        let with_cover = MediaSnapshot {
+            artwork_data_url: Some("vinyldeck://art/00000000000000ab".to_string()),
+            ..track
+        };
+        assert_eq!(
+            poller.accept_artwork(key.clone(), Some(with_cover.clone()), later),
+            Some(with_cover)
+        );
+        assert!(poller.artwork_retry.is_none());
+        assert!(!poller.artwork_request_due(&key, later));
+    }
+
+    #[test]
+    fn artwork_for_a_previous_track_is_ignored_without_using_a_retry() {
+        let mut poller = SmtcPoller::default();
+        let track = artwork_track();
+        let key = TrackCacheKey::from_snapshot(&track);
+        let next = MediaSnapshot {
+            track: "Next".to_string(),
+            artwork_data_url: Some("vinyldeck://art/00000000000000cd".to_string()),
+            ..track
+        };
+        let now = std::time::Instant::now();
+
+        poller.artwork_in_flight = Some(key.clone());
+        assert_eq!(poller.accept_artwork(key.clone(), Some(next), now), None);
+        assert!(poller.artwork_retry.is_none());
+        assert!(poller.cached_media.is_none());
+        assert!(poller.artwork_request_due(&key, now));
+    }
+
+    #[test]
+    fn artwork_retry_delay_doubles_and_caps() {
+        let secs = |attempts| artwork_retry_delay(attempts).as_millis();
+        assert_eq!(
+            [secs(1), secs(2), secs(3), secs(4), secs(5), secs(200)],
+            [1_000, 2_000, 4_000, 8_000, 8_000, 8_000]
+        );
     }
 
     #[test]
