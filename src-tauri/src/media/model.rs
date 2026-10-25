@@ -201,6 +201,9 @@ pub(crate) fn ticks_to_seconds(ticks: i64) -> f64 {
 #[allow(dead_code)]
 pub(crate) fn friendly_source_name(app_id: &str) -> String {
     let lower = app_id.to_lowercase();
+    if let Some(name) = known_music_app_name(app_id) {
+        return name.to_string();
+    }
     if lower.contains("spotify") {
         return "Spotify".to_string();
     }
@@ -255,9 +258,56 @@ const BROWSER_MARKERS: &[&str] = &[
     "arc",
 ];
 
+/// Dedicated music apps, matched against a lowercased, alphanumeric-only
+/// form of the MPRIS identity or SMTC AUMID. They win over browser markers:
+/// Electron apps such as Yandex Music register on MPRIS as
+/// `chromium.instanceN`, and "YandexMusic" would otherwise read as Yandex
+/// Browser.
+const MUSIC_APP_MARKERS: &[(&str, &str)] = &[
+    ("yandexmusic", "Yandex Music"),
+    ("yandexdesktopmusic", "Yandex Music"),
+    ("яндексмузыка", "Yandex Music"),
+    ("youtubemusic", "YouTube Music"),
+    ("ytmusic", "YouTube Music"),
+    ("vkmusic", "VK Music"),
+    ("вкмузыка", "VK Music"),
+    ("applemusic", "Apple Music"),
+    ("amazonmusic", "Amazon Music"),
+    ("deezer", "Deezer"),
+    ("tidal", "Tidal"),
+];
+
+fn compact_name(value: &str) -> String {
+    value
+        .chars()
+        .filter(|ch| ch.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// Display name for a known music app, from an identity or app id.
+pub(crate) fn known_music_app_name(value: &str) -> Option<&'static str> {
+    let compact = compact_name(value);
+    MUSIC_APP_MARKERS
+        .iter()
+        .find(|(marker, _)| compact.contains(marker))
+        .map(|(_, name)| *name)
+}
+
+/// Readable name for a source: known music apps get their brand spelling
+/// ("YandexMusic" becomes "Yandex Music"), anything else is kept as is.
+pub(crate) fn display_source_name(identity: &str) -> String {
+    known_music_app_name(identity)
+        .map(str::to_string)
+        .unwrap_or_else(|| identity.to_string())
+}
+
 /// Splits sources into dedicated music apps and web browsers so the Crate can
 /// keep video sites out of the music collection.
 pub(crate) fn source_kind(source_id: &str, source_name: &str) -> &'static str {
+    if known_music_app_name(source_name).is_some() || known_music_app_name(source_id).is_some() {
+        return SOURCE_KIND_APP;
+    }
     let haystack = format!("{source_id} {source_name}").to_lowercase();
     let is_browser = haystack
         .split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '-')
@@ -285,9 +335,9 @@ fn seconds_to_millis(seconds: f64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        friendly_source_name, mpris_loop_status, order_players, repeat_mode_from_mpris,
-        repeat_mode_from_smtc_code, smtc_auto_repeat_code, source_kind, ticks_to_seconds,
-        MediaPlayer, MediaSnapshot,
+        display_source_name, friendly_source_name, mpris_loop_status, order_players,
+        repeat_mode_from_mpris, repeat_mode_from_smtc_code, smtc_auto_repeat_code, source_kind,
+        ticks_to_seconds, MediaPlayer, MediaSnapshot,
     };
 
     #[test]
@@ -491,6 +541,10 @@ mod tests {
             ("org.mpris.MediaPlayer2.chromium.instance1234", "Chromium"),
             ("org.mpris.MediaPlayer2.yandex-browser", "Yandex Browser"),
             (
+                "org.mpris.MediaPlayer2.chromium.instance99",
+                "Yandex Browser",
+            ),
+            (
                 "org.mpris.MediaPlayer2.plasma-browser-integration",
                 "Plasma Browser Integration",
             ),
@@ -506,9 +560,30 @@ mod tests {
             ("org.mpris.MediaPlayer2.youtube-music", "YouTube Music"),
             ("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify", "Spotify"),
             ("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App", "Apple Music"),
+            // Electron music apps register as chromium.instanceN.
+            (
+                "org.mpris.MediaPlayer2.chromium.instance13527",
+                "YandexMusic",
+            ),
+            ("org.mpris.MediaPlayer2.chromium.instance42", "Yandex Music"),
+            ("org.mpris.MediaPlayer2.chromium.instance7", "Яндекс Музыка"),
+            ("ru.yandex.desktop.music", "ru.yandex.desktop.music"),
             ("", ""),
         ] {
-            assert_eq!(source_kind(id, name), "app", "{id}");
+            assert_eq!(source_kind(id, name), "app", "{id} {name}");
         }
+    }
+
+    #[test]
+    fn known_music_apps_get_their_brand_name() {
+        assert_eq!(display_source_name("YandexMusic"), "Yandex Music");
+        assert_eq!(display_source_name("Яндекс Музыка"), "Yandex Music");
+        assert_eq!(display_source_name("Chromium"), "Chromium");
+        assert_eq!(display_source_name("Yandex Browser"), "Yandex Browser");
+        assert_eq!(
+            friendly_source_name("ru.yandex.desktop.music"),
+            "Yandex Music"
+        );
+        assert_eq!(friendly_source_name("chrome.exe"), "Chrome");
     }
 }

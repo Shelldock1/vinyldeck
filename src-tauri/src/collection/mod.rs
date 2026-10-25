@@ -10,7 +10,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 
-use crate::media::model::{source_kind, SOURCE_KIND_APP};
+use crate::media::model::{known_music_app_name, source_kind, SOURCE_KIND_APP};
 use listen::CountedPlay;
 
 pub mod listen;
@@ -101,8 +101,9 @@ impl CollectionState {
 pub fn initialize_collection(app: &AppHandle) -> Result<(), String> {
     let store = app.store(STORE_FILE).map_err(|error| error.to_string())?;
     let mut records = validate_records(store.get(STORE_KEY));
-    let history = wrapped::validate_history(store.get(HISTORY_KEY));
+    let mut history = wrapped::validate_history(store.get(HISTORY_KEY));
     backfill_source_kinds(&mut records, &history);
+    reclassify_music_app_records(&mut records, &mut history);
     let state = app.state::<CollectionState>();
     tauri::async_runtime::block_on(async {
         *state.records.lock().await = records;
@@ -349,6 +350,42 @@ fn backfill_source_kinds(records: &mut [CollectedRecord], history: &[wrapped::Pl
     }
 }
 
+/// Records saved while a music app was misread as a browser (Yandex Music
+/// registers on MPRIS as `chromium.instanceN`) move to the music shelf by
+/// their stored player name. History events carry no player name, so their
+/// browser-tagged plays of those records follow the record.
+fn reclassify_music_app_records(
+    records: &mut [CollectedRecord],
+    history: &mut [wrapped::PlayEvent],
+) {
+    let mut moved = Vec::new();
+    for record in records.iter_mut().filter(|record| {
+        record.source_kind.as_deref() != Some(SOURCE_KIND_APP)
+            && record
+                .source_name
+                .as_deref()
+                .and_then(known_music_app_name)
+                .is_some()
+    }) {
+        record.source_kind = Some(SOURCE_KIND_APP.to_string());
+        moved.push(record.key.clone());
+    }
+    if moved.is_empty() {
+        return;
+    }
+
+    for event in history
+        .iter_mut()
+        .filter(|event| wrapped::event_source_kind(event) != SOURCE_KIND_APP)
+    {
+        if record_key(&event.artist, &event.album, &event.track)
+            .is_some_and(|key| moved.contains(&key))
+        {
+            event.source_kind = Some(SOURCE_KIND_APP.to_string());
+        }
+    }
+}
+
 fn next_pressing_number(records: &[CollectedRecord]) -> u32 {
     records
         .iter()
@@ -442,8 +479,8 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        backfill_source_kinds, count_play, press, record_key, validate_records, wrapped::PlayEvent,
-        CountedPlay, PressInput, PressingColors,
+        backfill_source_kinds, count_play, press, reclassify_music_app_records, record_key,
+        validate_records, wrapped::PlayEvent, CountedPlay, PressInput, PressingColors,
     };
 
     fn play(artist: &str, album: &str, track: &str, source: &str) -> CountedPlay {
@@ -559,6 +596,47 @@ mod tests {
         let again = count_play(&mut records, &play("A", "One", "Song", "Chromium"), 3).unwrap();
         assert_eq!(again.source_kind.as_deref(), Some("app"));
         assert_eq!(again.source_name.as_deref(), Some("Chromium"));
+    }
+
+    #[test]
+    fn yandex_music_records_saved_as_browser_move_to_the_music_shelf() {
+        let mut records = Vec::new();
+        let yandex = count_play(
+            &mut records,
+            &CountedPlay {
+                artist: "MORGENSHTERN".to_string(),
+                album: "Single".to_string(),
+                track: "Song".to_string(),
+                source_id: "org.mpris.MediaPlayer2.chromium.instance13527".to_string(),
+                source_name: "YandexMusic".to_string(),
+            },
+            1,
+        )
+        .expect("record");
+        count_play(&mut records, &play("Channel", "", "Video", "Chromium"), 1).expect("record");
+        // What the old classifier stored for both.
+        for record in records.iter_mut() {
+            record.source_kind = Some("browser".to_string());
+        }
+        let event = |artist: &str, album: &str, track: &str| PlayEvent {
+            at: 2,
+            artist: artist.to_string(),
+            album: album.to_string(),
+            track: track.to_string(),
+            source_kind: Some("browser".to_string()),
+        };
+        let mut history = vec![
+            event("MORGENSHTERN", "Single", "Song"),
+            event("Channel", "", "Video"),
+        ];
+
+        reclassify_music_app_records(&mut records, &mut history);
+
+        assert_eq!(records[0].key, yandex.key);
+        assert_eq!(records[0].source_kind.as_deref(), Some("app"));
+        assert_eq!(records[1].source_kind.as_deref(), Some("browser"));
+        assert_eq!(history[0].source_kind.as_deref(), Some("app"));
+        assert_eq!(history[1].source_kind.as_deref(), Some("browser"));
     }
 
     #[test]

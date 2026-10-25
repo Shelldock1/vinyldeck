@@ -100,7 +100,7 @@ fn identity_for(connection: &Connection, bus_name: &str) -> String {
                 .get_property::<String>("Identity")
                 .map_err(|error| anyhow!(error.to_string()))
         })
-        .map(|identity| identity.trim().to_string())
+        .map(|identity| super::model::display_source_name(identity.trim()))
         .ok()
         .filter(|identity| !identity.is_empty())
         .unwrap_or_else(|| {
