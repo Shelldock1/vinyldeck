@@ -1,7 +1,7 @@
 use tauri::State;
 
 use super::authority::PlaybackAuthority;
-use super::model::{MediaPlayer, MediaSnapshot};
+use super::model::{with_known_artwork, MediaPlayer, MediaSnapshot};
 
 fn snapshot_fallback(authority: &PlaybackAuthority) -> Option<String> {
     authority
@@ -21,11 +21,16 @@ pub async fn cmd_media_players() -> Result<Vec<MediaPlayer>, String> {
 pub async fn cmd_smtc_snapshot(
     authority: State<'_, PlaybackAuthority>,
 ) -> Result<Option<MediaSnapshot>, String> {
+    // The fresh read is metadata only; the cover lives in the poller's last
+    // snapshot. A window opened mid-track (the mini player) gets it here,
+    // since the poller re-emits artwork only when the track changes.
+    let known = authority.snapshot();
     super::platform::current_media_snapshot_with_metadata(
         authority.selection(),
         snapshot_fallback(&authority),
     )
     .await
+    .map(|fresh| fresh.map(|fresh| with_known_artwork(fresh, known.as_ref())))
     .map_err(|error| error.to_string())
 }
 

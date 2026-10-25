@@ -199,6 +199,26 @@ pub(crate) fn ticks_to_seconds(ticks: i64) -> f64 {
 }
 
 #[allow(dead_code)]
+/// Carries the already-fetched cover onto a fresh metadata-only snapshot of
+/// the same track, so on-demand reads do not blank the artwork.
+pub(crate) fn with_known_artwork(
+    mut fresh: MediaSnapshot,
+    known: Option<&MediaSnapshot>,
+) -> MediaSnapshot {
+    if fresh.artwork_data_url.is_some() {
+        return fresh;
+    }
+    if let Some(known) = known.filter(|known| {
+        known.source_id == fresh.source_id
+            && known.track == fresh.track
+            && known.artist == fresh.artist
+            && known.album == fresh.album
+    }) {
+        fresh.artwork_data_url = known.artwork_data_url.clone();
+    }
+    fresh
+}
+
 pub(crate) fn friendly_source_name(app_id: &str) -> String {
     let lower = app_id.to_lowercase();
     if let Some(name) = known_music_app_name(app_id) {
@@ -337,7 +357,7 @@ mod tests {
     use super::{
         display_source_name, friendly_source_name, mpris_loop_status, order_players,
         repeat_mode_from_mpris, repeat_mode_from_smtc_code, smtc_auto_repeat_code, source_kind,
-        ticks_to_seconds, MediaPlayer, MediaSnapshot,
+        ticks_to_seconds, with_known_artwork, MediaPlayer, MediaSnapshot,
     };
 
     #[test]
@@ -572,6 +592,47 @@ mod tests {
         ] {
             assert_eq!(source_kind(id, name), "app", "{id} {name}");
         }
+    }
+
+    #[test]
+    fn on_demand_snapshot_keeps_the_cover_of_the_same_track() {
+        let known = MediaSnapshot {
+            source_id: "org.mpris.MediaPlayer2.chromium.instance1".to_string(),
+            track: "Song".to_string(),
+            artist: "Artist".to_string(),
+            album: "Album".to_string(),
+            position: 10.0,
+            artwork_data_url: Some("vinyldeck://art/00000000000000ab".to_string()),
+            ..MediaSnapshot::default()
+        };
+        let fresh = MediaSnapshot {
+            position: 42.0,
+            artwork_data_url: None,
+            ..known.clone()
+        };
+
+        let merged = with_known_artwork(fresh.clone(), Some(&known));
+        assert_eq!(merged.artwork_data_url, known.artwork_data_url);
+        assert_eq!(merged.position, 42.0);
+
+        let next_track = MediaSnapshot {
+            track: "Next".to_string(),
+            ..fresh.clone()
+        };
+        assert_eq!(
+            with_known_artwork(next_track, Some(&known)).artwork_data_url,
+            None
+        );
+        assert_eq!(with_known_artwork(fresh, None).artwork_data_url, None);
+
+        let own_cover = MediaSnapshot {
+            artwork_data_url: Some("vinyldeck://art/00000000000000cd".to_string()),
+            ..known.clone()
+        };
+        assert_eq!(
+            with_known_artwork(own_cover.clone(), Some(&known)).artwork_data_url,
+            own_cover.artwork_data_url
+        );
     }
 
     #[test]
