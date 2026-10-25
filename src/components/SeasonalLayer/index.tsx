@@ -1,5 +1,6 @@
 // src/components/SeasonalLayer/index.tsx
-// Halloween decoration: hairline cobwebs, lantern pumpkins, one drifting ghost.
+// Halloween decoration: hairline cobwebs, carved jack-o'-lanterns, a spider on
+// its thread, and one drifting ghost.
 // Static markup mounted once beside AmbientLayer. Visibility is pure CSS
 // (--seasonal-display from schemes.css), so switching schemes never
 // re-renders this or the deck, and display:none stops its animations.
@@ -24,6 +25,13 @@ function Cobweb({ className }: { className: string }) {
   );
 }
 
+// Carved openings, lit from inside: triangle eyes and nose, a grin with
+// two teeth hanging from its top edge.
+const FACE_EYES = "M18.5 27L25.5 27L22 21ZM34.5 27L41.5 27L38 21Z";
+const FACE_NOSE = "M28.4 31.2L31.6 31.2L30 28.2Z";
+const FACE_MOUTH =
+  "M17 34Q30 46 43 34Q40 36 36 36.2L35 38.6L33.6 36.6L26.4 36.6L25 38.6L24 36.2Q20 36 17 34Z";
+
 function Pumpkin({ className }: { className: string }) {
   return (
     <svg className={`seasonal__pumpkin ${className}`} viewBox="0 0 60 52">
@@ -38,12 +46,35 @@ function Pumpkin({ className }: { className: string }) {
         ry="20"
         fill="url(#seasonal-lantern)"
       />
+      <g className="seasonal__face" fill="url(#seasonal-candle)">
+        <path d={FACE_EYES} />
+        <path d={FACE_NOSE} />
+        <path d={FACE_MOUTH} />
+      </g>
+    </svg>
+  );
+}
+
+// Thread runs from the top of the box into the head, so it meets the
+// stretching thread above without a gap.
+function Spider() {
+  return (
+    <svg className="seasonal__spider" viewBox="0 0 40 44">
+      <path className="seasonal__spider-thread" d="M20 0V12" />
+      <g className="seasonal__spider-legs">
+        <path d="M16 17Q9 11 5 14M15 20Q7 17 3 22M15 23Q7 24 4 30M16 26Q10 30 8 36" />
+        <path d="M24 17Q31 11 35 14M25 20Q33 17 37 22M25 23Q33 24 36 30M24 26Q30 30 32 36" />
+      </g>
+      <ellipse className="seasonal__spider-body" cx="20" cy="26" rx="7" ry="8.5" />
+      <circle className="seasonal__spider-body" cx="20" cy="15.5" r="4.2" />
+      <circle cx="18.3" cy="14.8" r="0.9" fill="#FFA94D" />
+      <circle cx="21.7" cy="14.8" r="0.9" fill="#FFA94D" />
     </svg>
   );
 }
 
 interface SeasonalLayerProps {
-  /** Mini player: cobwebs only, no ghost or pumpkins. */
+  /** Mini player: cobwebs only, no ghost, spider or pumpkins. */
   compact?: boolean;
 }
 
@@ -58,6 +89,11 @@ export const SeasonalLayer = memo(function SeasonalLayer({
             <stop offset="0" stopColor="#FFA94D" />
             <stop offset="0.55" stopColor="#C9520A" />
             <stop offset="1" stopColor="#3A1A08" />
+          </radialGradient>
+          <radialGradient id="seasonal-candle" cx="50%" cy="60%" r="70%">
+            <stop offset="0" stopColor="#FFF4C6" />
+            <stop offset="0.6" stopColor="#FFD166" />
+            <stop offset="1" stopColor="#FF9F1C" />
           </radialGradient>
         </defs>
       </svg>
@@ -76,6 +112,13 @@ export const SeasonalLayer = memo(function SeasonalLayer({
               <ellipse cx="23" cy="30" rx="2.6" ry="3.6" fill="#141214" opacity="0.55" />
               <ellipse cx="37" cy="30" rx="2.6" ry="3.6" fill="#141214" opacity="0.55" />
             </svg>
+          </div>
+
+          <div className="seasonal__drop">
+            <span className="seasonal__drop-thread" />
+            <div className="seasonal__drop-spider">
+              <Spider />
+            </div>
           </div>
 
           <div className="seasonal__glow seasonal__glow--left" />

@@ -3,8 +3,9 @@
    Sits between AmbientLayer (z 0) and the deck (z 1), never takes
    pointer events, and is display:none unless data-scheme="halloween".
    Budget: only transform/opacity animate (ghost drift + sway, glow
-   breathing); cobwebs and pumpkins are static; the ghost's blur sits
-   on the inner node so it is rasterised once, not per frame.
+   breathing, candle flicker, the spider's drop); cobwebs and pumpkin
+   bodies are static; the ghost's blur sits on the inner node so it is
+   rasterised once, not per frame.
    ============================================================ */
 
 .seasonal {
@@ -58,6 +59,24 @@
   stroke: #ffa94d;
   stroke-opacity: 0.35;
   stroke-width: 0.6;
+}
+
+/* Carved face, lit from inside. Only its opacity flickers. */
+.seasonal__face {
+  stroke: #3a1a08;
+  stroke-opacity: 0.45;
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 1.5px rgba(255, 190, 90, 0.9));
+  animation: seasonalFlicker 3.2s linear infinite;
+}
+
+.seasonal__pumpkin--left-small .seasonal__face {
+  animation-delay: -1.1s;
+}
+
+.seasonal__pumpkin--right .seasonal__face {
+  animation-delay: -2.3s;
 }
 
 .seasonal__pumpkin--left {
@@ -114,6 +133,67 @@
   animation-delay: -3.1s;
 }
 
+/* Spider on a thread under the right cobweb (the left corner holds the
+   app's buttons). The thread scales from the top while the spider rides
+   its end: both run the same keyframe timings, transform only. */
+.seasonal__drop {
+  --spider-drop: min(40vh, 340px);
+  position: absolute;
+  top: 0;
+  right: clamp(150px, 13vw, 190px);
+  width: 32px;
+  height: var(--spider-drop);
+}
+
+.seasonal__drop-thread {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: rgba(232, 220, 203, 0.32);
+  transform-origin: top;
+  will-change: transform;
+  animation: seasonalThread 16s infinite;
+}
+
+.seasonal__drop-spider {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  animation: seasonalSpiderDrop 16s infinite;
+}
+
+.seasonal__spider {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 32px;
+  height: 35px;
+  margin-top: -1px;
+  overflow: visible;
+  transform-origin: 50% 0;
+  animation: seasonalSpiderSway 2.4s ease-in-out infinite alternate;
+}
+
+.seasonal__spider-thread {
+  stroke: rgba(232, 220, 203, 0.32);
+  stroke-width: 1.5;
+}
+
+.seasonal__spider-legs {
+  fill: none;
+  stroke: rgba(232, 220, 203, 0.55);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+
+.seasonal__spider-body {
+  fill: #2a2220;
+  stroke: rgba(232, 220, 203, 0.45);
+  stroke-width: 0.8;
+}
+
 /* Outer node drifts left → right; inner node sways and carries the blur. */
 .seasonal__track {
   position: absolute;
@@ -145,6 +225,11 @@ html[data-soft-render="1"] .seasonal__glow {
   will-change: auto;
 }
 
+html[data-soft-render="1"] .seasonal__face {
+  animation: none;
+  filter: none;
+}
+
 html[data-soft-render="1"] .seasonal__ghost {
   filter: none;
   opacity: 0.22;
@@ -159,6 +244,22 @@ html[data-soft-render="1"] .seasonal__ghost {
     animation: none;
     opacity: 0.7;
   }
+
+  .seasonal__face,
+  .seasonal__spider {
+    animation: none;
+  }
+
+  /* The spider just hangs halfway down. */
+  .seasonal__drop-thread {
+    animation: none;
+    transform: scaleY(0.55);
+  }
+
+  .seasonal__drop-spider {
+    animation: none;
+    transform: translateY(-45%);
+  }
 }
 
 @keyframes seasonalGlow {
@@ -169,6 +270,86 @@ html[data-soft-render="1"] .seasonal__ghost {
   to {
     opacity: 1;
     transform: scale(1.05);
+  }
+}
+
+@keyframes seasonalFlicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0.84;
+  }
+  24% {
+    opacity: 0.97;
+  }
+  53% {
+    opacity: 0.9;
+  }
+  61% {
+    opacity: 1;
+  }
+  79% {
+    opacity: 0.88;
+  }
+}
+
+/* Lower slowly, wait, give one small tug, climb back, rest at the top. */
+@keyframes seasonalThread {
+  0%,
+  100% {
+    transform: scaleY(0.08);
+    animation-timing-function: ease-in-out;
+  }
+  38%,
+  52% {
+    transform: scaleY(1);
+    animation-timing-function: ease-in-out;
+  }
+  55% {
+    transform: scaleY(0.94);
+    animation-timing-function: ease-in-out;
+  }
+  58% {
+    transform: scaleY(1);
+    animation-timing-function: ease-in-out;
+  }
+  90% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes seasonalSpiderDrop {
+  0%,
+  100% {
+    transform: translateY(-92%);
+    animation-timing-function: ease-in-out;
+  }
+  38%,
+  52% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  55% {
+    transform: translateY(-6%);
+    animation-timing-function: ease-in-out;
+  }
+  58% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  90% {
+    transform: translateY(-92%);
+  }
+}
+
+@keyframes seasonalSpiderSway {
+  from {
+    transform: rotate(-5deg);
+  }
+  to {
+    transform: rotate(5deg);
   }
 }
 
