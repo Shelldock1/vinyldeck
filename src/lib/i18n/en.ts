@@ -130,6 +130,19 @@ export const en = {
     title: "Your collection",
     close: "Close crate",
     wrapped: "Wrapped",
+    select: "Select",
+    selectTitle: "Choose records to remove",
+    selectionGroup: "Record selection",
+    selectedCount: (count: number) => `${count} selected`,
+    markCoverless: "No cover",
+    markCoverlessTitle: "Select the records shown that have no cover",
+    remove: (count: number) => `Remove ${count}`,
+    confirmRemove: (count: number) =>
+      `Remove ${count} ${count === 1 ? "record" : "records"} from the crate? This can't be undone.`,
+    confirmYes: "Remove",
+    cancel: "Cancel",
+    removedStatus: (count: number) =>
+      `Removed ${count} ${count === 1 ? "record" : "records"}`,
     sourceGroup: "Filter by source",
     sources: {
       app: { label: "Music", title: "Music apps (Spotify, VLC, ...)" },

@@ -70,6 +70,7 @@ pub fn run() {
             settings::cmd_settings_reset,
             collection::cmd_collection_snapshot,
             collection::cmd_collection_press,
+            collection::cmd_collection_remove,
             collection::cmd_collection_wrapped,
             collection::cmd_collection_play_times,
             app_lifecycle::cmd_quit,

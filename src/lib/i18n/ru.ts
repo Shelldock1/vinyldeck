@@ -5,6 +5,8 @@ import { pluralRu } from "./plural";
 
 const plays = (count: number) =>
   pluralRu(count, "прослушивание", "прослушивания", "прослушиваний");
+const recordsAcc = (count: number) =>
+  pluralRu(count, "пластинку", "пластинки", "пластинок");
 
 export const ru: Dict = {
   common: {
@@ -131,6 +133,18 @@ export const ru: Dict = {
     title: "Ваши пластинки",
     close: "Закрыть коллекцию",
     wrapped: "Итоги",
+    select: "Выбрать",
+    selectTitle: "Выбрать пластинки для удаления",
+    selectionGroup: "Выбор пластинок",
+    selectedCount: (count) => `Выбрано: ${count}`,
+    markCoverless: "Без обложки",
+    markCoverlessTitle: "Отметить показанные пластинки без обложки",
+    remove: (count) => `Удалить ${count}`,
+    confirmRemove: (count) =>
+      `Удалить ${count} ${recordsAcc(count)} из коллекции? Отменить будет нельзя.`,
+    confirmYes: "Удалить",
+    cancel: "Отмена",
+    removedStatus: (count) => `Удалено: ${count}`,
     sourceGroup: "Фильтр по источнику",
     sources: {
       app: { label: "Музыка", title: "Музыкальные приложения (Spotify, VLC, ...)" },

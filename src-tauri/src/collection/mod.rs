@@ -17,6 +17,8 @@ pub mod listen;
 mod wrapped;
 
 pub const COLLECTION_CHANGED_EVENT: &str = "collection-changed";
+/// Payload: the keys of the records that left the Crate.
+pub const COLLECTION_REMOVED_EVENT: &str = "collection-removed";
 
 const STORE_FILE: &str = "collection.json";
 const STORE_KEY: &str = "records";
@@ -131,6 +133,39 @@ pub async fn cmd_collection_press(
     drop(records);
     emit_record_changed(&app, &result.record);
     Ok(result)
+}
+
+/// Removes the chosen records from the Crate and returns the keys that were
+/// actually there. Play history stays, so Wrapped and the streak keep those
+/// listens; a record comes back as a fresh pressing if its album is counted
+/// again.
+#[tauri::command]
+pub async fn cmd_collection_remove(
+    app: AppHandle,
+    state: State<'_, CollectionState>,
+    keys: Vec<String>,
+) -> Result<Vec<String>, String> {
+    let mut records = state.records.lock().await;
+    let removed = remove_records(&mut records, &keys);
+    if removed.is_empty() {
+        return Ok(removed);
+    }
+    save_records(&app, &records)?;
+    drop(records);
+    let _ = app.emit(COLLECTION_REMOVED_EVENT, &removed);
+    Ok(removed)
+}
+
+fn remove_records(records: &mut Vec<CollectedRecord>, keys: &[String]) -> Vec<String> {
+    let mut removed = Vec::new();
+    records.retain(|record| {
+        let remove = keys.contains(&record.key);
+        if remove {
+            removed.push(record.key.clone());
+        }
+        !remove
+    });
+    removed
 }
 
 /// Called by the media poller once a listen crosses the scrobble threshold.
@@ -480,7 +515,8 @@ mod tests {
 
     use super::{
         backfill_source_kinds, count_play, press, reclassify_music_app_records, record_key,
-        validate_records, wrapped::PlayEvent, CountedPlay, PressInput, PressingColors,
+        remove_records, validate_records, wrapped::PlayEvent, CountedPlay, PressInput,
+        PressingColors,
     };
 
     fn play(artist: &str, album: &str, track: &str, source: &str) -> CountedPlay {
@@ -637,6 +673,26 @@ mod tests {
         assert_eq!(records[1].source_kind.as_deref(), Some("browser"));
         assert_eq!(history[0].source_kind.as_deref(), Some("app"));
         assert_eq!(history[1].source_kind.as_deref(), Some("browser"));
+    }
+
+    #[test]
+    fn remove_records_drops_only_the_chosen_keys() {
+        let mut records = Vec::new();
+        count_play(&mut records, &play("A", "Keep", "Song", "Spotify"), 1).expect("record");
+        count_play(&mut records, &play("B", "Drop", "Song", "Spotify"), 1).expect("record");
+        count_play(&mut records, &play("C", "Also", "Song", "Spotify"), 1).expect("record");
+        let keep = records[0].key.clone();
+        let chosen = vec![
+            records[2].key.clone(),
+            records[1].key.clone(),
+            "missing|key".to_string(),
+        ];
+
+        let removed = remove_records(&mut records, &chosen);
+        assert_eq!(removed, vec![chosen[1].clone(), chosen[0].clone()]);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].key, keep);
+        assert!(remove_records(&mut records, &chosen).is_empty());
     }
 
     #[test]

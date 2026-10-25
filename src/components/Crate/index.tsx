@@ -1,14 +1,15 @@
 // src/components/Crate/index.tsx
 // The Crate: every album VinylDeck has played, pressed as its own record.
 // Dig through sleeves, pull a record out to read its pressing card.
-// Read-only view over the collection store; pressing and play counting
-// happen elsewhere (useCratePressing + backend poller).
+// A view over the collection store; pressing and play counting happen
+// elsewhere (useCratePressing + backend poller). Selection mode lets the
+// listener remove records they pick, after a confirmation.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { useCrateStore } from "../../lib/collection";
+import { removeRecords, useCrateStore } from "../../lib/collection";
 import { getPlayTimes } from "../../lib/collection/wrapped";
 import { localeFor, useLanguage, useT } from "../../lib/i18n";
 import type { Dict } from "../../lib/i18n";
@@ -78,6 +79,11 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
   const [query, setQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [wrappedOpen, setWrappedOpen] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+  const [marked, setMarked] = useState<ReadonlySet<string>>(() => new Set());
+  const [confirming, setConfirming] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [removedNotice, setRemovedNotice] = useState("");
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -110,6 +116,10 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
       // Clear while closed so reopening never flashes a stale filtered shelf.
       setQuery("");
       setWrappedOpen(false);
+      setSelecting(false);
+      setMarked(new Set());
+      setConfirming(false);
+      setRemovedNotice("");
       lastFadeKey.current = "";
       return;
     }
@@ -148,6 +158,43 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
       recordsByKey[selectedKey]) ||
     sorted[0] ||
     null;
+  // Keys removed by another window drop out of the selection on their own.
+  const markedKeys = [...marked].filter((key) => recordsByKey[key]);
+  const coverlessShown = sorted.filter((record) => !record.thumbnail).length;
+
+  function exitSelection() {
+    setSelecting(false);
+    setMarked(new Set());
+    setConfirming(false);
+  }
+
+  function toggleMark(key: string) {
+    setConfirming(false);
+    setMarked((previous) => {
+      const next = new Set(previous);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function markCoverless() {
+    setConfirming(false);
+    setMarked((previous) => {
+      const next = new Set(previous);
+      for (const record of sorted) if (!record.thumbnail) next.add(record.key);
+      return next;
+    });
+  }
+
+  async function confirmRemove() {
+    setRemoving(true);
+    const removed = await removeRecords(markedKeys);
+    setRemoving(false);
+    setRemovedNotice(t.crate.removedStatus(removed.length));
+    exitSelection();
+  }
+
   const topAlbumTitle = stats.topAlbum
     ? `${stats.topAlbum.album} — ${stats.topAlbum.artist || t.common.unknownArtist}`
     : undefined;
@@ -169,6 +216,19 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
             <h2 className="crate-panel__title">{t.crate.title}</h2>
           </div>
           <div className="crate-panel__actions">
+            {records.length > 0 && !selecting && (
+              <button
+                type="button"
+                className="crate-panel__wrapped"
+                title={t.crate.selectTitle}
+                onClick={() => {
+                  setSelecting(true);
+                  setRemovedNotice("");
+                }}
+              >
+                {t.crate.select}
+              </button>
+            )}
             <button
               type="button"
               className="crate-panel__wrapped"
@@ -213,6 +273,65 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
             </button>
           ))}
         </div>
+
+        {selecting && (
+          <div className="crate-select" role="group" aria-label={t.crate.selectionGroup}>
+            {confirming ? (
+              <>
+                <p className="crate-select__text" role="alert">
+                  {t.crate.confirmRemove(markedKeys.length)}
+                </p>
+                <div className="crate-select__actions">
+                  <button
+                    type="button"
+                    className="crate-select__button crate-select__button--danger"
+                    disabled={removing}
+                    onClick={() => void confirmRemove()}
+                  >
+                    {t.crate.confirmYes}
+                  </button>
+                  <button
+                    type="button"
+                    className="crate-select__button"
+                    disabled={removing}
+                    onClick={() => setConfirming(false)}
+                  >
+                    {t.crate.cancel}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="crate-select__text">{t.crate.selectedCount(markedKeys.length)}</p>
+                <div className="crate-select__actions">
+                  <button
+                    type="button"
+                    className="crate-select__button"
+                    title={t.crate.markCoverlessTitle}
+                    disabled={coverlessShown === 0}
+                    onClick={markCoverless}
+                  >
+                    {t.crate.markCoverless}
+                  </button>
+                  <button
+                    type="button"
+                    className="crate-select__button crate-select__button--danger"
+                    disabled={markedKeys.length === 0}
+                    onClick={() => setConfirming(true)}
+                  >
+                    {t.crate.remove(markedKeys.length)}
+                  </button>
+                  <button type="button" className="crate-select__button" onClick={exitSelection}>
+                    {t.crate.cancel}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        <p className="crate-visually-hidden" role="status" aria-live="polite">
+          {removedNotice}
+        </p>
 
         <dl className="crate-panel__stats" aria-label={t.crate.statsLabel}>
           <div className="crate-panel__stat">
@@ -342,35 +461,57 @@ export function Crate({ open, onClose, focusKey = null }: CrateProps) {
                 </motion.div>
               ) : (
                 <ul ref={gridRef} className="crate-grid" aria-label={t.crate.gridLabel}>
-                  {sorted.map((record) => (
-                    <li key={record.key}>
-                      <button
-                        type="button"
-                        className={`crate-card${selected?.key === record.key ? " crate-card--selected" : ""}`}
-                        data-rarity={rarityFor(record.recipe)}
-                        aria-pressed={selected?.key === record.key}
-                        aria-label={t.crate.cardLabel(record.album, record.artist || t.common.unknownArtist)}
-                        onClick={() => setSelectedKey(record.key)}
-                      >
-                        <span className="crate-card__stage">
-                          <CrateDisc record={record} className="crate-card__disc" />
-                          <span
-                            className="crate-card__sleeve"
-                            style={sleeveStyle(record)}
-                          />
-                          {rarityRank(record.recipe) >= 2 && (
-                            <span className="crate-card__rarity">
-                              {t.crate.rarity[rarityFor(record.recipe)]}
-                            </span>
-                          )}
-                        </span>
-                        <span className="crate-card__album">{record.album}</span>
-                        <span className="crate-card__meta">
-                          {record.artist || t.common.unknownArtist}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                  {sorted.map((record) => {
+                    const isMarked = selecting && marked.has(record.key);
+                    const isSelected = !selecting && selected?.key === record.key;
+                    return (
+                      <li key={record.key}>
+                        <button
+                          type="button"
+                          className={`crate-card${isSelected ? " crate-card--selected" : ""}${isMarked ? " crate-card--marked" : ""}`}
+                          data-rarity={rarityFor(record.recipe)}
+                          aria-pressed={selecting ? isMarked : isSelected}
+                          aria-label={t.crate.cardLabel(record.album, record.artist || t.common.unknownArtist)}
+                          onClick={() =>
+                            selecting ? toggleMark(record.key) : setSelectedKey(record.key)
+                          }
+                        >
+                          <span className="crate-card__stage">
+                            {selecting && (
+                              <span className="crate-card__check" aria-hidden="true">
+                                {isMarked && (
+                                  <svg width="10" height="10" viewBox="0 0 10 10">
+                                    <path
+                                      d="M2 5.2l2 2L8 3"
+                                      stroke="currentColor"
+                                      strokeWidth="1.6"
+                                      fill="none"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                )}
+                              </span>
+                            )}
+                            <CrateDisc record={record} className="crate-card__disc" />
+                            <span
+                              className="crate-card__sleeve"
+                              style={sleeveStyle(record)}
+                            />
+                            {rarityRank(record.recipe) >= 2 && (
+                              <span className="crate-card__rarity">
+                                {t.crate.rarity[rarityFor(record.recipe)]}
+                              </span>
+                            )}
+                          </span>
+                          <span className="crate-card__album">{record.album}</span>
+                          <span className="crate-card__meta">
+                            {record.artist || t.common.unknownArtist}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

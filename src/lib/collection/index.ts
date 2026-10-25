@@ -12,6 +12,8 @@ import type { CollectedRecord, PressInput, PressResult } from "./types";
 import { logger } from "../logger";
 
 export const COLLECTION_CHANGED_EVENT = "collection-changed";
+/** Payload: keys of the records removed from the Crate. */
+export const COLLECTION_REMOVED_EVENT = "collection-removed";
 
 const BROWSER_STORAGE_KEY = "vinyldeck:crate:v1";
 
@@ -22,6 +24,7 @@ interface CrateStore {
   lastNewPressing: { key: string; at: number } | null;
   replaceAll: (records: CollectedRecord[]) => void;
   upsert: (record: CollectedRecord) => void;
+  removeMany: (keys: string[]) => void;
   markNewPressing: (key: string) => void;
 }
 
@@ -36,6 +39,12 @@ export const useCrateStore = create<CrateStore>((set) => ({
     }),
   upsert: (record) =>
     set((state) => ({ records: { ...state.records, [record.key]: record } })),
+  removeMany: (keys) =>
+    set((state) => {
+      const records = { ...state.records };
+      for (const key of keys) delete records[key];
+      return { records };
+    }),
   markNewPressing: (key) =>
     set({ lastNewPressing: { key, at: Date.now() } }),
 }));
@@ -50,12 +59,22 @@ export async function initCollection(): Promise<() => void> {
   }
 
   // Subscribe before the snapshot so no change can fall between the two.
-  const unlisten = await listen<CollectedRecord>(
+  const unlistenChanged = await listen<CollectedRecord>(
     COLLECTION_CHANGED_EVENT,
     ({ payload }) => {
       if (isCollectedRecord(payload)) useCrateStore.getState().upsert(payload);
     },
   );
+  const unlistenRemoved = await listen<unknown>(
+    COLLECTION_REMOVED_EVENT,
+    ({ payload }) => {
+      if (isKeyList(payload)) useCrateStore.getState().removeMany(payload);
+    },
+  );
+  const unlisten = () => {
+    unlistenChanged();
+    unlistenRemoved();
+  };
 
   try {
     const records = await invoke<CollectedRecord[]>("cmd_collection_snapshot");
@@ -89,6 +108,37 @@ export async function pressRecord(input: PressInput): Promise<PressResult | null
   store.upsert(result.record);
   if (result.newlyPressed) store.markNewPressing(result.record.key);
   return result;
+}
+
+/**
+ * Removes the chosen records for good. Play history is kept, so Wrapped and
+ * the streak still count those listens. Resolves to the keys that were removed.
+ */
+export async function removeRecords(keys: string[]): Promise<string[]> {
+  if (keys.length === 0) return [];
+  let removed: string[];
+
+  if (isTauri()) {
+    try {
+      const result = await invoke<unknown>("cmd_collection_remove", { keys });
+      removed = isKeyList(result) ? result : [];
+    } catch (error) {
+      logger.warn("[Crate] Remove failed:", error);
+      return [];
+    }
+  } else {
+    const chosen = new Set(keys);
+    const records = readBrowserRecords();
+    removed = records.filter((record) => chosen.has(record.key)).map((record) => record.key);
+    writeBrowserRecords(records.filter((record) => !chosen.has(record.key)));
+  }
+
+  useCrateStore.getState().removeMany(removed);
+  return removed;
+}
+
+function isKeyList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((key) => typeof key === "string");
 }
 
 /** Browser dev fallback only — Tauri counts plays in the Rust poller. */

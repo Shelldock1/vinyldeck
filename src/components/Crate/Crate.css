@@ -304,6 +304,97 @@
   margin: 0 24px 12px;
 }
 
+/* Selection mode: pick records to remove, then confirm. */
+.crate-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin: 0 24px 12px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  border: 0.5px solid color-mix(in srgb, var(--ui-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 6%, transparent);
+}
+
+.crate-select__text {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ui-text-primary);
+}
+
+.crate-select__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.crate-select__button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 0.5px solid var(--surface-border, var(--ui-border));
+  background: transparent;
+  color: var(--ui-text-primary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+
+.crate-select__button:hover:not(:disabled),
+.crate-select__button:focus-visible {
+  background: color-mix(in srgb, var(--ui-text-primary) 8%, transparent);
+}
+
+.crate-select__button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.crate-select__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.crate-select__button--danger {
+  border-color: transparent;
+  background: #c2412d;
+  color: #fff;
+}
+
+.crate-select__button--danger:hover:not(:disabled),
+.crate-select__button--danger:focus-visible {
+  background: #a63624;
+}
+
+.crate-card__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+}
+
+.crate-card--marked .crate-card__check {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  color: var(--bg, #000);
+}
+
+.crate-card--marked .crate-card__sleeve {
+  box-shadow:
+    0 10px 22px -8px rgba(0, 0, 0, 0.7),
+    0 0 0 1.5px var(--ui-accent);
+}
+
 .crate-sort__tab {
   padding: 5px 8px;
   border: 0;
