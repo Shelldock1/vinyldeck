@@ -280,7 +280,8 @@ export const ru: Dict = {
       mini: { name: "Мини", note: "Компактный виджет" },
     },
     alwaysOnTop: "Поверх всех окон",
-    alwaysOnTopDescription: "Держать VinylDeck над остальными окнами.",
+    alwaysOnTopDescription:
+      "Держать главное окно над остальными. Мини-плеер всегда поверх окон.",
     leanBack: "Режим отдыха",
     leanBackDescription: "Элементы управления исчезают, и остаётся только пластинка.",
     cursorHide: "Скрывать курсор",

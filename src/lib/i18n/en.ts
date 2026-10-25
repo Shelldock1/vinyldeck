@@ -275,7 +275,8 @@ export const en = {
       mini: { name: "Mini", note: "Resizable widget" },
     },
     alwaysOnTop: "Always On Top",
-    alwaysOnTopDescription: "Keep VinylDeck above other windows.",
+    alwaysOnTopDescription:
+      "Keep the main window above other windows. The mini player always stays on top.",
     leanBack: "Lean-Back Mode",
     leanBackDescription: "Let controls disappear while the record becomes the room.",
     cursorHide: "Cursor Hide",

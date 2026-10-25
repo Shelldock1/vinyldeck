@@ -49,14 +49,13 @@ pub async fn cmd_set_window_mode(app: AppHandle, mode: String) -> Result<(), Str
     set_window_mode(&app, WindowMode::from_str(&mode)?).await
 }
 
+/// The "Always on top" setting is for Main. Mini is a floating companion and
+/// always stays on top, so this never touches it.
 #[tauri::command]
 pub fn cmd_set_always_on_top(app: AppHandle, enabled: bool) -> Result<(), String> {
-    for label in [MAIN_LABEL, MINI_LABEL] {
-        if let Some(window) = app.get_webview_window(label) {
-            window
-                .set_always_on_top(enabled)
-                .map_err(|error| error.to_string())?;
-        }
+    if let Some(main) = app.get_webview_window(MAIN_LABEL) {
+        main.set_always_on_top(enabled)
+            .map_err(|error| error.to_string())?;
     }
 
     Ok(())

@@ -23,10 +23,33 @@ fn apply_linux_window_theme() {
     }
 }
 
+/// GNOME on Wayland ignores a client's request to stay above other windows,
+/// so the Mini player would sink behind whatever gets focus. Under X11
+/// (XWayland) the request is honoured. Runs before GTK starts; keeps an
+/// explicit GDK_BACKEND, and stays on Wayland when XWayland is not there.
+#[cfg(target_os = "linux")]
+fn apply_linux_display_backend() {
+    if should_use_x11_backend(
+        std::env::var_os("GDK_BACKEND").is_some(),
+        std::env::var_os("WAYLAND_DISPLAY").is_some(),
+        std::env::var_os("DISPLAY").is_some(),
+    ) {
+        std::env::set_var("GDK_BACKEND", "x11");
+    }
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn should_use_x11_backend(backend_set: bool, wayland: bool, xwayland: bool) -> bool {
+    !backend_set && wayland && xwayland
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[cfg(target_os = "linux")]
-    apply_linux_window_theme();
+    {
+        apply_linux_window_theme();
+        apply_linux_display_backend();
+    }
 
     tauri::Builder::default()
         // Must be registered first: a second launch hands off to this
@@ -96,4 +119,20 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_use_x11_backend;
+
+    #[test]
+    fn wayland_sessions_with_xwayland_switch_to_x11() {
+        assert!(should_use_x11_backend(false, true, true));
+        // An explicit GDK_BACKEND wins.
+        assert!(!should_use_x11_backend(true, true, true));
+        // Pure Wayland without XWayland would fail to open any window on X11.
+        assert!(!should_use_x11_backend(false, true, false));
+        // Plain X11 sessions need nothing.
+        assert!(!should_use_x11_backend(false, false, true));
+    }
 }
