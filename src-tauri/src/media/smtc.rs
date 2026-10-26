@@ -402,7 +402,7 @@ fn current_lightweight_snapshot_from_session(
     session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
     source_key: &str,
 ) -> super::model::MediaSnapshot {
-    use super::model::{friendly_source_name, ticks_to_seconds};
+    use super::model::friendly_source_name;
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionPlaybackStatus;
 
     let (aumid, _) = parse_source_key(source_key);
@@ -442,23 +442,26 @@ fn current_lightweight_snapshot_from_session(
     }
 
     if let Ok(timeline) = session.GetTimelineProperties() {
-        if let Ok(duration) = timeline.EndTime() {
-            snapshot.duration = ticks_to_seconds(duration.Duration);
-        }
-        if let Ok(position) = timeline.Position() {
-            snapshot.position = timeline
-                .LastUpdatedTime()
-                .ok()
-                .and_then(|last_updated| {
-                    projected_position_seconds(
-                        position.Duration,
-                        snapshot.duration,
-                        snapshot.is_playing,
-                        last_updated.UniversalTime,
-                        std::time::SystemTime::now(),
-                    )
-                })
-                .unwrap_or_else(|| ticks_to_seconds(position.Duration));
+        let start_ticks = timeline
+            .StartTime()
+            .map(|value| value.Duration)
+            .unwrap_or(0);
+        let last_updated_ticks = timeline
+            .LastUpdatedTime()
+            .ok()
+            .map(|value| value.UniversalTime);
+
+        if let (Ok(end), Ok(position)) = (timeline.EndTime(), timeline.Position()) {
+            let values = timeline_seconds(
+                start_ticks,
+                end.Duration,
+                position.Duration,
+                snapshot.is_playing,
+                last_updated_ticks,
+                std::time::SystemTime::now(),
+            );
+            snapshot.duration = values.duration;
+            snapshot.position = values.position;
         }
     }
 
@@ -564,6 +567,7 @@ pub(crate) fn seconds_to_ticks(seconds: f64) -> anyhow::Result<i64> {
     Ok(ticks.round() as i64)
 }
 
+#[cfg(test)]
 fn projected_position_seconds(
     position_ticks: i64,
     duration_seconds: f64,
@@ -571,18 +575,33 @@ fn projected_position_seconds(
     last_updated_windows_ticks: i64,
     now: std::time::SystemTime,
 ) -> Option<f64> {
-    let base = super::model::ticks_to_seconds(position_ticks);
+    project_position_seconds(
+        super::model::ticks_to_seconds(position_ticks),
+        duration_seconds,
+        is_playing,
+        last_updated_windows_ticks,
+        now,
+    )
+}
+
+fn project_position_seconds(
+    base_seconds: f64,
+    duration_seconds: f64,
+    is_playing: bool,
+    last_updated_windows_ticks: i64,
+    now: std::time::SystemTime,
+) -> Option<f64> {
     if !is_playing {
-        return Some(clamp_position(base, duration_seconds));
+        return Some(clamp_position(base_seconds, duration_seconds));
     }
 
     let now_ticks = system_time_to_windows_ticks(now)?;
     let elapsed_ticks = now_ticks.checked_sub(last_updated_windows_ticks)?;
     if elapsed_ticks <= 0 {
-        return Some(clamp_position(base, duration_seconds));
+        return Some(clamp_position(base_seconds, duration_seconds));
     }
 
-    let projected = base + super::model::ticks_to_seconds(elapsed_ticks);
+    let projected = base_seconds + super::model::ticks_to_seconds(elapsed_ticks);
     Some(clamp_position(projected, duration_seconds))
 }
 
@@ -608,6 +627,42 @@ fn clamp_position(position: f64, duration_seconds: f64) -> f64 {
     position
 }
 
+/// Track-relative duration and position for one SMTC timeline snapshot.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct SmtcTimeline {
+    duration: f64,
+    position: f64,
+}
+
+/// Normalizes raw SMTC timeline ticks into track-relative seconds.
+///
+/// SMTC timelines are absolute: `EndTime - StartTime` is the duration and
+/// `Position` is offset by `StartTime`. A zero start (normal tracks) is a
+/// no-op. Playing sessions project the position forward from
+/// `LastUpdatedTime`, then clamp to the track-relative duration.
+fn timeline_seconds(
+    start_ticks: i64,
+    end_ticks: i64,
+    position_ticks: i64,
+    is_playing: bool,
+    last_updated_windows_ticks: Option<i64>,
+    now: std::time::SystemTime,
+) -> SmtcTimeline {
+    use super::model::ticks_to_seconds;
+
+    let start = ticks_to_seconds(start_ticks);
+    let duration = (ticks_to_seconds(end_ticks) - start).max(0.0);
+    let base = ticks_to_seconds(position_ticks) - start;
+
+    let position = last_updated_windows_ticks
+        .and_then(|last_updated| {
+            project_position_seconds(base, duration, is_playing, last_updated, now)
+        })
+        .unwrap_or_else(|| clamp_position(base, duration));
+
+    SmtcTimeline { duration, position }
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::{Duration, UNIX_EPOCH};
@@ -615,7 +670,7 @@ mod tests {
     use super::{
         display_name_for_key, parse_source_key, projected_position_seconds,
         require_command_accepted, seconds_to_ticks, select_session_index, session_keys,
-        system_time_to_windows_ticks,
+        system_time_to_windows_ticks, timeline_seconds,
     };
 
     #[test]
@@ -724,5 +779,80 @@ mod tests {
             projected_position_seconds(119 * 10_000_000, 120.0, true, last_updated, now),
             Some(120.0)
         );
+    }
+
+    const TICKS: i64 = 10_000_000;
+
+    #[test]
+    fn smtc_timeline_subtracts_start_time_from_duration_and_position() {
+        // Regression: a normal track has StartTime = 0, so the values are
+        // already track-relative and must not change.
+        let zero_start = timeline_seconds(0, 140 * TICKS, 20 * TICKS, false, None, UNIX_EPOCH);
+        assert_eq!(zero_start.duration, 140.0);
+        assert_eq!(zero_start.position, 20.0);
+
+        // A timeline that starts at 100 s reports an absolute position and an
+        // end-relative duration: 100..140 with position 120 means 40 s long
+        // and 20 s into the track.
+        let offset_start = timeline_seconds(
+            100 * TICKS,
+            140 * TICKS,
+            120 * TICKS,
+            false,
+            None,
+            UNIX_EPOCH,
+        );
+        assert_eq!(offset_start.duration, 40.0);
+        assert_eq!(offset_start.position, 20.0);
+    }
+
+    #[test]
+    fn smtc_timeline_projects_playing_position_from_relative_base() {
+        let now = UNIX_EPOCH + Duration::from_secs(1_000);
+        let now_ticks = system_time_to_windows_ticks(now).unwrap();
+        // Five seconds elapsed since the position was reported.
+        let last_updated = now_ticks - 5 * TICKS;
+
+        let values = timeline_seconds(
+            100 * TICKS,
+            140 * TICKS,
+            110 * TICKS,
+            true,
+            Some(last_updated),
+            now,
+        );
+        assert_eq!(values.duration, 40.0);
+        assert_eq!(values.position, 15.0, "10 s relative + 5 s elapsed");
+    }
+
+    #[test]
+    fn smtc_timeline_position_clamps_to_relative_duration() {
+        let now = UNIX_EPOCH + Duration::from_secs(1_000);
+        let now_ticks = system_time_to_windows_ticks(now).unwrap();
+        let last_updated = now_ticks - 60 * TICKS;
+
+        // Projection would run past the 40 s track; clamp at duration.
+        let past_end = timeline_seconds(
+            100 * TICKS,
+            140 * TICKS,
+            130 * TICKS,
+            true,
+            Some(last_updated),
+            now,
+        );
+        assert_eq!(past_end.duration, 40.0);
+        assert_eq!(past_end.position, 40.0);
+
+        // A position before StartTime must not go negative.
+        let before_start = timeline_seconds(
+            100 * TICKS,
+            140 * TICKS,
+            90 * TICKS,
+            false,
+            None,
+            UNIX_EPOCH,
+        );
+        assert_eq!(before_start.duration, 40.0);
+        assert_eq!(before_start.position, 0.0);
     }
 }
