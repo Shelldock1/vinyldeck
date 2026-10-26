@@ -958,4 +958,117 @@ mod tests {
         assert_eq!(reloaded.discord_client_id, "");
         assert_eq!(reloaded.language, "auto");
     }
+
+    // The uninstallers cannot be built in this environment (the MSI bundler
+    // needs a WiX download), so the templates are checked directly instead.
+    const MSI_TEMPLATE: &str = include_str!("../../installer/main.wxs");
+    const NSIS_TEMPLATE: &str = include_str!("../../installer/installer.nsi");
+
+    const AUTOSTART_RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
+    const AUTOSTART_APPROVED_KEY: &str =
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+
+    /// Collapse every whitespace run so the assertions do not depend on line
+    /// wrapping or indentation inside the templates.
+    fn collapse_whitespace(text: &str) -> String {
+        text.split_whitespace().collect::<Vec<_>>().join(" ")
+    }
+
+    /// Returns the whitespace-collapsed document plus every `<tag ...>` element
+    /// in it, so attribute order and formatting do not matter.
+    fn msi_elements(template: &str, tag: &str) -> (String, Vec<String>) {
+        let document = collapse_whitespace(template);
+        let open = format!("<{tag} ");
+        let mut elements = Vec::new();
+        let mut rest = document.as_str();
+        while let Some(start) = rest.find(&open) {
+            rest = &rest[start..];
+            let end = rest.find('>').map_or(rest.len(), |index| index + 1);
+            elements.push(rest[..end].to_string());
+            rest = &rest[end..];
+        }
+        (document, elements)
+    }
+
+    fn assert_msi_removes_value(key: &str, value_names: &[&str]) {
+        let (document, removals) = msi_elements(MSI_TEMPLATE, "RemoveRegistryValue");
+        let expected_key = format!("Key=\"{key}\"");
+        let element = removals
+            .iter()
+            .find(|element| {
+                element.contains("Root=\"HKCU\"")
+                    && element.contains(&expected_key)
+                    && value_names
+                        .iter()
+                        .any(|name| element.contains(&format!("Name=\"{name}\"")))
+            })
+            .unwrap_or_else(|| {
+                panic!(
+                    "MSI template must remove HKCU\\{key} value {value_names:?} with RemoveRegistryValue"
+                )
+            });
+
+        // WiX only sequences the removal when it belongs to a component, which
+        // also gives it a key path.
+        let position = document
+            .find(element.as_str())
+            .expect("removal element is in the document");
+        let component_open = document[..position].rfind("<Component ").unwrap_or(0);
+        let component_close = document[..position]
+            .rfind("</Component>")
+            .map_or(0, |index| index + 1);
+        assert!(
+            component_open > component_close,
+            "RemoveRegistryValue for {key} must be inside a Component"
+        );
+
+        // Deleting the whole key would drop autostart entries of other apps.
+        let (_, key_removals) = msi_elements(MSI_TEMPLATE, "RemoveRegistryKey");
+        assert!(
+            key_removals
+                .iter()
+                .all(|removal| !removal.contains(&expected_key)),
+            "MSI template must not delete the shared {key} key"
+        );
+    }
+
+    fn assert_nsis_removes_value(key: &str, value_tokens: &[&str]) {
+        let document = collapse_whitespace(NSIS_TEMPLATE);
+        let start = document
+            .find("Section Uninstall")
+            .expect("NSIS template has an uninstall section");
+        let end = document[start..]
+            .find(" SectionEnd")
+            .map_or(document.len(), |index| start + index);
+        let section = &document[start..end];
+
+        let directive = format!("DeleteRegValue HKCU \"{key}\"");
+        let removes_value = value_tokens
+            .iter()
+            .any(|token| section.contains(&format!("{directive} {token}")));
+        assert!(
+            removes_value,
+            "NSIS uninstall section must remove HKCU\\{key} value {value_tokens:?} with DeleteRegValue"
+        );
+        assert!(
+            !section.contains(&format!("DeleteRegKey HKCU \"{key}\"")),
+            "NSIS uninstall must not delete the shared {key} key"
+        );
+    }
+
+    /// Uninstalling must remove exactly the two autostart values the app writes
+    /// and leave the shared Run / StartupApproved keys (and their other values)
+    /// alone. `{{product_name}}` renders to `VinylDeck`, the name the app uses.
+    #[test]
+    fn installer_templates_remove_the_autostart_values() {
+        let msi_names = ["VinylDeck", "{{product_name}}"];
+        assert_msi_removes_value(AUTOSTART_RUN_KEY, &msi_names);
+        assert_msi_removes_value(AUTOSTART_APPROVED_KEY, &msi_names);
+
+        // NSIS refers to the value as ${PRODUCTNAME}, defined from the same
+        // product name, so both spellings are accepted.
+        let nsis_names = ["\"VinylDeck\"", "\"${PRODUCTNAME}\""];
+        assert_nsis_removes_value(AUTOSTART_RUN_KEY, &nsis_names);
+        assert_nsis_removes_value(AUTOSTART_APPROVED_KEY, &nsis_names);
+    }
 }

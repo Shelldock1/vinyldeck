@@ -131,6 +131,16 @@
                 <RegistryKey Root="HKCU" Key="Software\\{{manufacturer}}\\{{product_name}}">
                     <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLDIR]" KeyPath="yes" />
                 </RegistryKey>
+                <!-- Windows autostart values written by the app at runtime. Remove
+                     only the VinylDeck values on uninstall; the Run and
+                     StartupApproved keys are shared with other applications and
+                     must stay intact. -->
+                <RemoveRegistryValue Root="HKCU"
+                                     Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                                     Name="VinylDeck" />
+                <RemoveRegistryValue Root="HKCU"
+                                     Key="Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+                                     Name="VinylDeck" />
                 <!-- Change the Root to HKCU for perUser installations -->
                 {{#each deep_link_protocols as |protocol| ~}}
                 <RegistryKey Root="HKLM" Key="Software\Classes\\{{protocol}}">

@@ -903,12 +903,15 @@ Section Uninstall
     DeleteRegKey HKCU "${UNINSTKEY}"
   !endif
 
-  ; Removes the Autostart entry for ${PRODUCTNAME} from the HKCU Run key if it exists.
-  ; This ensures the program does not launch automatically after uninstallation if it exists.
-  ; If it doesn't exist, it does nothing.
-  ; We do this when not updating (to preserve the registry value on updates)
+  ; Removes the Autostart entries for ${PRODUCTNAME} from the HKCU Run and
+  ; StartupApproved keys if they exist, so the program does not launch
+  ; automatically after uninstallation. Only the ${PRODUCTNAME} values are
+  ; deleted; both keys are shared with other applications.
+  ; If the values don't exist, it does nothing.
+  ; We do this when not updating (to preserve the registry values on updates)
   ${If} $UpdateMode <> 1
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "${PRODUCTNAME}"
   ${EndIf}
 
   ; Delete app data if the checkbox is selected
