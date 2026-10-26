@@ -129,10 +129,12 @@ pub(crate) fn fit_main_to_monitor(app: &AppHandle) {
     };
 
     let area = monitor.work_area().size;
+    let min = main_min_size(app, monitor.scale_factor());
     let Some(fitted) = fit_within(
         (size.width, size.height),
         (area.width, area.height),
         MAIN_MAX_WORK_AREA_SHARE,
+        min,
     ) else {
         return;
     };
@@ -148,13 +150,41 @@ pub(crate) fn fit_main_to_monitor(app: &AppHandle) {
     let _ = main.center();
 }
 
+/// The configured `minWidth`/`minHeight` of the Main window, in physical pixels.
+/// Returns `(0, 0)` when unconfigured so the fit stays unclamped.
+fn main_min_size(app: &AppHandle, scale_factor: f64) -> (u32, u32) {
+    app.config()
+        .app
+        .windows
+        .iter()
+        .find(|window| window.label == MAIN_LABEL)
+        .and_then(|window| window.min_width.zip(window.min_height))
+        .map(|(width, height)| {
+            (
+                (width * scale_factor).round() as u32,
+                (height * scale_factor).round() as u32,
+            )
+        })
+        .unwrap_or((0, 0))
+}
+
 /// Returns the clamped size when `size` exceeds `share` of `area`, else None.
-fn fit_within(size: (u32, u32), area: (u32, u32), share: f64) -> Option<(u32, u32)> {
+/// The configured `min` always wins: the result never goes below it, even when
+/// the working area itself is smaller than the minimum.
+fn fit_within(
+    size: (u32, u32),
+    area: (u32, u32),
+    share: f64,
+    min: (u32, u32),
+) -> Option<(u32, u32)> {
     if area.0 == 0 || area.1 == 0 {
         return None;
     }
     let max_width = (f64::from(area.0) * share).floor() as u32;
     let max_height = (f64::from(area.1) * share).floor() as u32;
+    // Prefer the minimum over the share, per the explicit 700x560 requirement.
+    let max_width = max_width.max(min.0);
+    let max_height = max_height.max(min.1);
     if size.0 <= max_width && size.1 <= max_height {
         return None;
     }
@@ -353,13 +383,62 @@ mod tests {
         );
     }
 
+    /// The Main minimum read from `tauri.conf.json` (the same source production
+    /// reads through the app config), so tests do not duplicate the numbers.
+    fn configured_main_min() -> (u32, u32) {
+        let config: serde_json::Value = serde_json::from_str(include_str!("../../tauri.conf.json"))
+            .expect("tauri.conf.json should parse");
+        let main = config["app"]["windows"]
+            .as_array()
+            .and_then(|windows| windows.iter().find(|window| window["label"] == "main"))
+            .expect("main window config should exist");
+        (
+            main["minWidth"].as_u64().expect("minWidth should be set") as u32,
+            main["minHeight"].as_u64().expect("minHeight should be set") as u32,
+        )
+    }
+
     #[test]
     fn main_window_only_shrinks_when_it_does_not_fit() {
-        assert_eq!(fit_within((1000, 860), (1920, 1040), 0.92), None);
+        let min = configured_main_min();
+        assert_eq!(fit_within((1000, 860), (1920, 1040), 0.92, min), None);
         assert_eq!(
-            fit_within((1000, 860), (1366, 728), 0.92),
+            fit_within((1000, 860), (1366, 728), 0.92, min),
             Some((1000, 669))
         );
-        assert_eq!(fit_within((1000, 860), (0, 0), 0.92), None);
+        assert_eq!(fit_within((1000, 860), (0, 0), 0.92, min), None);
+    }
+
+    #[test]
+    fn main_fit_keeps_the_92_percent_share_above_the_minimum() {
+        let min = configured_main_min();
+        // Normal monitors: 92% is well above the minimum, so nothing shrinks.
+        assert_eq!(fit_within((1000, 860), (2560, 1440), 0.92, min), None);
+        // 92% of 728px is 669px, still above the minimum height.
+        assert_eq!(
+            fit_within((1000, 860), (1366, 728), 0.92, min),
+            Some((1000, 669))
+        );
+    }
+
+    #[test]
+    fn main_fit_never_goes_below_the_minimum_on_a_small_work_area() {
+        let min = configured_main_min();
+        // 92% of 600px is 552px, which would undercut the minimum height.
+        assert_eq!(
+            fit_within((1000, 860), (1280, 600), 0.92, min),
+            Some((1000, min.1))
+        );
+        // A work area smaller than the minimum still yields the minimum.
+        assert_eq!(fit_within((1000, 860), (600, 480), 0.92, min), Some(min));
+    }
+
+    #[test]
+    fn main_fit_leaves_an_already_small_size_alone() {
+        let min = configured_main_min();
+        // Smaller than both the working area and the minimum: nothing to shrink.
+        assert_eq!(fit_within((600, 500), (640, 480), 0.92, min), None);
+        // Already at the minimum: the fit must not request anything smaller.
+        assert_eq!(fit_within(min, (640, 480), 0.92, min), None);
     }
 }
