@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -225,8 +227,57 @@ pub async fn cmd_settings_reset(
 }
 
 fn load_settings(app: &AppHandle) -> Result<PersistedSettings, String> {
+    prepare_store_file(app);
     let store = app.store(STORE_FILE).map_err(|error| error.to_string())?;
     Ok(validate_settings(store.get(STORE_KEY)))
+}
+
+/// The store deserializes `settings.json` with `serde_json::from_slice`, which
+/// rejects a leading UTF-8 BOM. The plugin ignores that load error, so the
+/// store starts empty and `initialize_settings` then saves defaults over the
+/// file: a hand-edited file written by a BOM-emitting editor would be silently
+/// normalized. Strip the BOM on disk before the store is first opened. This is
+/// the only pre-store file rewrite; the plugin's own saves stay untouched.
+fn prepare_store_file(app: &AppHandle) {
+    let path = match tauri_plugin_store::resolve_store_path(app, STORE_FILE) {
+        Ok(path) => path,
+        Err(error) => {
+            eprintln!("[VinylDeck settings] failed to resolve store path: {error}");
+            return;
+        }
+    };
+
+    match strip_utf8_bom(&path) {
+        Ok(true) => eprintln!(
+            "[VinylDeck settings] stripped UTF-8 BOM from {}",
+            path.display()
+        ),
+        Ok(false) => {}
+        Err(error) => eprintln!(
+            "[VinylDeck settings] failed to check {} for a BOM: {error}",
+            path.display()
+        ),
+    }
+}
+
+const UTF8_BOM: [u8; 3] = [0xEF, 0xBB, 0xBF];
+
+/// Removes exactly one leading UTF-8 BOM from `path`, if present. Returns
+/// whether the file was rewritten. A missing file, a BOM-less file and a file
+/// whose JSON is invalid are left byte-for-byte alone (an empty file stays
+/// empty, so the store still creates its own defaults).
+fn strip_utf8_bom(path: &Path) -> std::io::Result<bool> {
+    let bytes = match std::fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+    };
+
+    let Some(without_bom) = bytes.strip_prefix(&UTF8_BOM) else {
+        return Ok(false);
+    };
+    std::fs::write(path, without_bom)?;
+    Ok(true)
 }
 
 fn save_settings(app: &AppHandle, settings: &PersistedSettings) -> Result<(), String> {
@@ -591,9 +642,70 @@ fn normalize_source_text(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use serde_json::json;
 
-    use super::{apply_patch, validate_settings, PersistedSettings, SettingsPatch};
+    use super::{apply_patch, strip_utf8_bom, validate_settings, PersistedSettings, SettingsPatch};
+
+    /// Unique per-process, per-call temp path. Tests must never touch the real
+    /// `%APPDATA%\com.vinyldeck.app` store.
+    fn temp_settings_path(tag: &str) -> PathBuf {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "vinyldeck-{tag}-{}-{nanos}.json",
+            std::process::id()
+        ))
+    }
+
+    #[test]
+    fn strips_leading_utf8_bom_before_store_parses_settings() {
+        let bommed = temp_settings_path("bom");
+        let mut bytes = vec![0xEF, 0xBB, 0xBF];
+        bytes.extend_from_slice(br#"{"settings":{"theme":"glass","scheme":"halloween"}}"#);
+        std::fs::write(&bommed, &bytes).expect("write BOM settings");
+
+        let rewrote = strip_utf8_bom(&bommed).expect("strip BOM");
+        assert!(rewrote, "helper should report the BOM rewrite");
+
+        let after = std::fs::read(&bommed).expect("read stripped settings");
+        assert!(
+            !after.starts_with(&[0xEF, 0xBB, 0xBF]),
+            "stored file still starts with a UTF-8 BOM"
+        );
+        // Exactly the BOM is gone; the payload is intact.
+        assert_eq!(&after[..], &bytes[3..]);
+        let parsed: serde_json::Value =
+            serde_json::from_slice(&after).expect("stripped file parses as JSON");
+        let settings = validate_settings(parsed.get("settings").cloned());
+        assert_eq!(settings.theme, "glass");
+        assert_eq!(settings.scheme, "halloween");
+        assert_eq!(settings.version, 4);
+
+        // A second pass is a no-op, so repeated launches are safe.
+        assert!(!strip_utf8_bom(&bommed).expect("second strip"));
+
+        let plain = temp_settings_path("plain");
+        let plain_bytes = br#"{"settings":{"scheme":"light"}}"#.to_vec();
+        std::fs::write(&plain, &plain_bytes).expect("write BOM-less settings");
+
+        assert!(!strip_utf8_bom(&plain).expect("strip BOM-less"));
+        assert_eq!(
+            std::fs::read(&plain).expect("read BOM-less settings"),
+            plain_bytes,
+            "a BOM-less file must stay byte-for-byte untouched"
+        );
+
+        let missing = temp_settings_path("missing");
+        assert!(!strip_utf8_bom(&missing).expect("missing file"));
+        assert!(!missing.exists(), "helper must not create the store file");
+
+        let _ = std::fs::remove_file(&bommed);
+        let _ = std::fs::remove_file(&plain);
+    }
 
     #[test]
     fn validates_bad_settings_to_safe_defaults() {
