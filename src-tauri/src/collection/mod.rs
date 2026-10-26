@@ -515,8 +515,8 @@ mod tests {
 
     use super::{
         backfill_source_kinds, count_play, press, reclassify_music_app_records, record_key,
-        remove_records, validate_records, wrapped::PlayEvent, CountedPlay, PressInput,
-        PressingColors,
+        remove_records, validate_records, wrapped::validate_history, wrapped::PlayEvent,
+        CountedPlay, PressInput, PressingColors,
     };
 
     fn play(artist: &str, album: &str, track: &str, source: &str) -> CountedPlay {
@@ -726,5 +726,90 @@ mod tests {
         assert_eq!(records[0].source_kind.as_deref(), Some("app"));
         assert_eq!(records[1].source_kind.as_deref(), Some("browser"));
         assert_eq!(records[2].source_kind, None);
+    }
+
+    /// A relaunch reads the Crate back through `validate_records`. Pressing
+    /// numbers, play counts, the pressing recipe, the cover and the source tag
+    /// must all survive, and a removed album must stay removed.
+    #[test]
+    fn crate_snapshot_survives_a_reload_with_counts_and_removals() {
+        let mut records = Vec::new();
+        count_play(&mut records, &play("A", "One", "Song", "Spotify"), 10).expect("stub");
+        press(&mut records, input("A", "One"), 20).expect("press");
+        count_play(&mut records, &play("A", "One", "Song", "Spotify"), 30).expect("play");
+        count_play(&mut records, &play("B", "Two", "Song", "Spotify"), 40).expect("second");
+        let removed_key = records[1].key.clone();
+        assert_eq!(
+            remove_records(&mut records, std::slice::from_ref(&removed_key)),
+            vec![removed_key.clone()]
+        );
+
+        let stored = serde_json::to_value(&records).expect("records serialize");
+        let reloaded = validate_records(Some(stored));
+
+        assert_eq!(reloaded, records);
+        assert_eq!(reloaded.len(), 1);
+        assert_eq!(reloaded[0].key, "a|one");
+        assert_eq!(reloaded[0].pressing_number, 1);
+        assert_eq!(reloaded[0].play_count, 2);
+        assert_eq!(reloaded[0].last_played_at, Some(30));
+        assert_eq!(reloaded[0].recipe.as_deref(), Some("galaxy"));
+        assert_eq!(
+            reloaded[0].thumbnail.as_deref(),
+            Some("data:image/jpeg;base64,AAAA")
+        );
+        assert_eq!(reloaded[0].source_name.as_deref(), Some("Spotify"));
+        assert!(reloaded.iter().all(|record| record.key != removed_key));
+    }
+
+    /// Wrapped and the streak read the bounded play history; it is written in
+    /// the same store file and has to round-trip unchanged.
+    #[test]
+    fn play_history_survives_a_reload() {
+        let history = vec![
+            PlayEvent {
+                at: 1_700_000_000_000,
+                artist: "Artist".to_string(),
+                album: "Album".to_string(),
+                track: "First".to_string(),
+                source_kind: Some("app".to_string()),
+            },
+            PlayEvent {
+                at: 1_700_000_060_000,
+                artist: "Channel".to_string(),
+                album: String::new(),
+                track: "Video".to_string(),
+                source_kind: Some("browser".to_string()),
+            },
+        ];
+
+        let stored = serde_json::to_value(&history).expect("history serialize");
+        let reloaded = validate_history(Some(stored));
+
+        assert_eq!(reloaded, history);
+    }
+
+    /// Removing an album keeps its listens in the history, so Wrapped and the
+    /// streak do not lose plays just because the record left the shelf.
+    #[test]
+    fn removing_a_record_keeps_its_history() {
+        let mut records = Vec::new();
+        count_play(&mut records, &play("A", "One", "Song", "Spotify"), 10).expect("record");
+        let history = vec![PlayEvent {
+            at: 10,
+            artist: "A".to_string(),
+            album: "One".to_string(),
+            track: "Song".to_string(),
+            source_kind: Some("app".to_string()),
+        }];
+        let key = records[0].key.clone();
+
+        remove_records(&mut records, &[key]);
+
+        assert!(records.is_empty());
+        assert_eq!(
+            validate_history(Some(serde_json::to_value(&history).unwrap())),
+            history
+        );
     }
 }

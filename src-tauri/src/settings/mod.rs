@@ -765,4 +765,76 @@ mod tests {
         );
         assert_eq!(ignored.language, "en");
     }
+
+    /// Every persisted field has to survive the store round trip: the file is
+    /// written on one launch and read back by `validate_settings` on the next.
+    #[test]
+    fn persisted_settings_round_trip_without_losing_fields() {
+        let settings = PersistedSettings {
+            version: 4,
+            theme: "glass".to_string(),
+            scheme: "halloween".to_string(),
+            ambient_mode: "beam".to_string(),
+            art_ambient: true,
+            vinyl_wobble: false,
+            film_grain: false,
+            lean_back_mode: false,
+            cursor_hide: false,
+            idle_timeout_seconds: 5,
+            always_on_top: true,
+            keyboard_shortcuts_enabled: false,
+            quit_to_tray: false,
+            start_with_windows: true,
+            window_mode: "fullscreen".to_string(),
+            mini_transparent_mode: true,
+            player_source_id: "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify".to_string(),
+            player_source_name: "Spotify".to_string(),
+            discord_client_id: "123456789012345678".to_string(),
+            language: "ru".to_string(),
+        };
+
+        let stored = serde_json::to_value(&settings).expect("settings serialize");
+        let reloaded = validate_settings(Some(stored));
+
+        assert_eq!(reloaded, settings);
+    }
+
+    /// The oldest file in the wild (version 2) is missing scheme, language,
+    /// Mini transparency, player source and Discord. Upgrading must keep the
+    /// known values and fill the new ones with safe defaults.
+    #[test]
+    fn version_two_settings_file_upgrades_without_losing_values() {
+        let reloaded = validate_settings(Some(json!({
+            "version": 2,
+            "theme": "glass",
+            "ambientMode": "beam",
+            "artAmbient": true,
+            "vinylWobble": false,
+            "filmGrain": false,
+            "leanBackMode": false,
+            "cursorHide": false,
+            "idleTimeoutSeconds": 4,
+            "alwaysOnTop": true,
+            "keyboardShortcutsEnabled": false,
+            "quitToTray": false,
+            "startWithWindows": false,
+            "windowMode": "fullscreen"
+        })));
+
+        assert_eq!(reloaded.version, 4);
+        assert_eq!(reloaded.theme, "glass");
+        assert_eq!(reloaded.scheme, "dark");
+        assert_eq!(reloaded.ambient_mode, "beam");
+        assert!(!reloaded.vinyl_wobble);
+        assert_eq!(reloaded.idle_timeout_seconds, 4);
+        assert!(reloaded.always_on_top);
+        assert!(!reloaded.keyboard_shortcuts_enabled);
+        assert!(!reloaded.quit_to_tray);
+        assert_eq!(reloaded.window_mode, "fullscreen");
+        assert!(!reloaded.mini_transparent_mode);
+        assert_eq!(reloaded.player_source_id, "");
+        assert_eq!(reloaded.player_source_name, "");
+        assert_eq!(reloaded.discord_client_id, "");
+        assert_eq!(reloaded.language, "auto");
+    }
 }
