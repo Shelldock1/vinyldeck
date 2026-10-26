@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 
 use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager as SessionManager;
@@ -17,11 +17,13 @@ pub(crate) async fn current_media_snapshot_with_metadata(
     selected: Option<String>,
     fallback: Option<String>,
 ) -> anyhow::Result<Option<MediaSnapshot>> {
-    let Some(session) = current_session(selected.as_deref(), fallback.as_deref()).await? else {
+    let Some((session, source_key)) =
+        current_session(selected.as_deref(), fallback.as_deref()).await?
+    else {
         return Ok(None);
     };
 
-    let mut snapshot = current_lightweight_snapshot_from_session(&session);
+    let mut snapshot = current_lightweight_snapshot_from_session(&session, &source_key);
     if let Ok(properties) = session.TryGetMediaPropertiesAsync()?.await {
         snapshot.track = properties
             .Title()
@@ -44,11 +46,13 @@ pub(crate) async fn current_media_snapshot_with_artwork(
     selected: Option<String>,
     fallback: Option<String>,
 ) -> anyhow::Result<Option<MediaSnapshot>> {
-    let Some(session) = current_session(selected.as_deref(), fallback.as_deref()).await? else {
+    let Some((session, source_key)) =
+        current_session(selected.as_deref(), fallback.as_deref()).await?
+    else {
         return Ok(None);
     };
 
-    let mut snapshot = current_lightweight_snapshot_from_session(&session);
+    let mut snapshot = current_lightweight_snapshot_from_session(&session, &source_key);
     if let Ok(properties) = session.TryGetMediaPropertiesAsync()?.await {
         snapshot.track = properties
             .Title()
@@ -76,11 +80,14 @@ pub(crate) async fn current_lightweight_snapshot(
     selected: Option<&str>,
     fallback: Option<&str>,
 ) -> anyhow::Result<Option<super::model::MediaSnapshot>> {
-    let Some(session) = current_session(selected, fallback).await? else {
+    let Some((session, source_key)) = current_session(selected, fallback).await? else {
         return Ok(None);
     };
 
-    Ok(Some(current_lightweight_snapshot_from_session(&session)))
+    Ok(Some(current_lightweight_snapshot_from_session(
+        &session,
+        &source_key,
+    )))
 }
 
 /// Enumerates every SMTC session for the Settings picker.
@@ -89,23 +96,19 @@ pub(crate) async fn list_players() -> anyhow::Result<Vec<MediaPlayer>> {
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
 
     let manager = GlobalSystemMediaTransportControlsSessionManager::RequestAsync()?.await?;
-    let sessions = manager.GetSessions()?;
     let mut players = Vec::new();
 
-    for index in 0..sessions.Size()? {
-        let Ok(session) = sessions.GetAt(index) else {
-            continue;
+    for (session, source_key) in sessions_with_keys(&manager) {
+        let name = {
+            let (aumid, _) = parse_source_key(&source_key);
+            if aumid.is_empty() {
+                continue;
+            }
+            display_name_for_key(&super::model::friendly_source_name(aumid), &source_key)
         };
-        let source_id = session
-            .SourceAppUserModelId()
-            .map(|value| value.to_string())
-            .unwrap_or_default();
-        if source_id.is_empty() {
-            continue;
-        }
         players.push(MediaPlayer {
-            name: super::model::friendly_source_name(&source_id),
-            id: source_id,
+            name,
+            id: source_key,
             is_playing: session_is_playing(&session),
         });
     }
@@ -131,12 +134,6 @@ async fn manager() -> anyhow::Result<SessionManager> {
 fn ensure_session_subscriptions(manager: &SessionManager) {
     use windows::Foundation::TypedEventHandler;
 
-    let Ok(sessions) = manager.GetSessions() else {
-        return;
-    };
-    let Ok(size) = sessions.Size() else {
-        return;
-    };
     let mut subscribed = SUBSCRIBED_SESSIONS
         .get_or_init(|| Mutex::new(HashSet::new()))
         .lock()
@@ -145,12 +142,8 @@ fn ensure_session_subscriptions(manager: &SessionManager) {
         subscribed.clear();
     }
 
-    for index in 0..size {
-        let Ok(session) = sessions.GetAt(index) else {
-            continue;
-        };
-        let source_id = session_source_id(&session);
-        if source_id.is_empty() || !subscribed.insert(source_id) {
+    for (session, source_key) in sessions_with_keys(manager) {
+        if parse_source_key(&source_key).0.is_empty() || !subscribed.insert(source_key) {
             continue;
         }
 
@@ -196,7 +189,12 @@ pub(crate) fn spawn_event_watchers() {
 async fn current_session(
     selected: Option<&str>,
     fallback: Option<&str>,
-) -> anyhow::Result<Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession>> {
+) -> anyhow::Result<
+    Option<(
+        windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+        String,
+    )>,
+> {
     let manager = manager().await?;
     ensure_session_subscriptions(&manager);
 
@@ -217,10 +215,101 @@ async fn current_session(
     }
 
     if let Ok(session) = manager.GetCurrentSession() {
-        return Ok(Some(session));
+        let source_key = session_key_for_aumid(&manager, &session);
+        return Ok(Some((session, source_key)));
     }
 
     Ok(first_paused_session(&manager))
+}
+
+/// Assigns every session a composite key. AUMIDs that appear once keep their
+/// plain value (`Chrome`) so selections stored by older builds still resolve.
+/// Repeated AUMIDs get a deterministic per-AUMID occurrence suffix
+/// (`Chrome#1`, `Chrome#2`) in enumeration order, because WinRT exposes no
+/// stable per-session id.
+fn session_keys(aumids: &[&str]) -> Vec<String> {
+    let mut totals: HashMap<&str, usize> = HashMap::new();
+    for aumid in aumids {
+        *totals.entry(*aumid).or_default() += 1;
+    }
+
+    let mut seen: HashMap<&str, usize> = HashMap::new();
+    aumids
+        .iter()
+        .map(|aumid| {
+            let occurrence = seen.entry(*aumid).or_default();
+            *occurrence += 1;
+            if totals.get(*aumid).copied().unwrap_or(1) > 1 {
+                format!("{aumid}#{occurrence}")
+            } else {
+                (*aumid).to_string()
+            }
+        })
+        .collect()
+}
+
+/// Splits a stored key into its AUMID and optional occurrence. A plain AUMID
+/// (older settings) has no occurrence and selects the first session of that
+/// app. AUMIDs that contain `#` are not mistaken for composites.
+fn parse_source_key(key: &str) -> (&str, Option<usize>) {
+    if let Some((aumid, suffix)) = key.rsplit_once('#') {
+        if !aumid.is_empty() {
+            if let Ok(occurrence) = suffix.parse::<usize>() {
+                if occurrence > 0 {
+                    return (aumid, Some(occurrence));
+                }
+            }
+        }
+    }
+    (key, None)
+}
+
+/// Picker label for a keyed session. Unique sessions keep their old name;
+/// duplicates gain the occurrence so the picker can tell them apart.
+fn display_name_for_key(base_name: &str, key: &str) -> String {
+    match parse_source_key(key) {
+        (_, Some(occurrence)) => format!("{base_name} ({occurrence})"),
+        _ => base_name.to_string(),
+    }
+}
+
+/// Resolves a stored key against the current enumeration. Exact composite keys
+/// win; a plain AUMID or an occurrence that disappeared after a refresh falls
+/// back to the first session for that app instead of losing the source.
+fn select_session_index(keys: &[String], requested: &str) -> Option<usize> {
+    if let Some(index) = keys.iter().position(|key| key == requested) {
+        return Some(index);
+    }
+
+    let (aumid, _) = parse_source_key(requested);
+    keys.iter().position(|key| parse_source_key(key).0 == aumid)
+}
+
+/// Enumerates sessions together with their composite keys, preserving manager
+/// order so listing, selection, and subscription all agree.
+fn sessions_with_keys(
+    manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
+) -> Vec<(
+    windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+    String,
+)> {
+    let Ok(sessions) = manager.GetSessions() else {
+        return Vec::new();
+    };
+    let Ok(size) = sessions.Size() else {
+        return Vec::new();
+    };
+
+    let mut handles = Vec::new();
+    for index in 0..size {
+        if let Ok(session) = sessions.GetAt(index) {
+            handles.push(session);
+        }
+    }
+
+    let aumids: Vec<String> = handles.iter().map(session_source_id).collect();
+    let aumid_refs: Vec<&str> = aumids.iter().map(String::as_str).collect();
+    handles.into_iter().zip(session_keys(&aumid_refs)).collect()
 }
 
 fn session_source_id(
@@ -260,65 +349,66 @@ fn session_is_paused(
         })
 }
 
+/// Key of the first session for an AUMID. Used only for the manager's current
+/// session, which has no enumeration position of its own.
+fn session_key_for_aumid(
+    manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
+    session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+) -> String {
+    let aumid = session_source_id(session);
+    sessions_with_keys(manager)
+        .into_iter()
+        .map(|(_, key)| key)
+        .find(|key| parse_source_key(key).0 == aumid)
+        .unwrap_or(aumid)
+}
+
 fn session_by_source_id(
     manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
     source_id: &str,
-) -> Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
-    let sessions = manager.GetSessions().ok()?;
-    for index in 0..sessions.Size().ok()? {
-        let Ok(session) = sessions.GetAt(index) else {
-            continue;
-        };
-        if session_source_id(&session) == source_id {
-            return Some(session);
-        }
-    }
-    None
+) -> Option<(
+    windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+    String,
+)> {
+    let sessions = sessions_with_keys(manager);
+    let keys: Vec<String> = sessions.iter().map(|(_, key)| key.clone()).collect();
+    let index = select_session_index(&keys, source_id)?;
+    sessions.into_iter().nth(index)
 }
 
 fn first_playing_session(
     manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
-) -> Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
-    let sessions = manager.GetSessions().ok()?;
-    for index in 0..sessions.Size().ok()? {
-        let Ok(session) = sessions.GetAt(index) else {
-            continue;
-        };
-        if session_is_playing(&session) {
-            return Some(session);
-        }
-    }
-    None
+) -> Option<(
+    windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+    String,
+)> {
+    sessions_with_keys(manager)
+        .into_iter()
+        .find(|(session, _)| session_is_playing(session))
 }
 
 fn first_paused_session(
     manager: &windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager,
-) -> Option<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
-    let sessions = manager.GetSessions().ok()?;
-    for index in 0..sessions.Size().ok()? {
-        let Ok(session) = sessions.GetAt(index) else {
-            continue;
-        };
-        if session_is_paused(&session) {
-            return Some(session);
-        }
-    }
-    None
+) -> Option<(
+    windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+    String,
+)> {
+    sessions_with_keys(manager)
+        .into_iter()
+        .find(|(session, _)| session_is_paused(session))
 }
 
 fn current_lightweight_snapshot_from_session(
     session: &windows::Media::Control::GlobalSystemMediaTransportControlsSession,
+    source_key: &str,
 ) -> super::model::MediaSnapshot {
     use super::model::{friendly_source_name, ticks_to_seconds};
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionPlaybackStatus;
 
-    let source_id = session
-        .SourceAppUserModelId()
-        .map(|value| value.to_string())
-        .unwrap_or_default();
-    let source_name = friendly_source_name(&source_id);
+    let (aumid, _) = parse_source_key(source_key);
+    let source_name = display_name_for_key(&friendly_source_name(aumid), source_key);
     let mut snapshot = super::model::MediaSnapshot {
-        source_id,
+        source_id: source_key.to_string(),
         source_name,
         ..super::model::MediaSnapshot::default()
     };
@@ -447,6 +537,7 @@ async fn current_session_for_command(
 ) -> anyhow::Result<windows::Media::Control::GlobalSystemMediaTransportControlsSession> {
     current_session(source_id, None)
         .await?
+        .map(|(session, _)| session)
         .ok_or_else(|| anyhow::anyhow!("No active media session"))
 }
 
@@ -522,7 +613,8 @@ mod tests {
     use std::time::{Duration, UNIX_EPOCH};
 
     use super::{
-        projected_position_seconds, require_command_accepted, seconds_to_ticks,
+        display_name_for_key, parse_source_key, projected_position_seconds,
+        require_command_accepted, seconds_to_ticks, select_session_index, session_keys,
         system_time_to_windows_ticks,
     };
 
@@ -563,6 +655,47 @@ mod tests {
                 .to_string();
             assert_eq!(error, expected);
         }
+    }
+
+    #[test]
+    fn smtc_sessions_are_keyed_by_aumid_and_occurrence() {
+        assert_eq!(parse_source_key("Chrome#2"), ("Chrome", Some(2)));
+        assert_eq!(parse_source_key("Chrome"), ("Chrome", None));
+        assert_eq!(
+            parse_source_key("App#WithHash"),
+            ("App#WithHash", None),
+            "an AUMID containing # is not a composite key"
+        );
+
+        // Two Chrome windows share one AUMID; the composite keys make them
+        // distinguishable and the picker labels follow the occurrence.
+        let same_app = session_keys(&["Chrome", "Chrome"]);
+        assert_eq!(same_app, ["Chrome#1", "Chrome#2"]);
+        assert_eq!(display_name_for_key("Chrome", &same_app[0]), "Chrome (1)");
+        assert_eq!(display_name_for_key("Chrome", &same_app[1]), "Chrome (2)");
+
+        // A unique session keeps its plain AUMID, so selections stored by
+        // older builds still resolve.
+        let mixed = session_keys(&["Spotify.exe", "Chrome"]);
+        assert_eq!(mixed, ["Spotify.exe", "Chrome"]);
+        assert_eq!(display_name_for_key("Spotify", &mixed[0]), "Spotify");
+
+        // Selection by composite key picks the requested occurrence.
+        assert_eq!(select_session_index(&same_app, "Chrome#1"), Some(0));
+        assert_eq!(select_session_index(&same_app, "Chrome#2"), Some(1));
+
+        // Backward compatibility: a stored plain AUMID selects the first
+        // session of that app.
+        assert_eq!(select_session_index(&same_app, "Chrome"), Some(0));
+
+        // A refresh that leaves one Chrome session still resolves the stored
+        // composite key instead of dropping the selection.
+        let refreshed = session_keys(&["Chrome"]);
+        assert_eq!(refreshed, ["Chrome"]);
+        assert_eq!(select_session_index(&refreshed, "Chrome#2"), Some(0));
+
+        // Unknown sources resolve to nothing.
+        assert_eq!(select_session_index(&same_app, "Spotify.exe"), None);
     }
 
     #[test]
