@@ -48,6 +48,8 @@ windows = { version = "0.56", features = [
   "Win32_Media_Audio",
   "Win32_System_Com",
 ] }
+# Windows autostart command is written by us so the executable path is quoted.
+winreg = "0.55"
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = "2"

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager, State};
+#[cfg(not(windows))]
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
@@ -140,14 +141,20 @@ impl SettingsState {
         let mut settings = self.settings.lock().await;
         let current = settings.clone();
         let next = apply_patch(&current, patch);
+
+        // Keep the lock until the new state is on disk. Releasing it first let
+        // two concurrent updates (Main + Mini) save in the opposite order of
+        // their in-memory writes, so a relaunch could restore an older patch.
+        // Only commit memory after the save succeeds; on failure the running
+        // state still matches the file.
+        if next.start_with_windows != current.start_with_windows {
+            sync_start_with_windows(app, next.start_with_windows, true)?;
+        }
+        save_settings(app, &next)?;
         *settings = next.clone();
+        sync_authority_selection(app, &next);
         drop(settings);
 
-        if next.start_with_windows != current.start_with_windows {
-            sync_start_with_windows(app, next.start_with_windows)?;
-        }
-        sync_authority_selection(app, &next);
-        save_settings(app, &next)?;
         sync_mini_transparency(app, &next, &current);
         if next.language != current.language {
             crate::tray::set_language(app, &next.language);
@@ -162,12 +169,13 @@ impl SettingsState {
         let mut settings = self.settings.lock().await;
         let current = settings.clone();
         let next = PersistedSettings::default();
+
+        sync_start_with_windows(app, next.start_with_windows, true)?;
+        save_settings(app, &next)?;
         *settings = next.clone();
+        sync_authority_selection(app, &next);
         drop(settings);
 
-        sync_start_with_windows(app, next.start_with_windows)?;
-        sync_authority_selection(app, &next);
-        save_settings(app, &next)?;
         sync_mini_transparency(app, &next, &current);
         crate::tray::set_language(app, &next.language);
         emit_settings_changed(app, &next);
@@ -178,12 +186,17 @@ impl SettingsState {
 
 pub async fn initialize_settings(app: AppHandle) -> Result<(), String> {
     let settings = load_settings(&app)?;
-    if let Err(error) = sync_start_with_windows(&app, settings.start_with_windows) {
+    if let Err(error) = sync_start_with_windows(&app, settings.start_with_windows, false) {
         eprintln!("[VinylDeck settings] Failed to restore autostart: {error}");
     }
     app.state::<SettingsState>().replace(settings.clone()).await;
     sync_authority_selection(&app, &settings);
-    save_settings(&app, &settings)?;
+    // A read-only or temporarily locked settings file must not stop the app
+    // from launching: the loaded values are already active in memory, and the
+    // next successful update retries the save.
+    if let Err(error) = save_settings(&app, &settings) {
+        eprintln!("[VinylDeck settings] failed to save normalized settings: {error}");
+    }
     Ok(())
 }
 
@@ -385,14 +398,122 @@ fn apply_patch(current: &PersistedSettings, patch: SettingsPatch) -> PersistedSe
     next
 }
 
-fn sync_start_with_windows(app: &AppHandle, enabled: bool) -> Result<(), String> {
-    let autostart = app.autolaunch();
-    if enabled {
-        autostart.enable()
-    } else {
-        autostart.disable()
+fn sync_start_with_windows(app: &AppHandle, enabled: bool, explicit: bool) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        windows_autostart::set_enabled(app, enabled, explicit)
     }
-    .map_err(|error| error.to_string())
+
+    #[cfg(not(windows))]
+    {
+        let _ = explicit;
+        let autostart = app.autolaunch();
+        if enabled {
+            autostart.enable()
+        } else if autostart.is_enabled().unwrap_or(false) {
+            // The plugin errors when the entry is already absent; treating
+            // "off when off" as success keeps reset and toggle-off idempotent.
+            autostart.disable()
+        } else {
+            Ok(())
+        }
+        .map_err(|error| error.to_string())
+    }
+}
+
+#[cfg(windows)]
+mod windows_autostart {
+    use std::path::Path;
+
+    use tauri::AppHandle;
+    use winreg::enums::{RegType, HKEY_CURRENT_USER, KEY_READ, KEY_SET_VALUE};
+    use winreg::{RegKey, RegValue};
+
+    const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
+    const APPROVED_KEY: &str =
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+    /// The 12-byte "enabled" state Windows writes in StartupApproved.
+    const APPROVED_ENABLED: [u8; 12] = [0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    /// Mirrors the autostart plugin on Windows, with two fixes: the executable
+    /// path is quoted (the plugin's auto-launch backend writes it bare, which
+    /// breaks an install under `Program Files`), and StartupApproved is only
+    /// touched when the user changes the setting, so a manual launch does not
+    /// undo a Task Manager disable.
+    pub(super) fn set_enabled(
+        app: &AppHandle,
+        enabled: bool,
+        explicit: bool,
+    ) -> Result<(), String> {
+        let name = app.package_info().name.clone();
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+
+        if enabled {
+            let exe = std::env::current_exe().map_err(|error| error.to_string())?;
+            let command = command_for(&exe);
+            let (run, _) = hkcu
+                .create_subkey(RUN_KEY)
+                .map_err(|error| error.to_string())?;
+            let stored = run.get_value::<String, _>(&name).ok();
+            if stored.as_deref() != Some(command.as_str()) {
+                run.set_value(&name, &command)
+                    .map_err(|error| error.to_string())?;
+            }
+            if explicit {
+                write_approved(&hkcu, &name, Some(&APPROVED_ENABLED));
+            }
+        } else if let Ok(run) = hkcu.open_subkey_with_flags(RUN_KEY, KEY_READ | KEY_SET_VALUE) {
+            if run.get_value::<String, _>(&name).is_ok() {
+                run.delete_value(&name).map_err(|error| error.to_string())?;
+            }
+            if explicit {
+                write_approved(&hkcu, &name, None);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn write_approved(hkcu: &RegKey, name: &str, bytes: Option<&[u8]>) {
+        let Ok(key) = hkcu.open_subkey_with_flags(APPROVED_KEY, KEY_SET_VALUE) else {
+            return;
+        };
+        match bytes {
+            Some(bytes) => {
+                let _ = key.set_raw_value(
+                    name,
+                    &RegValue {
+                        vtype: RegType::REG_BINARY,
+                        bytes: bytes.to_vec(),
+                    },
+                );
+            }
+            None => {
+                let _ = key.delete_value(name);
+            }
+        }
+    }
+
+    /// Windows stores the whole command line in one registry value, so the
+    /// executable has to be quoted or `C:\Program Files\...` splits at the
+    /// first space.
+    fn command_for(exe: &Path) -> String {
+        format!("\"{}\"", exe.display())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::command_for;
+        use std::path::Path;
+
+        #[test]
+        fn quotes_an_executable_path_with_spaces() {
+            assert_eq!(
+                command_for(Path::new(r"C:\Program Files\VinylDeck\vinyldeck.exe")),
+                r#""C:\Program Files\VinylDeck\vinyldeck.exe""#
+            );
+        }
+    }
 }
 
 fn shell_from_legacy_theme(theme: &str) -> &'static str {
