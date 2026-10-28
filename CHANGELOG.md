@@ -6,9 +6,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-28
+
+The Windows hardening release: the deck now behaves on WoW64 and ARM64 machines, small or high-DPI monitors, and MSI installs under `Program Files`, and the media layer stops losing covers, timelines and player names.
+
 ### Added
 
 - **Repeat for players without a repeat control.** Browsers and apps such as Yandex Music publish no repeat mode, so the repeat lever stayed hidden. VinylDeck now shows it for them and runs repeat-one itself: just before the end it seeks back to the start, and if the player already moved to the next track it steps back once.
+- **Crate selection and removal.** A Select mode marks records by click, and No cover marks every shown record without artwork. Remove asks for confirmation, then the backend drops the chosen records and tells every window. Play history is kept, so Wrapped and the streak still count those listens.
+- **Halloween faces and a spider.** The pumpkins get candle-lit triangle eyes, a nose and a toothed grin with a faint flicker, and a spider lowers itself from the right cobweb and climbs back. Both animate with transform and opacity only, hold still under reduced motion and drop the glow on soft render.
+
+### Fixed
+
+- **Music apps were shelved as browsers.** Electron players such as Yandex Music register as `chromium.instanceN`, which matched the browser markers. Known music apps now win over those markers and show their brand name, and records saved as browser under them move to the music shelf with their history.
+- **Covers no longer stay blank for a whole track.** A player that published its title before its cover, or one failed download, cached the miss forever. Misses now retry after 1, 2, 4 and 8 seconds and only a real cover is cached.
+- **The Mini keeps the cover when opened mid-track.** `cmd_smtc_snapshot` read fresh metadata without artwork, and the poller only re-emits the cover on a track change.
+- **SMTC timelines are track-relative.** Position and duration were exposed with `StartTime` still baked in; it is subtracted now and clamped in track-relative seconds.
+- **Two windows from one app are told apart.** Duplicate AUMIDs get a composite key only when they repeat, plain AUMIDs stay for compatibility, and a vanished occurrence resolves back to the first session of that app.
+- **More WASAPI formats decode.** 24-bit packed and 32-bit integer shared-mode mixes are selected from the format tag or the `WAVEFORMATEXTENSIBLE` sub-format and scaled to the analyzer's normalized range instead of reading as float noise.
+- **Discord IPC no longer backs up.** Handshake and activity responses are drained non-blockingly, partial frames are kept between reads, and a dead pipe reconnects.
+- **The settings store stays the source of truth.** Two concurrent updates (Main and Mini) could write the older patch last, and a failed save left the running state diverged from the file. The lock now spans the save and memory commits only after it succeeds. On Windows the autostart Run command is written with a quoted executable path, so an MSI install under `Program Files` can start, and StartupApproved is touched only when the setting is toggled.
+- **A UTF-8 BOM no longer wipes `settings.json`.** The store rejected a leading BOM and then initialized defaults over the file; the BOM is stripped before the first open.
+- **Autostart cleans up on uninstall.** The MSI and NSIS templates remove `HKCU\Run\VinylDeck` and its StartupApproved flag while leaving the shared keys alone.
+- **The Main window honors its minimum.** Fitting the window to 92% of the work area could shrink the deck below 700x560 on a small or high-DPI monitor; the fitted size is now clamped to the configured minimum.
+- **The Mini stays above other windows on Wayland.** Wayland ignores keep-above, so the app now runs on the X11 backend when XWayland is available, and Always on top only changes the Main window.
+- **Readable Mini text on Linux.** Transparency kept a 78% backing in the scheme's own color instead of a fully clear card, without the dark shadows that muddied the Light scheme.
+- **The one-line Windows installer detects WoW64 and ARM64.** `PROCESSOR_ARCHITEW6432` now wins over the 32-bit `PROCESSOR_ARCHITECTURE`, so a 32-bit PowerShell on a 64-bit machine is no longer rejected, and ARM64 asks for the ARM64 asset.
+
+### Changed
+
+- **README screenshots** show the current UI: Noir with Art Ambient, the Light and Halloween schemes, the Crate, Wrapped, Russian settings and the Mini player.
+
+### Tests
+
+- Round-trip coverage for every persisted setting, the v2 to v4 upgrade, Crate press and play counts, removals and the bounded play history, plus a `SeasonalLayer` test that pins the pumpkin and spider markup.
 
 ## [0.2.1] - 2026-10-24
 
@@ -153,7 +184,8 @@ full documentation pass.
 - Splash screen.
 - Active WebGL vinyl renderer.
 
-[Unreleased]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Shelldock1/vinyldeck/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Shelldock1/vinyldeck/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Shelldock1/vinyldeck/releases/tag/v0.1.1

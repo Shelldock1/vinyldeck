@@ -1,7 +1,7 @@
 # VinylDeck: Current State
 
-**Current Phase:** Release `0.2.0` shipped — Windows/Linux parity, tag-driven releases, one-line installers, manual update check and docs overhaul.
-**Current Stage:** `v0.2.0` is public on GitHub with checksummed Windows and Linux assets; `main` and CI are green. No release follow-up is pending.
+**Current Phase:** Release `0.2.2` tagged — Windows hardening (WoW64/ARM64 install, MSI autostart, settings authority), media-layer fixes, Crate selection and the Halloween pass.
+**Current Stage:** `v0.2.2` is tagged from `main` and the tag-driven Release workflow builds NSIS/MSI and DEB/AppImage, writes `SHA256SUMS.txt` and publishes `install.ps1`/`install.sh`; confirm the workflow is green and the release is marked Latest.
 
 ## Active Work
 
@@ -68,6 +68,12 @@ Post-roadmap:
 - Restored README `## Controls` table to the exact `SHORTCUTS[].readmeRow` strings; the Phase 3 docs rewrite had broken `shortcuts.test.ts`.
 - Version bumped to `0.2.0` in root and landing `package.json`/lockfiles, `src-tauri/Cargo.toml`, `Cargo.lock`, `tauri.conf.json`. Landing download metadata already pointed at 0.2.0.
 - Verified after the change: `npm run lint`, `npm run build`, 144 frontend tests / 25 files, `cargo fmt --check`, `cargo clippy -D warnings`, 102 Rust tests, `cargo check --locked`.
+
+## Release 0.2.2 preparation (2026-10-28)
+
+- Version bumped together in `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, `src-tauri/tauri.conf.json` and `landing/package.json`; `CHANGELOG.md` gained the `[0.2.2]` section and the compare links moved to `v0.2.2`.
+- A tag `v0.2.1.1` was pushed first by mistake: it did not match any project version and had no CHANGELOG section, so the run was cancelled and the tag replaced with `v0.2.2`. Keep the tag equal to the four version fields.
+- The one-line Windows installer url (`releases/latest/download/install.ps1`) resolves to the newest non-prerelease release; it downloads `vinyldeck-setup-windows-x64.exe`, verifies `SHA256SUMS.txt` when present, installs silently for the current user, repairs the Start Menu shortcut and adds the folder to the user `PATH`.
 
 ## Release 0.2.0 shipped (2026-10-24)
 
