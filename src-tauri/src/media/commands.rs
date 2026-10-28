@@ -30,7 +30,12 @@ pub async fn cmd_smtc_snapshot(
         snapshot_fallback(&authority),
     )
     .await
-    .map(|fresh| fresh.map(|fresh| with_known_artwork(fresh, known.as_ref())))
+    .map(|fresh| {
+        fresh.map(|fresh| {
+            let fresh = with_known_artwork(fresh, known.as_ref());
+            authority.vinyl_loop().decorate(fresh)
+        })
+    })
     .map_err(|error| error.to_string())
 }
 
@@ -112,6 +117,11 @@ pub async fn cmd_media_set_repeat(
     authority: State<'_, PlaybackAuthority>,
     mode: String,
 ) -> Result<Option<MediaSnapshot>, String> {
+    // Players without a repeat control get VinylDeck's own loop instead.
+    if authority.vinyl_loop().try_set_mode(&mode) {
+        super::poller::wake_poller();
+        return cmd_smtc_snapshot(authority).await;
+    }
     let source_id = authority.selected_source_id();
     super::platform::set_repeat(&mode, source_id.as_deref())
         .await

@@ -14,6 +14,7 @@ use super::{
     authority::PlaybackAuthority,
     emit_media_position, emit_media_snapshot,
     model::{MediaPosition, MediaSemanticKey, MediaSnapshot},
+    vinyl_loop::{LoopAction, LoopWatch, RESTART_POSITION_SECONDS},
 };
 use crate::collection::{self, listen::ListenTracker};
 
@@ -117,7 +118,11 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
     let fallback = poller.last_playing_source_id.clone();
     let snapshot = poller
         .snapshot_for_poll(selection.clone(), fallback.clone())
-        .await?;
+        .await?
+        .map(|snapshot| match app.try_state::<PlaybackAuthority>() {
+            Some(authority) => authority.vinyl_loop().decorate(snapshot),
+            None => snapshot,
+        });
     poller.observe_playing_source(snapshot.as_ref());
     crate::reactivity::set_playing(
         snapshot
@@ -134,13 +139,35 @@ async fn poll_once(app: &AppHandle, poller: &mut SmtcPoller) -> anyhow::Result<(
     // Metadata goes out now; the artwork download runs off the poll thread and
     // is emitted as a follow-up snapshot once it lands.
     poller.request_artwork(snapshot.as_ref(), selection, fallback, now);
+    let loop_active = app
+        .try_state::<PlaybackAuthority>()
+        .is_some_and(|authority| authority.vinyl_loop().is_active());
+    let loop_action = poller
+        .loop_watch
+        .observe(snapshot.as_ref(), loop_active, now)
+        .zip(snapshot.as_ref().map(|snapshot| snapshot.source_id.clone()));
     match poller.handle_polled_snapshot(snapshot, now) {
         Some(MediaEmission::Snapshot(snapshot)) => emit_media_snapshot(app, &snapshot),
         Some(MediaEmission::Position(position)) => emit_media_position(app, position),
         None => {}
     }
+    if let Some((action, source_id)) = loop_action {
+        run_loop_action(action, &source_id).await;
+    }
 
     Ok(())
+}
+
+async fn run_loop_action(action: LoopAction, source_id: &str) {
+    let source_id = Some(source_id).filter(|source_id| !source_id.is_empty());
+    let result = match action {
+        LoopAction::Restart => super::platform::seek(RESTART_POSITION_SECONDS, source_id).await,
+        LoopAction::StepBack => super::platform::previous(source_id).await,
+    };
+    match result {
+        Ok(()) => eprintln!("[VinylDeck loop] {action:?}"),
+        Err(error) => eprintln!("[VinylDeck loop] {action:?} failed: {error}"),
+    }
 }
 
 /// Full snapshots (with artwork) go out only on semantic change; periodic
@@ -162,6 +189,7 @@ struct SmtcPoller {
     artwork_rx: Option<Receiver<ArtworkResult>>,
     artwork_in_flight: Option<TrackCacheKey>,
     artwork_retry: Option<ArtworkRetry>,
+    loop_watch: LoopWatch,
 }
 
 type ArtworkResult = (TrackCacheKey, Option<MediaSnapshot>);
@@ -301,6 +329,11 @@ impl SmtcPoller {
         loop {
             match rx.try_recv() {
                 Ok((key, fetched)) => {
+                    let fetched =
+                        fetched.map(|snapshot| match app.try_state::<PlaybackAuthority>() {
+                            Some(authority) => authority.vinyl_loop().decorate(snapshot),
+                            None => snapshot,
+                        });
                     let Some(full_snapshot) = self.accept_artwork(key, fetched, Instant::now())
                     else {
                         continue;

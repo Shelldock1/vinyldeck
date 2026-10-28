@@ -6,7 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Repeat for players without a repeat control.** Browsers and apps such as Yandex Music publish no repeat mode, so the repeat lever stayed hidden. VinylDeck now shows it for them and runs repeat-one itself: just before the end it seeks back to the start, and if the player already moved to the next track it steps back once.
 
 ## [0.2.1] - 2026-10-24
 

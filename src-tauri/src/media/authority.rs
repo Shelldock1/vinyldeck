@@ -9,11 +9,13 @@ use std::sync::RwLock;
 use tokio::sync::watch;
 
 use super::model::MediaSnapshot;
+use super::vinyl_loop::VinylLoop;
 
 pub struct PlaybackAuthority {
     current: RwLock<Option<MediaSnapshot>>,
     selection: RwLock<Option<String>>,
     notifier: watch::Sender<Option<MediaSnapshot>>,
+    vinyl_loop: VinylLoop,
 }
 
 impl PlaybackAuthority {
@@ -23,6 +25,7 @@ impl PlaybackAuthority {
             current: RwLock::new(None),
             selection: RwLock::new(None),
             notifier,
+            vinyl_loop: VinylLoop::default(),
         }
     }
 
@@ -80,6 +83,11 @@ impl PlaybackAuthority {
         }
         self.notifier.send_replace(snapshot);
         true
+    }
+
+    /// VinylDeck's own repeat-one for players without a repeat control.
+    pub fn vinyl_loop(&self) -> &VinylLoop {
+        &self.vinyl_loop
     }
 
     pub fn subscribe(&self) -> watch::Receiver<Option<MediaSnapshot>> {

@@ -12,6 +12,7 @@ pub mod poller;
 pub mod smtc;
 #[cfg(not(any(windows, target_os = "linux")))]
 pub mod unsupported;
+pub mod vinyl_loop;
 
 use model::{MediaPosition, MediaSnapshot};
 

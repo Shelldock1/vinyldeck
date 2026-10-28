@@ -86,6 +86,12 @@ Post-roadmap:
 - **N — Wrapped:** `collection/mod.rs` persists bounded play history (10,000 events under `collection.json` key `history`); `collection/wrapped.rs` folds a UTC month into totals, top 5 records, top track/artist, rarest pressing, busiest day, and available months. `cmd_collection_wrapped`; UI is `CrateWrapped.tsx` opened from the Crate header with a month picker. Browser dev shows an empty current-month card.
 - **O — packaging/docs:** README lists Windows + Linux, MPRIS, overlay/Discord/Wrapped/global shortcuts, and Linux build/install steps; `tauri.conf.json` bundles `msi`, `nsis`, `deb`, `appimage`. Tests added for `pressingEngine.ts`, `useColorExtraction.ts` (exported `paletteFromPixels`, `buildAmbientFromPalette`), `themes/applier.ts`, and `textureBake.ts` (fake 2D canvas).
 
+## Emulated repeat-one (2026-10-26, uncommitted)
+
+- `src-tauri/src/media/vinyl_loop.rs`: `VinylLoop` (in `PlaybackAuthority`) decorates snapshots from players with no native repeat but control + seek/skip: `canRepeat=true`, `repeatMode` off/one. `cmd_media_set_repeat` routes there first; any non-`off` mode enables it, so the existing lever cycle off->all->one becomes off<->one with no frontend change.
+- Poller `LoopWatch`: seek(0) when <=1.5s remain while playing; `previous` when the same source rolled to a new track with <=3.5s left on the old one. Decoration applied in `poll_once`, `collect_artwork`, `cmd_smtc_snapshot`.
+- Verified: 151 Rust tests, clippy, fmt, release build installed to `%LOCALAPPDATA%\VinylDeck`. Yandex Music SMTC: seek/next/prev true, no AutoRepeatMode. Loop not yet exercised live.
+
 ## Verification
 
 Last full local run:
